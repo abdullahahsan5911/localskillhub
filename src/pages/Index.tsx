@@ -240,7 +240,7 @@ const Index = () => {
         <div ref={catRef} className="overflow-hidden">
           <div className="flex">
             {categories.map((cat) => (
-              <div key={cat.name} className="flex-[0_0_45%] sm:flex-[0_0_30%] lg:flex-[0_0_22%] min-w-0 pl-5 first:pl-0">
+              <div key={cat.name} className="flex-[0_0_45%] sm:flex-[0_0_30%] lg:flex-[0_0_22%] min-w-0 pl-5">
                 <Link
                   to="/browse"
                   className="group relative block aspect-[4/3] rounded-xl overflow-hidden"
