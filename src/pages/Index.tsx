@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Search, MapPin, ArrowRight, CheckCircle, Shield, Users, Zap, Star, Briefcase, Clock } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Search, MapPin, ArrowRight, CheckCircle, Shield, Users, Zap, Star, Briefcase, Clock, ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -17,6 +17,8 @@ import avatar3 from "@/assets/avatars/avatar-3.jpg";
 import avatar4 from "@/assets/avatars/avatar-4.jpg";
 import avatar5 from "@/assets/avatars/avatar-5.jpg";
 import avatar6 from "@/assets/avatars/avatar-6.jpg";
+import avatar7 from "@/assets/avatars/avatar-7.jpg";
+import avatar8 from "@/assets/avatars/avatar-8.jpg";
 
 const categories = [
   { name: "Web Development", image: webDesignImg, count: "2,340+" },
@@ -25,15 +27,27 @@ const categories = [
   { name: "Digital Marketing", image: digitalMarketingImg, count: "1,560+" },
   { name: "Photography", image: photographyImg, count: "1,200+" },
   { name: "Content Writing", image: contentWritingImg, count: "2,100+" },
+  { name: "Mobile App Dev", image: webDesignImg, count: "1,750+" },
+  { name: "Brand Strategy", image: graphicDesignImg, count: "890+" },
+  { name: "Motion Graphics", image: videoProductionImg, count: "670+" },
+  { name: "SEO Services", image: digitalMarketingImg, count: "1,430+" },
+  { name: "Product Photography", image: photographyImg, count: "560+" },
+  { name: "Copywriting", image: contentWritingImg, count: "1,980+" },
 ];
 
 const featuredFreelancers = [
-  { name: "Priya Sharma", skill: "UI/UX Designer", city: "Mumbai", rating: 4.9, jobs: 47, verified: true, rate: "₹2,500/hr", avatar: avatar1 },
-  { name: "Arjun Patel", skill: "Full Stack Dev", city: "Bangalore", rating: 4.8, jobs: 92, verified: true, rate: "₹3,000/hr", avatar: avatar2 },
-  { name: "Sneha Gupta", skill: "Content Writer", city: "Delhi", rating: 4.9, jobs: 124, verified: true, rate: "₹1,200/hr", avatar: avatar3 },
-  { name: "Rahul Verma", skill: "Video Editor", city: "Pune", rating: 4.7, jobs: 38, verified: false, rate: "₹1,800/hr", avatar: avatar4 },
-  { name: "Ananya Desai", skill: "Photographer", city: "Hyderabad", rating: 4.8, jobs: 67, verified: true, rate: "₹2,000/hr", avatar: avatar5 },
-  { name: "Vikram Singh", skill: "Digital Marketer", city: "Chennai", rating: 4.6, jobs: 55, verified: true, rate: "₹1,500/hr", avatar: avatar6 },
+  { name: "Priya Sharma", skill: "UI/UX Designer", city: "Mumbai", rating: 4.9, jobs: 47, verified: true, avatar: avatar1 },
+  { name: "Arjun Patel", skill: "Full Stack Dev", city: "Bangalore", rating: 4.8, jobs: 92, verified: true, avatar: avatar2 },
+  { name: "Sneha Gupta", skill: "Content Writer", city: "Delhi", rating: 4.9, jobs: 124, verified: true, avatar: avatar3 },
+  { name: "Rahul Verma", skill: "Video Editor", city: "Pune", rating: 4.7, jobs: 38, verified: false, avatar: avatar4 },
+  { name: "Ananya Desai", skill: "Photographer", city: "Hyderabad", rating: 4.8, jobs: 67, verified: true, avatar: avatar5 },
+  { name: "Vikram Singh", skill: "Digital Marketer", city: "Chennai", rating: 4.6, jobs: 55, verified: true, avatar: avatar6 },
+  { name: "Kavita Menon", skill: "Brand Designer", city: "Kochi", rating: 4.9, jobs: 83, verified: true, avatar: avatar7 },
+  { name: "Aditya Rao", skill: "Mobile Developer", city: "Jaipur", rating: 4.7, jobs: 61, verified: true, avatar: avatar8 },
+  { name: "Neha Kulkarni", skill: "Motion Designer", city: "Ahmedabad", rating: 4.8, jobs: 45, verified: true, avatar: avatar1 },
+  { name: "Siddharth Joshi", skill: "SEO Specialist", city: "Lucknow", rating: 4.6, jobs: 72, verified: false, avatar: avatar2 },
+  { name: "Ritu Agarwal", skill: "Illustrator", city: "Kolkata", rating: 4.9, jobs: 98, verified: true, avatar: avatar3 },
+  { name: "Deepak Nair", skill: "Copywriter", city: "Thiruvananthapuram", rating: 4.8, jobs: 53, verified: true, avatar: avatar4 },
 ];
 
 const whyHire = [
@@ -47,18 +61,60 @@ const testimonials = [
   { name: "Meera Iyer", role: "Startup Founder", text: "Found an incredible UI designer in my city within hours. The local trust system gave me total confidence.", avatar: avatar3 },
   { name: "Rohit Kapoor", role: "Agency Director", text: "We've hired 12 freelancers through LocalSkillHub. Quality is consistently excellent and communication is seamless.", avatar: avatar2 },
   { name: "Divya Nair", role: "Small Business Owner", text: "The fact that I could meet my freelancer in person made all the difference. Highly recommend for local projects.", avatar: avatar5 },
+  { name: "Amit Sharma", role: "Product Manager", text: "LocalSkillHub made it incredibly easy to find skilled developers nearby. The quality of work exceeded our expectations.", avatar: avatar1 },
+  { name: "Pooja Reddy", role: "Marketing Head", text: "We found our entire design team through LocalSkillHub. The vetting process ensures only the best talent.", avatar: avatar7 },
+  { name: "Karthik Menon", role: "CTO, TechStart", text: "The platform's local focus means faster turnarounds and better communication. A game changer for our startup.", avatar: avatar4 },
+  { name: "Sunita Patel", role: "E-commerce Owner", text: "From photographers to web developers, I've found amazing talent for every project. Truly a one-stop solution.", avatar: avatar8 },
+  { name: "Rajesh Kumar", role: "Creative Director", text: "The endorsement system gives real confidence. We've built lasting relationships with freelancers found here.", avatar: avatar6 },
 ];
 
-const stats = [
-  { value: "50K+", label: "Verified Freelancers" },
-  { value: "120K+", label: "Projects Completed" },
-  { value: "98%", label: "Client Satisfaction" },
-  { value: "200+", label: "Cities Covered" },
-];
+// --- Reusable Carousel Hook ---
+function useCarouselScroll(itemsPerView: number, totalItems: number, autoPlayMs?: number) {
+  const [index, setIndex] = useState(0);
+  const maxIndex = Math.max(0, totalItems - itemsPerView);
+
+  const next = useCallback(() => setIndex((i) => Math.min(i + 1, maxIndex)), [maxIndex]);
+  const prev = useCallback(() => setIndex((i) => Math.max(i - 1, 0)), []);
+
+  useEffect(() => {
+    if (!autoPlayMs) return;
+    const timer = setInterval(() => {
+      setIndex((i) => (i >= maxIndex ? 0 : i + 1));
+    }, autoPlayMs);
+    return () => clearInterval(timer);
+  }, [autoPlayMs, maxIndex]);
+
+  return { index, next, prev, canPrev: index > 0, canNext: index < maxIndex };
+}
+
+// --- Carousel Navigation Buttons ---
+const CarouselNav = ({ onPrev, onNext, canPrev, canNext }: { onPrev: () => void; onNext: () => void; canPrev: boolean; canNext: boolean }) => (
+  <div className="flex gap-2">
+    <button
+      onClick={onPrev}
+      disabled={!canPrev}
+      className="w-10 h-10 rounded-full border border-border flex items-center justify-center disabled:opacity-20 hover:bg-secondary transition-colors"
+    >
+      <ChevronLeft className="h-5 w-5 text-foreground" />
+    </button>
+    <button
+      onClick={onNext}
+      disabled={!canNext}
+      className="w-10 h-10 rounded-full border border-border flex items-center justify-center disabled:opacity-20 hover:bg-secondary transition-colors"
+    >
+      <ChevronRight className="h-5 w-5 text-foreground" />
+    </button>
+  </div>
+);
 
 const Index = () => {
   const [searchService, setSearchService] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
+
+  // Responsive items per view (simplified: use fixed counts, CSS handles overflow)
+  const catCarousel = useCarouselScroll(6, categories.length, 4000);
+  const flCarousel = useCarouselScroll(4, featuredFreelancers.length, 5000);
+  const testCarousel = useCarouselScroll(3, testimonials.length, 6000);
 
   return (
     <Layout>
@@ -88,7 +144,7 @@ const Index = () => {
                     onChange={(e) => setSearchService(e.target.value)}
                   />
                 </div>
-                <div className="w-px h-8 bg-primary-foreground/20 hidden sm:block self-center"></div>
+                <div className="w-px h-8 bg-primary-foreground/20 hidden sm:block self-center" />
                 <div className="flex-1 flex items-center gap-3 px-4 py-2 rounded-full bg-transparent">
                   <MapPin className="h-5 w-5 text-primary-foreground/40 shrink-0" />
                   <input
@@ -107,7 +163,7 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Avatars row */}
+            {/* Avatars */}
             <div className="mt-8 flex items-center justify-center gap-3">
               <div className="flex -space-x-2">
                 {[avatar1, avatar2, avatar3, avatar4, avatar5].map((av, i) => (
@@ -122,28 +178,53 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Browse Categories */}
+      {/* Browse Categories — Carousel */}
       <section className="bg-foreground pb-20">
         <div className="container">
-          <p className="text-center text-primary-foreground/40 text-sm mb-6 font-medium tracking-wide uppercase">Browse Categories</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categories.map((cat) => (
-              <Link
-                key={cat.name}
-                to="/browse"
-                className="group relative aspect-[4/3] rounded-xl overflow-hidden"
+          <div className="flex items-center justify-between mb-6">
+            <p className="text-primary-foreground/40 text-sm font-medium tracking-wide uppercase">Browse Categories</p>
+            <div className="flex gap-2">
+              <button
+                onClick={catCarousel.prev}
+                disabled={!catCarousel.canPrev}
+                className="w-9 h-9 rounded-full border border-primary-foreground/20 flex items-center justify-center disabled:opacity-20 hover:bg-primary-foreground/10 transition-colors"
               >
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-foreground/60 group-hover:bg-foreground/40 transition-colors duration-300" />
-                <div className="absolute bottom-0 left-0 p-4">
-                  <h3 className="text-sm font-semibold text-primary-foreground">{cat.name}</h3>
-                </div>
-              </Link>
-            ))}
+                <ChevronLeft className="h-4 w-4 text-primary-foreground" />
+              </button>
+              <button
+                onClick={catCarousel.next}
+                disabled={!catCarousel.canNext}
+                className="w-9 h-9 rounded-full border border-primary-foreground/20 flex items-center justify-center disabled:opacity-20 hover:bg-primary-foreground/10 transition-colors"
+              >
+                <ChevronRight className="h-4 w-4 text-primary-foreground" />
+              </button>
+            </div>
+          </div>
+          <div className="overflow-hidden">
+            <div
+              className="flex gap-4 transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${catCarousel.index * (100 / 6)}%)` }}
+            >
+              {categories.map((cat) => (
+                <Link
+                  key={cat.name}
+                  to="/browse"
+                  className="group relative aspect-[4/3] rounded-xl overflow-hidden flex-shrink-0"
+                  style={{ width: "calc((100% - 5 * 1rem) / 6)" }}
+                >
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-foreground/60 group-hover:bg-foreground/40 transition-colors duration-300" />
+                  <div className="absolute bottom-0 left-0 p-4">
+                    <h3 className="text-sm font-semibold text-primary-foreground">{cat.name}</h3>
+                    <p className="text-xs text-primary-foreground/50">{cat.count} freelancers</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -158,7 +239,7 @@ const Index = () => {
             <p className="text-muted-foreground mb-12 text-lg">
               Hiring freelancers on LocalSkillHub is seamless and secure.
             </p>
-            
+
             <div className="grid sm:grid-cols-2 gap-x-12 gap-y-10">
               {whyHire.map((item) => (
                 <div key={item.title} className="flex gap-4">
@@ -172,7 +253,7 @@ const Index = () => {
                 </div>
               ))}
             </div>
-            
+
             <div className="mt-12 flex gap-4">
               <Button className="h-12 rounded-full px-8 font-semibold bg-brand hover:bg-brand-glow text-foreground">
                 Get Started
@@ -185,60 +266,61 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Freelancers */}
+      {/* Featured Freelancers — Carousel */}
       <section className="container py-20">
-        <div className="mb-12">
-          <p className="text-sm font-semibold text-brand mb-2">Our Freelancers</p>
-          <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground tracking-tight max-w-2xl">
-            Hire top freelancers hand-selected by the LocalSkillHub team.
-          </h2>
+        <div className="flex items-end justify-between mb-12">
+          <div>
+            <p className="text-sm font-semibold text-brand mb-2">Our Freelancers</p>
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground tracking-tight max-w-2xl">
+              Hire top freelancers hand-selected by the LocalSkillHub team.
+            </h2>
+          </div>
+          <CarouselNav onPrev={flCarousel.prev} onNext={flCarousel.next} canPrev={flCarousel.canPrev} canNext={flCarousel.canNext} />
         </div>
 
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide mb-8">
-          {['All', 'Web Developers', 'Brand Designers', 'Illustrators', 'UI/UX Designers'].map((tab, i) => (
-            <button key={tab} className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap ${i === 0 ? 'bg-foreground text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'}`}>
-              {tab}
-            </button>
-          ))}
-        </div>
+        <div className="overflow-hidden">
+          <div
+            className="flex gap-6 transition-transform duration-500 ease-out"
+            style={{ transform: `translateX(-${flCarousel.index * (100 / 4)}%)` }}
+          >
+            {featuredFreelancers.map((fl) => (
+              <Link
+                key={fl.name}
+                to="/profile/1"
+                className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg transition-all duration-300 group flex flex-col items-center text-center flex-shrink-0"
+                style={{ width: "calc((100% - 3 * 1.5rem) / 4)" }}
+              >
+                <div className="relative mb-4">
+                  <img src={fl.avatar} alt={fl.name} className="w-20 h-20 rounded-full object-cover border-2 border-background shadow-sm" />
+                  {fl.verified && (
+                    <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5">
+                      <CheckCircle className="h-5 w-5 text-trust-green" />
+                    </div>
+                  )}
+                </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {featuredFreelancers.map((fl) => (
-            <Link
-              key={fl.name}
-              to="/profile/1"
-              className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg transition-all duration-300 group flex flex-col items-center text-center"
-            >
-              <div className="relative mb-4">
-                <img src={fl.avatar} alt={fl.name} className="w-20 h-20 rounded-full object-cover border-2 border-background shadow-sm" />
-                {fl.verified && (
-                  <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5">
-                    <CheckCircle className="h-5 w-5 text-trust-green" />
+                <h3 className="font-semibold text-foreground text-lg">{fl.name}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{fl.skill} • {fl.city}</p>
+
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="flex items-center gap-1 text-sm font-medium text-foreground bg-secondary px-2.5 py-1 rounded-full">
+                    <Star className="h-3.5 w-3.5 text-trust-gold fill-trust-gold" /> {fl.rating}
                   </div>
-                )}
-              </div>
-              
-              <h3 className="font-semibold text-foreground text-lg">{fl.name}</h3>
-              <p className="text-sm text-muted-foreground mb-4">{fl.skill} • {fl.city}</p>
-              
-              <div className="flex items-center gap-2 mb-6">
-                <div className="flex items-center gap-1 text-sm font-medium text-foreground bg-secondary px-2.5 py-1 rounded-full">
-                  <Star className="h-3.5 w-3.5 text-trust-gold fill-trust-gold" /> {fl.rating}
+                  <div className="text-sm text-muted-foreground bg-secondary px-2.5 py-1 rounded-full">
+                    {fl.jobs} jobs
+                  </div>
                 </div>
-                <div className="text-sm text-muted-foreground bg-secondary px-2.5 py-1 rounded-full">
-                  {fl.jobs} jobs completed
+
+                <div className="w-full mt-auto">
+                  <Button variant="outline" className="w-full rounded-full font-medium group-hover:bg-foreground group-hover:text-primary-foreground transition-colors">
+                    View Profile
+                  </Button>
                 </div>
-              </div>
-              
-              <div className="w-full mt-auto">
-                <Button variant="outline" className="w-full rounded-full font-medium group-hover:bg-foreground group-hover:text-primary-foreground transition-colors">
-                  View Profile
-                </Button>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
-        
+
         <div className="mt-12 text-center">
           <Button className="h-12 rounded-full px-8 font-semibold bg-brand hover:bg-brand-glow text-foreground">
             Browse All Freelancers
@@ -246,29 +328,42 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Testimonials — Carousel */}
       <section className="bg-card py-20">
         <div className="container">
-          <div className="mb-12">
-            <p className="text-sm font-semibold text-brand mb-2">Success Stories</p>
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground tracking-tight">
-              See what clients are saying.
-            </h2>
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <p className="text-sm font-semibold text-brand mb-2">Success Stories</p>
+              <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground tracking-tight">
+                See what clients are saying.
+              </h2>
+            </div>
+            <CarouselNav onPrev={testCarousel.prev} onNext={testCarousel.next} canPrev={testCarousel.canPrev} canNext={testCarousel.canNext} />
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((t) => (
-              <div key={t.name} className="bg-background border border-border/60 rounded-2xl p-8 flex flex-col">
-                <p className="text-base text-foreground leading-relaxed mb-8 flex-grow">"{t.text}"</p>
-                <div className="flex items-center gap-3">
-                  <img src={t.avatar} alt={t.name} className="w-10 h-10 rounded-full object-cover" />
-                  <div>
-                    <div className="text-sm font-semibold text-foreground">{t.name}</div>
-                    <div className="text-xs text-muted-foreground">{t.role}</div>
+          <div className="overflow-hidden">
+            <div
+              className="flex gap-6 transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${testCarousel.index * (100 / 3)}%)` }}
+            >
+              {testimonials.map((t) => (
+                <div
+                  key={t.name}
+                  className="bg-background border border-border/60 rounded-2xl p-8 flex flex-col flex-shrink-0"
+                  style={{ width: "calc((100% - 2 * 1.5rem) / 3)" }}
+                >
+                  <Quote className="h-8 w-8 text-brand/30 mb-4" />
+                  <p className="text-base text-foreground leading-relaxed mb-8 flex-grow">{t.text}</p>
+                  <div className="flex items-center gap-3">
+                    <img src={t.avatar} alt={t.name} className="w-10 h-10 rounded-full object-cover" />
+                    <div>
+                      <div className="text-sm font-semibold text-foreground">{t.name}</div>
+                      <div className="text-xs text-muted-foreground">{t.role}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -290,14 +385,14 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Bottom Stats Banner */}
+      {/* Bottom Stats */}
       <section className="bg-foreground text-primary-foreground">
         <div className="container py-24 text-center">
           <p className="text-sm font-semibold mb-4">LocalSkillHub</p>
           <h2 className="text-3xl md:text-5xl font-display font-bold mb-16 max-w-3xl mx-auto">
             Tap into your city's largest professional community.
           </h2>
-          
+
           <div className="grid sm:grid-cols-3 gap-10 max-w-4xl mx-auto divide-x divide-primary-foreground/10">
             {[
               { value: "50M+", label: "Over 50 million professionals in the LocalSkillHub community" },
