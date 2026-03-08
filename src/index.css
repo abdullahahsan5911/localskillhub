@@ -68,6 +68,7 @@
   }
 }
 
+@layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -75,7 +76,6 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-
 
   .glass-card {
     @apply bg-surface-glass/60 backdrop-blur-xl border border-border/50 rounded-xl transition-all duration-300;
@@ -101,7 +101,6 @@
     box-shadow: 0 0 15px -5px hsl(var(--brand) / 0.2);
   }
 
-  /* Smooth transitions */
   .transition-smooth {
     @apply transition-all duration-300 ease-out;
   }
