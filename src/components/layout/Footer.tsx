@@ -48,7 +48,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-brand">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                 <MapPin className="h-4 w-4 text-primary-foreground" />
               </div>
               <span className="text-base font-display font-bold text-foreground">
@@ -63,7 +63,7 @@ const Footer = () => {
                 <a
                   key={i}
                   href="#"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-muted-foreground hover:text-primary hover:bg-brand-muted transition-colors"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-muted-foreground hover:text-primary hover:bg-brand-muted transition-colors duration-200"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
@@ -79,7 +79,7 @@ const Footer = () => {
                   <li key={link.label}>
                     <Link
                       to={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
                     >
                       {link.label}
                     </Link>

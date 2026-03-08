@@ -40,15 +40,15 @@ const PostJob = () => {
         <div className="flex items-center gap-2 mb-10">
           {steps.map((s, i) => (
             <div key={s.num} className="flex items-center gap-2 flex-1">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 ${
-                step >= s.num ? "gradient-brand text-primary-foreground" : "bg-secondary text-muted-foreground"
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 transition-all duration-300 ${
+                step >= s.num ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
               }`}>
                 {step > s.num ? <Check className="h-4 w-4" /> : s.num}
               </div>
-              <span className={`text-xs font-medium hidden sm:block ${step >= s.num ? "text-foreground" : "text-muted-foreground"}`}>
+              <span className={`text-xs font-medium hidden sm:block transition-colors duration-200 ${step >= s.num ? "text-foreground" : "text-muted-foreground"}`}>
                 {s.label}
               </span>
-              {i < steps.length - 1 && <div className={`flex-1 h-px ${step > s.num ? "bg-primary" : "bg-border"}`} />}
+              {i < steps.length - 1 && <div className={`flex-1 h-px transition-colors duration-300 ${step > s.num ? "bg-primary" : "bg-border"}`} />}
             </div>
           ))}
         </div>
@@ -63,9 +63,9 @@ const PostJob = () => {
                   <button
                     key={cat}
                     onClick={() => setFormData({ ...formData, category: cat })}
-                    className={`p-4 rounded-xl text-sm font-medium text-left transition-all ${
+                    className={`p-4 rounded-xl text-sm font-medium text-left transition-all duration-200 ${
                       formData.category === cat
-                        ? "gradient-brand text-primary-foreground glow-sm"
+                        ? "bg-primary text-primary-foreground"
                         : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
                     }`}
                   >
@@ -85,7 +85,7 @@ const PostJob = () => {
                 <input
                   type="text"
                   placeholder="e.g., Need a website redesign for my restaurant"
-                  className="w-full px-4 py-3 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground outline-none border border-border focus:border-primary transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground outline-none border border-border focus:border-primary transition-colors duration-200 text-sm"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
@@ -95,7 +95,7 @@ const PostJob = () => {
                 <textarea
                   rows={5}
                   placeholder="Describe your project in detail..."
-                  className="w-full px-4 py-3 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground outline-none border border-border focus:border-primary transition-colors text-sm resize-none"
+                  className="w-full px-4 py-3 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground outline-none border border-border focus:border-primary transition-colors duration-200 text-sm resize-none"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
@@ -112,7 +112,7 @@ const PostJob = () => {
                           : [...formData.skills, skill];
                         setFormData({ ...formData, skills });
                       }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                         formData.skills.includes(skill)
                           ? "bg-primary text-primary-foreground"
                           : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -132,7 +132,7 @@ const PostJob = () => {
               <h2 className="text-xl font-display font-semibold text-foreground mb-6">Location & Budget</h2>
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">City / Location</label>
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-border">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-border focus-within:border-primary transition-colors duration-200">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <input
                     type="text"
@@ -161,9 +161,9 @@ const PostJob = () => {
                     <button
                       key={type}
                       onClick={() => setFormData({ ...formData, budgetType: type })}
-                      className={`px-6 py-3 rounded-xl text-sm font-medium capitalize transition-colors ${
+                      className={`px-6 py-3 rounded-xl text-sm font-medium capitalize transition-all duration-200 ${
                         formData.budgetType === type
-                          ? "gradient-brand text-primary-foreground"
+                          ? "bg-primary text-primary-foreground"
                           : "bg-secondary text-muted-foreground"
                       }`}
                     >
@@ -178,7 +178,7 @@ const PostJob = () => {
                   <input
                     type="number"
                     placeholder="5,000"
-                    className="w-full px-4 py-3 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground outline-none border border-border focus:border-primary transition-colors text-sm"
+                    className="w-full px-4 py-3 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground outline-none border border-border focus:border-primary transition-colors duration-200 text-sm"
                     value={formData.budgetMin}
                     onChange={(e) => setFormData({ ...formData, budgetMin: e.target.value })}
                   />
@@ -188,7 +188,7 @@ const PostJob = () => {
                   <input
                     type="number"
                     placeholder="25,000"
-                    className="w-full px-4 py-3 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground outline-none border border-border focus:border-primary transition-colors text-sm"
+                    className="w-full px-4 py-3 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground outline-none border border-border focus:border-primary transition-colors duration-200 text-sm"
                     value={formData.budgetMax}
                     onChange={(e) => setFormData({ ...formData, budgetMax: e.target.value })}
                   />
@@ -228,7 +228,7 @@ const PostJob = () => {
           <div className="flex justify-between mt-8 pt-6 border-t border-border/40">
             <Button
               variant="outline"
-              className="border-border text-foreground gap-2"
+              className="border-border text-foreground gap-2 transition-colors duration-200"
               onClick={() => setStep(Math.max(1, step - 1))}
               disabled={step === 1}
             >
@@ -236,13 +236,13 @@ const PostJob = () => {
             </Button>
             {step < 4 ? (
               <Button
-                className="gradient-brand text-primary-foreground font-semibold gap-2"
+                className="bg-primary text-primary-foreground font-semibold gap-2 hover:bg-primary/90 transition-all duration-200"
                 onClick={() => setStep(Math.min(4, step + 1))}
               >
                 Next <ArrowRight className="h-4 w-4" />
               </Button>
             ) : (
-              <Button className="gradient-brand text-primary-foreground font-semibold glow-sm gap-2">
+              <Button className="bg-primary text-primary-foreground font-semibold gap-2 hover:bg-primary/90 transition-all duration-200">
                 <Check className="h-4 w-4" /> Post Job
               </Button>
             )}

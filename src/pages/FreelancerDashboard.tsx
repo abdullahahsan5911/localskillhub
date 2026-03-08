@@ -71,13 +71,13 @@ const FreelancerDashboard = () => {
           </div>
           <div className="flex gap-3">
             <Link to="/messages">
-              <Button variant="outline" size="sm" className="border-border text-foreground gap-2">
+              <Button variant="outline" size="sm" className="border-border text-foreground gap-2 transition-colors duration-200">
                 <MessageSquare className="h-4 w-4" /> Messages
                 <span className="ml-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">3</span>
               </Button>
             </Link>
             <Link to="/profile/1">
-              <Button size="sm" className="gradient-brand text-primary-foreground font-semibold gap-2">
+              <Button size="sm" className="bg-primary text-primary-foreground font-semibold gap-2 hover:bg-primary/90 transition-all duration-200">
                 <Eye className="h-4 w-4" /> View Profile
               </Button>
             </Link>
@@ -92,7 +92,7 @@ const FreelancerDashboard = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="glass-card p-5"
+              className="glass-card p-5 hover:border-primary/20 transition-all duration-300"
             >
               <div className="flex items-center justify-between mb-3">
                 <stat.icon className={`h-5 w-5 ${stat.color}`} />
@@ -113,9 +113,9 @@ const FreelancerDashboard = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-5 py-2 rounded-lg text-sm font-medium capitalize transition-all ${
+              className={`px-5 py-2 rounded-lg text-sm font-medium capitalize transition-all duration-200 ${
                 activeTab === tab
-                  ? "gradient-brand text-primary-foreground"
+                  ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -137,7 +137,7 @@ const FreelancerDashboard = () => {
                   </div>
                   <div className="space-y-4">
                     {activeProjects.map((project) => (
-                      <div key={project.title} className="p-4 rounded-xl bg-secondary/40 border border-border/30">
+                      <div key={project.title} className="p-4 rounded-xl bg-secondary/40 border border-border/30 hover:border-primary/20 transition-colors duration-200">
                         <div className="flex items-start justify-between mb-3">
                           <div>
                             <h3 className="text-sm font-semibold text-foreground">{project.title}</h3>
@@ -153,7 +153,7 @@ const FreelancerDashboard = () => {
                             <span className="font-semibold text-foreground">{project.progress}%</span>
                           </div>
                           <div className="h-2 rounded-full bg-secondary overflow-hidden">
-                            <div className="h-full rounded-full bg-gradient-to-r from-primary to-brand-glow transition-all" style={{ width: `${project.progress}%` }} />
+                            <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${project.progress}%` }} />
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-xs text-muted-foreground mt-3">
@@ -179,7 +179,7 @@ const FreelancerDashboard = () => {
                           initial={{ height: 0 }}
                           animate={{ height: `${(data.amount / maxEarning) * 100}%` }}
                           transition={{ delay: i * 0.1, duration: 0.5 }}
-                          className="w-full rounded-t-md bg-gradient-to-t from-primary/80 to-brand-glow/60 min-h-[4px]"
+                          className="w-full rounded-t-md bg-primary/70 hover:bg-primary transition-colors duration-200 min-h-[4px]"
                         />
                         <span className="text-[10px] text-muted-foreground">{data.month}</span>
                       </div>
@@ -194,7 +194,7 @@ const FreelancerDashboard = () => {
                 <h2 className="text-lg font-display font-semibold text-foreground mb-5">Recent Proposals</h2>
                 <div className="space-y-3">
                   {recentProposals.map((p) => (
-                    <div key={p.title} className="flex items-center justify-between p-4 rounded-xl bg-secondary/40 border border-border/30 hover:border-primary/20 transition-colors cursor-pointer">
+                    <div key={p.title} className="flex items-center justify-between p-4 rounded-xl bg-secondary/40 border border-border/30 hover:border-primary/20 transition-colors duration-200 cursor-pointer">
                       <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-semibold text-foreground truncate">{p.title}</h3>
                         <p className="text-xs text-muted-foreground">{p.client} • {p.date}</p>
@@ -235,7 +235,7 @@ const FreelancerDashboard = () => {
                         initial={{ height: 0 }}
                         animate={{ height: `${(data.amount / maxEarning) * 100}%` }}
                         transition={{ delay: i * 0.1, duration: 0.5 }}
-                        className="w-full rounded-t-md bg-gradient-to-t from-trust-green/80 to-accent/60 min-h-[4px]"
+                        className="w-full rounded-t-md bg-accent/70 hover:bg-accent transition-colors duration-200 min-h-[4px]"
                       />
                       <span className="text-[10px] text-muted-foreground">{data.month}</span>
                     </div>
@@ -253,11 +253,11 @@ const FreelancerDashboard = () => {
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <Bell className="h-4 w-4 text-primary" /> Notifications
                 </h3>
-                <span className="text-[10px] text-primary cursor-pointer hover:text-brand-glow">View All</span>
+                <span className="text-[10px] text-primary cursor-pointer hover:text-brand-glow transition-colors duration-200">View All</span>
               </div>
               <div className="space-y-3">
                 {notifications.map((n, i) => (
-                  <div key={i} className="flex gap-3 p-3 rounded-lg bg-secondary/30 border border-border/20">
+                  <div key={i} className="flex gap-3 p-3 rounded-lg bg-secondary/30 border border-border/20 hover:border-primary/20 transition-colors duration-200">
                     <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
                       n.type === "payment" ? "bg-trust-green" : n.type === "review" ? "bg-trust-gold" : "bg-primary"
                     }`} />
@@ -283,12 +283,12 @@ const FreelancerDashboard = () => {
                   <Link
                     key={action.label}
                     to={action.href}
-                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border/20 hover:border-primary/20 transition-colors group"
+                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border/20 hover:border-primary/20 transition-all duration-200 group"
                   >
-                    <span className="flex items-center gap-2 text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                    <span className="flex items-center gap-2 text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-200">
                       <action.icon className="h-4 w-4" /> {action.label}
                     </span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
                   </Link>
                 ))}
               </div>
@@ -305,7 +305,7 @@ const FreelancerDashboard = () => {
                   { rank: 2, name: "Arjun Patel", score: 97, city: "Mumbai" },
                   { rank: 3, name: "Priya Sharma", score: 96, city: "Mumbai", isYou: true },
                 ].map((user) => (
-                  <div key={user.rank} className={`flex items-center gap-3 p-3 rounded-lg ${user.isYou ? "bg-primary/10 border border-primary/20" : "bg-secondary/30 border border-border/20"}`}>
+                  <div key={user.rank} className={`flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 ${user.isYou ? "bg-primary/10 border border-primary/20" : "bg-secondary/30 border border-border/20 hover:border-primary/20"}`}>
                     <span className={`text-sm font-bold ${user.rank === 1 ? "text-trust-gold" : user.rank === 2 ? "text-muted-foreground" : "text-primary"}`}>
                       #{user.rank}
                     </span>

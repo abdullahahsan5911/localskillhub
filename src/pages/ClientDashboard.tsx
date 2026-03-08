@@ -51,7 +51,7 @@ const ClientDashboard = () => {
             <p className="text-muted-foreground text-sm mt-1">Manage your projects and find talent</p>
           </div>
           <Link to="/post-job">
-            <Button className="gradient-brand text-primary-foreground font-semibold gap-2">
+            <Button className="bg-primary text-primary-foreground font-semibold gap-2 hover:bg-primary/90 transition-all duration-200">
               <Plus className="h-4 w-4" /> Post New Job
             </Button>
           </Link>
@@ -65,7 +65,7 @@ const ClientDashboard = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="glass-card p-5"
+              className="glass-card p-5 hover:border-primary/20 transition-all duration-300"
             >
               <div className="flex items-center justify-between mb-3">
                 <stat.icon className={`h-5 w-5 ${stat.color}`} />
@@ -86,11 +86,11 @@ const ClientDashboard = () => {
             <div className="glass-card p-6">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-lg font-display font-semibold text-foreground">Active Jobs</h2>
-                <Link to="/jobs" className="text-xs text-primary hover:text-brand-glow">View All</Link>
+                <Link to="/jobs" className="text-xs text-primary hover:text-brand-glow transition-colors duration-200">View All</Link>
               </div>
               <div className="space-y-4">
                 {activeJobs.map((job) => (
-                  <div key={job.title} className="p-4 rounded-xl bg-secondary/40 border border-border/30 hover:border-primary/20 transition-colors cursor-pointer">
+                  <div key={job.title} className="p-4 rounded-xl bg-secondary/40 border border-border/30 hover:border-primary/20 transition-colors duration-200 cursor-pointer">
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="text-sm font-semibold text-foreground">{job.title}</h3>
@@ -107,14 +107,14 @@ const ClientDashboard = () => {
                           <span className="font-semibold text-foreground">{job.progress}%</span>
                         </div>
                         <div className="h-2 rounded-full bg-secondary overflow-hidden">
-                          <div className="h-full rounded-full bg-gradient-to-r from-primary to-brand-glow" style={{ width: `${job.progress}%` }} />
+                          <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${job.progress}%` }} />
                         </div>
                       </div>
                     )}
                     <div className="flex items-center justify-between text-xs text-muted-foreground mt-3">
                       <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> Due {job.deadline}</span>
                       {!job.freelancer && (
-                        <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground">Review Proposals</Button>
+                        <Button size="sm" className="h-7 text-[10px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-200">Review Proposals</Button>
                       )}
                     </div>
                   </div>
@@ -135,14 +135,14 @@ const ClientDashboard = () => {
                       </span>
                     </div>
                     <div className="relative h-3 rounded-full bg-secondary overflow-hidden">
-                      <div className="absolute inset-y-0 left-0 rounded-full bg-primary/60" style={{ width: `${(item.marketAvg / maxBudget) * 100}%` }} />
-                      <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-trust-green to-accent" style={{ width: `${(item.yourBudget / maxBudget) * 100}%` }} />
+                      <div className="absolute inset-y-0 left-0 rounded-full bg-primary/40" style={{ width: `${(item.marketAvg / maxBudget) * 100}%` }} />
+                      <div className="absolute inset-y-0 left-0 rounded-full bg-accent transition-all duration-500" style={{ width: `${(item.yourBudget / maxBudget) * 100}%` }} />
                     </div>
                   </div>
                 ))}
                 <div className="flex gap-4 text-[10px] text-muted-foreground mt-2">
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-trust-green" /> Your Budget</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary/60" /> Market Average</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent" /> Your Budget</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary/40" /> Market Average</span>
                 </div>
               </div>
             </div>
@@ -155,8 +155,8 @@ const ClientDashboard = () => {
               <h3 className="text-sm font-semibold text-foreground mb-4">Recent Hires</h3>
               <div className="space-y-3">
                 {recentHires.map((hire) => (
-                  <div key={hire.name} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/20 hover:border-primary/20 transition-colors cursor-pointer">
-                    <div className="w-9 h-9 rounded-lg gradient-brand flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
+                  <div key={hire.name} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/20 hover:border-primary/20 transition-colors duration-200 cursor-pointer">
+                    <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
                       {hire.name.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -184,12 +184,12 @@ const ClientDashboard = () => {
                   <Link
                     key={action.label}
                     to={action.href}
-                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border/20 hover:border-primary/20 transition-colors group"
+                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border/20 hover:border-primary/20 transition-all duration-200 group"
                   >
-                    <span className="flex items-center gap-2 text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                    <span className="flex items-center gap-2 text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-200">
                       <action.icon className="h-4 w-4" /> {action.label}
                     </span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
                   </Link>
                 ))}
               </div>

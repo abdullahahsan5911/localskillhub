@@ -25,7 +25,7 @@ const Jobs = () => {
 
           <div className="glass-card p-2 mt-6 max-w-2xl">
             <div className="flex gap-2">
-              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50">
+              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
                 <Search className="h-4 w-4 text-muted-foreground shrink-0" />
                 <input
                   type="text"
@@ -35,7 +35,7 @@ const Jobs = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Button className="gradient-brand text-primary-foreground font-semibold px-6">Search</Button>
+              <Button className="bg-primary text-primary-foreground font-semibold px-6 hover:bg-primary/90 transition-all duration-200">Search</Button>
             </div>
           </div>
         </div>
@@ -45,21 +45,21 @@ const Jobs = () => {
         <div className="flex items-center justify-between mb-6">
           <span className="text-sm text-muted-foreground">{mockJobs.length} jobs available</span>
           <div className="flex gap-3">
-            <Button variant="outline" size="sm" className="border-border text-foreground gap-2">
+            <Button variant="outline" size="sm" className="border-border text-foreground gap-2 transition-colors duration-200">
               <Filter className="h-4 w-4" /> Filters
             </Button>
-            <Button variant="outline" size="sm" className="border-border text-foreground gap-2">
+            <Button variant="outline" size="sm" className="border-border text-foreground gap-2 transition-colors duration-200">
               Sort: Latest <ChevronDown className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
         <div className="space-y-4">
-          {mockJobs.map((job) => (
-            <div key={job.id} className="glass-card p-6 hover:border-primary/30 transition-all group cursor-pointer">
+          {mockJobs.map((job, i) => (
+            <div key={job.id} className="glass-card p-6 hover:border-primary/30 transition-all duration-300 group cursor-pointer animate-fade-in-up" style={{ animationDelay: `${i * 0.05}s` }}>
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <div className="flex-1">
-                  <h3 className="text-lg font-display font-semibold text-foreground group-hover:text-primary transition-colors mb-1">{job.title}</h3>
+                  <h3 className="text-lg font-display font-semibold text-foreground group-hover:text-primary transition-colors duration-200 mb-1">{job.title}</h3>
                   <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">
                     <span>{job.client}</span>
                     <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{job.city}</span>

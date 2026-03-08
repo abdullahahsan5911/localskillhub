@@ -47,12 +47,6 @@ const messages = [
   { id: 9, sender: "them", text: "Looks great! Can we discuss the payment milestone?", time: "10:45 AM" },
 ];
 
-const proposalTemplates = [
-  "I'd be happy to help with this project. Here's my proposal...",
-  "Based on your requirements, I estimate this will take...",
-  "I can offer a competitive rate of ₹X for this project...",
-];
-
 const Messages = () => {
   const [selectedChat, setSelectedChat] = useState(conversations[0]);
   const [messageText, setMessageText] = useState("");
@@ -68,7 +62,7 @@ const Messages = () => {
             <div className={`w-full md:w-80 lg:w-96 border-r border-border/30 flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
               {/* Search */}
               <div className="p-4 border-b border-border/30">
-                <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-secondary/50">
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
                   <Search className="h-4 w-4 text-muted-foreground" />
                   <input
                     type="text"
@@ -86,12 +80,12 @@ const Messages = () => {
                   <button
                     key={conv.id}
                     onClick={() => { setSelectedChat(conv); setShowMobileChat(true); }}
-                    className={`w-full flex items-start gap-3 p-4 text-left hover:bg-secondary/30 transition-colors border-b border-border/10 ${
+                    className={`w-full flex items-start gap-3 p-4 text-left hover:bg-secondary/30 transition-colors duration-200 border-b border-border/10 ${
                       selectedChat.id === conv.id ? "bg-secondary/40 border-l-2 border-l-primary" : ""
                     }`}
                   >
                     <div className="relative shrink-0">
-                      <div className="w-10 h-10 rounded-lg gradient-brand flex items-center justify-center text-primary-foreground font-bold text-sm">
+                      <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
                         {conv.avatar}
                       </div>
                       {conv.online && (
@@ -123,11 +117,11 @@ const Messages = () => {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setShowMobileChat(false)}
-                    className="md:hidden text-muted-foreground hover:text-foreground"
+                    className="md:hidden text-muted-foreground hover:text-foreground transition-colors duration-200"
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
-                  <div className="w-9 h-9 rounded-lg gradient-brand flex items-center justify-center text-primary-foreground font-bold text-sm">
+                  <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
                     {selectedChat.avatar}
                   </div>
                   <div>
@@ -139,13 +133,13 @@ const Messages = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8 transition-colors duration-200">
                     <Phone className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8 transition-colors duration-200">
                     <Video className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8 transition-colors duration-200">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </div>
@@ -158,11 +152,12 @@ const Messages = () => {
                     key={msg.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
                     className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
                   >
                     <div className={`max-w-[70%] ${
                       msg.sender === "me"
-                        ? "bg-primary/20 border border-primary/20"
+                        ? "bg-primary/15 border border-primary/20"
                         : "bg-secondary/60 border border-border/30"
                     } rounded-2xl px-4 py-3`}>
                       <p className="text-sm text-foreground leading-relaxed">{msg.text}</p>
@@ -188,14 +183,14 @@ const Messages = () => {
               <div className="p-4 border-t border-border/30">
                 <div className="flex items-end gap-3">
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-9 w-9">
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-9 w-9 transition-colors duration-200">
                       <Paperclip className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-9 w-9">
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-9 w-9 transition-colors duration-200">
                       <Image className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-secondary/50 border border-border/30 focus-within:border-primary/40 transition-colors">
+                  <div className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-secondary/50 border border-border/30 focus-within:border-primary/40 transition-colors duration-200">
                     <input
                       type="text"
                       placeholder="Type a message..."
@@ -203,9 +198,9 @@ const Messages = () => {
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
                     />
-                    <Smile className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground" />
+                    <Smile className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground transition-colors duration-200" />
                   </div>
-                  <Button className="gradient-brand text-primary-foreground h-10 w-10 p-0 glow-sm shrink-0">
+                  <Button className="bg-primary text-primary-foreground h-10 w-10 p-0 shrink-0 hover:bg-primary/90 transition-all duration-200">
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>

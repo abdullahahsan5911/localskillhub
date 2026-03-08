@@ -22,8 +22,8 @@ const SignUp = () => {
               <button
                 key={r}
                 onClick={() => setRole(r)}
-                className={`flex-1 py-3 rounded-xl text-sm font-semibold capitalize transition-all ${
-                  role === r ? "gradient-brand text-primary-foreground glow-sm" : "bg-secondary text-muted-foreground"
+                className={`flex-1 py-3 rounded-xl text-sm font-semibold capitalize transition-all duration-200 ${
+                  role === r ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
                 }`}
               >
                 I'm a {r}
@@ -32,31 +32,31 @@ const SignUp = () => {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-border focus-within:border-primary transition-colors">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-border focus-within:border-primary transition-colors duration-200">
               <User className="h-4 w-4 text-muted-foreground" />
               <input type="text" placeholder="Full Name" className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm" />
             </div>
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-border focus-within:border-primary transition-colors">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-border focus-within:border-primary transition-colors duration-200">
               <Mail className="h-4 w-4 text-muted-foreground" />
               <input type="email" placeholder="Email Address" className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm" />
             </div>
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-border focus-within:border-primary transition-colors">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-border focus-within:border-primary transition-colors duration-200">
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <input type="text" placeholder="City" className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm" />
             </div>
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-border focus-within:border-primary transition-colors">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-border focus-within:border-primary transition-colors duration-200">
               <Lock className="h-4 w-4 text-muted-foreground" />
               <input type="password" placeholder="Password" className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm" />
             </div>
 
-            <Button className="w-full gradient-brand text-primary-foreground font-semibold h-12 glow-sm gap-2">
+            <Button className="w-full bg-primary text-primary-foreground font-semibold h-12 gap-2 hover:bg-primary/90 transition-all duration-200">
               Create Account <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             Already have an account?{" "}
-            <Link to="/login" className="text-primary hover:text-brand-glow transition-colors font-medium">Log In</Link>
+            <Link to="/login" className="text-primary hover:text-brand-glow transition-colors duration-200 font-medium">Log In</Link>
           </p>
         </div>
       </div>

@@ -68,7 +68,7 @@ const Contracts = () => {
             <p className="text-muted-foreground text-sm mt-1">Manage milestones, escrow, and invoices</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="border-border text-foreground gap-2">
+            <Button variant="outline" size="sm" className="border-border text-foreground gap-2 transition-colors duration-200">
               <Download className="h-4 w-4" /> Export Invoices
             </Button>
           </div>
@@ -87,7 +87,7 @@ const Contracts = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="glass-card p-5"
+              className="glass-card p-5 hover:border-primary/20 transition-all duration-300"
             >
               <stat.icon className={`h-5 w-5 ${stat.color} mb-3`} />
               <div className="text-2xl font-display font-bold text-foreground">{stat.value}</div>
@@ -102,9 +102,9 @@ const Contracts = () => {
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
-              className={`px-5 py-2 rounded-lg text-sm font-medium capitalize transition-all ${
+              className={`px-5 py-2 rounded-lg text-sm font-medium capitalize transition-all duration-200 ${
                 activeFilter === filter
-                  ? "gradient-brand text-primary-foreground"
+                  ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -125,10 +125,10 @@ const Contracts = () => {
               {/* Header */}
               <button
                 onClick={() => setExpandedContract(expandedContract === contract.id ? null : contract.id)}
-                className="w-full flex items-center justify-between p-6 text-left hover:bg-secondary/20 transition-colors"
+                className="w-full flex items-center justify-between p-6 text-left hover:bg-secondary/20 transition-colors duration-200"
               >
                 <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div className="w-10 h-10 rounded-lg gradient-brand flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
+                  <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
                     {contract.client.charAt(0)}
                   </div>
                   <div className="min-w-0">
@@ -144,7 +144,7 @@ const Contracts = () => {
                   <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${contractStatusConfig[contract.status]}`}>
                     {contract.status}
                   </span>
-                  <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${expandedContract === contract.id ? "rotate-90" : ""}`} />
+                  <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expandedContract === contract.id ? "rotate-90" : ""}`} />
                 </div>
               </button>
 
@@ -153,10 +153,10 @@ const Contracts = () => {
                 <div className="px-6 pb-6 border-t border-border/30 pt-4">
                   <h4 className="text-sm font-semibold text-foreground mb-3">Milestones</h4>
                   <div className="space-y-3">
-                    {contract.milestones.map((m, i) => {
+                    {contract.milestones.map((m) => {
                       const config = milestoneStatusConfig[m.status];
                       return (
-                        <div key={m.name} className="flex items-center gap-4 p-3 rounded-xl bg-secondary/30 border border-border/20">
+                        <div key={m.name} className="flex items-center gap-4 p-3 rounded-xl bg-secondary/30 border border-border/20 hover:border-primary/20 transition-colors duration-200">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${config.color}`}>
                             <config.icon className="h-4 w-4" />
                           </div>
@@ -166,7 +166,7 @@ const Contracts = () => {
                           </div>
                           <span className="text-sm font-semibold text-foreground">{m.amount}</span>
                           {m.status === "in_progress" && (
-                            <Button size="sm" className="h-7 text-[10px] gradient-brand text-primary-foreground">
+                            <Button size="sm" className="h-7 text-[10px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-200">
                               Request Release
                             </Button>
                           )}
@@ -175,10 +175,10 @@ const Contracts = () => {
                     })}
                   </div>
                   <div className="flex gap-3 mt-4">
-                    <Button variant="outline" size="sm" className="border-border text-foreground gap-2">
+                    <Button variant="outline" size="sm" className="border-border text-foreground gap-2 transition-colors duration-200">
                       <Download className="h-3.5 w-3.5" /> Download Invoice
                     </Button>
-                    <Button variant="outline" size="sm" className="border-border text-foreground gap-2">
+                    <Button variant="outline" size="sm" className="border-border text-foreground gap-2 transition-colors duration-200">
                       <FileText className="h-3.5 w-3.5" /> View Contract
                     </Button>
                   </div>

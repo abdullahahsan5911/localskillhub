@@ -14,27 +14,27 @@ const Login = () => {
 
         <div className="glass-card p-8">
           <div className="space-y-4">
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-border focus-within:border-primary transition-colors">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-border focus-within:border-primary transition-colors duration-200">
               <Mail className="h-4 w-4 text-muted-foreground" />
               <input type="email" placeholder="Email Address" className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm" />
             </div>
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-border focus-within:border-primary transition-colors">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-border focus-within:border-primary transition-colors duration-200">
               <Lock className="h-4 w-4 text-muted-foreground" />
               <input type="password" placeholder="Password" className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm" />
             </div>
 
             <div className="flex justify-end">
-              <a href="#" className="text-xs text-primary hover:text-brand-glow transition-colors">Forgot password?</a>
+              <a href="#" className="text-xs text-primary hover:text-brand-glow transition-colors duration-200">Forgot password?</a>
             </div>
 
-            <Button className="w-full gradient-brand text-primary-foreground font-semibold h-12 glow-sm gap-2">
+            <Button className="w-full bg-primary text-primary-foreground font-semibold h-12 gap-2 hover:bg-primary/90 transition-all duration-200">
               Log In <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             Don't have an account?{" "}
-            <Link to="/signup" className="text-primary hover:text-brand-glow transition-colors font-medium">Sign Up</Link>
+            <Link to="/signup" className="text-primary hover:text-brand-glow transition-colors duration-200 font-medium">Sign Up</Link>
           </p>
         </div>
       </div>
