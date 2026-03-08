@@ -83,6 +83,10 @@ const Index = () => {
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
 
+  const [catRef, catApi] = useEmblaCarousel({ loop: true, align: "start", slidesToScroll: 1 });
+  const catScrollPrev = useCallback(() => catApi?.scrollPrev(), [catApi]);
+  const catScrollNext = useCallback(() => catApi?.scrollNext(), [catApi]);
+
   useEffect(() => {
     if (!emblaApi) return;
     const onSelect = () => setActiveSlide(emblaApi.selectedScrollSnap());
