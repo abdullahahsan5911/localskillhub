@@ -108,93 +108,102 @@ const Index = () => {
 
   return (
     <Layout>
-      {/* Hero Carousel */}
+      {/* Hero with Background Carousel */}
       <section className="relative overflow-hidden">
-        <div ref={emblaRef} className="overflow-hidden">
-          <div className="flex">
-            {bannerSlides.map((slide, i) => (
-              <div key={i} className="relative flex-[0_0_100%] min-w-0">
-                {/* Background Image */}
-                <div className="absolute inset-0">
-                  <img src={slide.image} alt="" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-background/85" />
-                </div>
-
-                {/* Content */}
-                <div className="container relative py-24 md:py-36">
-                  <div className="max-w-3xl mx-auto text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-muted border border-primary/20 text-primary text-sm font-medium mb-8">
-                      <MapPin className="h-4 w-4" />
-                      Region-Specific • Trust-Verified • Community-Driven
-                    </div>
-
-                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-tight mb-6">
-                      {slide.title}
-                      <br />
-                      <span className="text-primary">{slide.highlight}</span>
-                    </h1>
-
-                    <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-                      {slide.description}
-                    </p>
-
-                    {/* Search Bar */}
-                    <div className="glass-card p-2 max-w-2xl mx-auto">
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
-                          <Search className="h-5 w-5 text-muted-foreground shrink-0" />
-                          <input
-                            type="text"
-                            placeholder="What service are you looking for?"
-                            className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm"
-                            value={searchService}
-                            onChange={(e) => setSearchService(e.target.value)}
-                          />
-                        </div>
-                        <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
-                          <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
-                          <input
-                            type="text"
-                            placeholder="City or Postcode"
-                            className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm"
-                            value={searchLocation}
-                            onChange={(e) => setSearchLocation(e.target.value)}
-                          />
-                        </div>
-                        <Link to="/browse">
-                          <Button className="bg-primary text-primary-foreground font-semibold h-12 px-8 w-full sm:w-auto hover:bg-primary/90 transition-all duration-200">
-                            Search
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+        {/* Background Image Carousel */}
+        <div className="absolute inset-0">
+          {bannerSlides.map((slide, i) => (
+            <div
+              key={i}
+              className="absolute inset-0 transition-opacity duration-700 ease-in-out"
+              style={{ opacity: i === activeSlide ? 1 : 0 }}
+            >
+              <img src={slide.image} alt="" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-background/85" />
+            </div>
+          ))}
         </div>
 
-        {/* Carousel Controls */}
-        <button
-          onClick={scrollPrev}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-card/80 backdrop-blur border border-border/50 text-foreground hover:bg-card transition-all duration-200"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button
-          onClick={scrollNext}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-card/80 backdrop-blur border border-border/50 text-foreground hover:bg-card transition-all duration-200"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
+        {/* Static Content */}
+        <div className="container relative z-10 py-24 md:py-36">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-muted border border-primary/20 text-primary text-sm font-medium mb-8 animate-fade-in-up">
+              <MapPin className="h-4 w-4" />
+              Region-Specific • Trust-Verified • Community-Driven
+            </div>
+
+            {/* Animated text that changes with slide */}
+            <div className="relative h-[180px] md:h-[200px] lg:h-[220px] mb-6 overflow-hidden">
+              {bannerSlides.map((slide, i) => (
+                <h1
+                  key={i}
+                  className="absolute inset-0 text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-tight transition-all duration-500 ease-in-out"
+                  style={{
+                    opacity: i === activeSlide ? 1 : 0,
+                    transform: i === activeSlide ? "translateY(0)" : "translateY(20px)",
+                  }}
+                >
+                  {slide.title}
+                  <br />
+                  <span className="text-primary">{slide.highlight}</span>
+                </h1>
+              ))}
+            </div>
+
+            <div className="relative h-[28px] md:h-[32px] mb-10 overflow-hidden">
+              {bannerSlides.map((slide, i) => (
+                <p
+                  key={i}
+                  className="absolute inset-0 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto transition-all duration-500 ease-in-out"
+                  style={{
+                    opacity: i === activeSlide ? 1 : 0,
+                    transform: i === activeSlide ? "translateY(0)" : "translateY(12px)",
+                  }}
+                >
+                  {slide.description}
+                </p>
+              ))}
+            </div>
+
+            {/* Search Bar - always visible */}
+            <div className="glass-card p-2 max-w-2xl mx-auto">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
+                  <Search className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="What service are you looking for?"
+                    className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm"
+                    value={searchService}
+                    onChange={(e) => setSearchService(e.target.value)}
+                  />
+                </div>
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
+                  <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="City or Postcode"
+                    className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm"
+                    value={searchLocation}
+                    onChange={(e) => setSearchLocation(e.target.value)}
+                  />
+                </div>
+                <Link to="/browse">
+                  <Button className="bg-primary text-primary-foreground font-semibold h-12 px-8 w-full sm:w-auto hover:bg-primary/90 transition-all duration-200">
+                    Search
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Dots */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
           {bannerSlides.map((_, i) => (
             <button
               key={i}
-              onClick={() => emblaApi?.scrollTo(i)}
+              onClick={() => { emblaApi?.scrollTo(i); setActiveSlide(i); }}
               className={`h-2 rounded-full transition-all duration-300 ${
                 i === activeSlide ? "w-8 bg-primary" : "w-2 bg-muted-foreground/40"
               }`}
