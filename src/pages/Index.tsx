@@ -193,7 +193,7 @@ const Index = () => {
           {bannerSlides.map((_, i) => (
             <button
               key={i}
-              onClick={() => { emblaApi?.scrollTo(i); setActiveSlide(i); }}
+              onClick={() => setActiveSlide(i)}
               className={`h-2 rounded-full transition-all duration-300 ${
                 i === activeSlide ? "w-8 bg-primary" : "w-2 bg-muted-foreground/40"
               }`}
