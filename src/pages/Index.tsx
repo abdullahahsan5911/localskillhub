@@ -360,7 +360,7 @@ const Index = () => {
               </div>
             </div>
           </AnimatedSection>
-          <div className="overflow-hidden">
+          <div className="overflow-hidden touch-pan-y" {...catCarousel.swipeHandlers}>
             <motion.div
               className="flex gap-4 transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${catCarousel.index * (100 / 6)}%)` }}
@@ -462,7 +462,7 @@ const Index = () => {
           <CarouselNav onPrev={flCarousel.prev} onNext={flCarousel.next} canPrev={flCarousel.canPrev} canNext={flCarousel.canNext} />
         </div>
 
-        <div className="overflow-hidden">
+        <div className="overflow-hidden touch-pan-y" {...flCarousel.swipeHandlers}>
           <div
             className="flex gap-6 transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${flCarousel.index * (100 / 4)}%)` }}
@@ -539,7 +539,7 @@ const Index = () => {
             <CarouselNav onPrev={testCarousel.prev} onNext={testCarousel.next} canPrev={testCarousel.canPrev} canNext={testCarousel.canNext} />
           </div>
 
-          <div className="overflow-hidden">
+          <div className="overflow-hidden touch-pan-y" {...testCarousel.swipeHandlers}>
             <div
               className="flex gap-6 transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${testCarousel.index * (100 / 3)}%)` }}
