@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Search, MapPin, ArrowRight, CheckCircle, Shield, Users, Zap, Star, Briefcase, Clock, ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { Search, MapPin, ArrowRight, CheckCircle, Shield, Users, Zap, Star, Briefcase, Clock, ChevronLeft, ChevronRight, Quote, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
