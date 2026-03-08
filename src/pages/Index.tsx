@@ -129,6 +129,19 @@ const HeroSectionInline = ({
   setSearchLocation: (v: string) => void;
 }) => {
   const [current, setCurrent] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+
+  const handleSwipe = useCallback(() => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) setCurrent((p) => (p + 1) % heroSlides.length);
+      else setCurrent((p) => (p - 1 + heroSlides.length) % heroSlides.length);
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
