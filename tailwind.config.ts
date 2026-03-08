@@ -25,7 +25,7 @@ export default {
   				'sans-serif'
   			],
   			sans: [
-  				'Space Grotesk',
+  				'DM Sans',
   				'ui-sans-serif',
   				'system-ui',
   				'-apple-system',
@@ -38,7 +38,7 @@ export default {
   				'sans-serif'
   			],
   			serif: [
-  				'Lora',
+  				'Crimson Pro',
   				'ui-serif',
   				'Georgia',
   				'Cambria',
@@ -47,7 +47,7 @@ export default {
   				'serif'
   			],
   			mono: [
-  				'Space Mono',
+  				'SF Mono',
   				'ui-monospace',
   				'SFMono-Regular',
   				'Menlo',
@@ -135,7 +135,7 @@ export default {
   					height: '0'
   				}
   			},
-  			'float': {
+  			float: {
   				'0%, 100%': {
   					transform: 'translateY(0px)'
   				},
@@ -193,7 +193,7 @@ export default {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
-  			'float': 'float 6s ease-in-out infinite',
+  			float: 'float 6s ease-in-out infinite',
   			'pulse-glow': 'pulse-glow 3s ease-in-out infinite',
   			'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
   			'fade-in': 'fade-in 0.4s ease-out forwards',
