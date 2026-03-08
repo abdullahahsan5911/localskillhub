@@ -94,17 +94,11 @@ const Index = () => {
   }, [catApi]);
 
   useEffect(() => {
-    if (!emblaApi) return;
-    const onSelect = () => setActiveSlide(emblaApi.selectedScrollSnap());
-    emblaApi.on("select", onSelect);
-    onSelect();
-
-    const autoplay = setInterval(() => emblaApi.scrollNext(), 5000);
-    return () => {
-      clearInterval(autoplay);
-      emblaApi.off("select", onSelect);
-    };
-  }, [emblaApi]);
+    const autoplay = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % bannerSlides.length);
+    }, 5000);
+    return () => clearInterval(autoplay);
+  }, []);
 
   return (
     <Layout>
