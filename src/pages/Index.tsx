@@ -83,7 +83,7 @@ const Index = () => {
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
 
-  const [catRef, catApi] = useEmblaCarousel({ loop: true, align: "start", slidesToScroll: 1, dragFree: true });
+  const [catRef, catApi] = useEmblaCarousel({ loop: true, align: "start", slidesToScroll: 1 });
   const catScrollPrev = useCallback(() => catApi?.scrollPrev(), [catApi]);
   const catScrollNext = useCallback(() => catApi?.scrollNext(), [catApi]);
 
@@ -238,24 +238,25 @@ const Index = () => {
         </div>
 
         <div ref={catRef} className="overflow-hidden">
-          <div className="flex gap-5">
+          <div className="flex">
             {categories.map((cat) => (
-              <Link
-                key={cat.name}
-                to="/browse"
-                className="group relative flex-[0_0_45%] sm:flex-[0_0_30%] lg:flex-[0_0_22%] aspect-[4/3] rounded-xl overflow-hidden"
-              >
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-background/50 group-hover:bg-background/40 transition-colors duration-300" />
-                <div className="absolute bottom-0 left-0 p-5">
-                  <h3 className="text-lg font-display font-semibold text-foreground">{cat.name}</h3>
-                  <p className="text-sm text-muted-foreground">{cat.count} professionals</p>
-                </div>
-              </Link>
+              <div key={cat.name} className="flex-[0_0_45%] sm:flex-[0_0_30%] lg:flex-[0_0_22%] min-w-0 pl-5 first:pl-0">
+                <Link
+                  to="/browse"
+                  className="group relative block aspect-[4/3] rounded-xl overflow-hidden"
+                >
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-background/50 group-hover:bg-background/40 transition-colors duration-300" />
+                  <div className="absolute bottom-0 left-0 p-5">
+                    <h3 className="text-lg font-display font-semibold text-foreground">{cat.name}</h3>
+                    <p className="text-sm text-muted-foreground">{cat.count} professionals</p>
+                  </div>
+                </Link>
+              </div>
             ))}
           </div>
         </div>
