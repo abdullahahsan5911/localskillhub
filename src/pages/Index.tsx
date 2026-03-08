@@ -83,9 +83,15 @@ const Index = () => {
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
 
-  const [catRef, catApi] = useEmblaCarousel({ loop: true, align: "start", slidesToScroll: 1 });
+  const [catRef, catApi] = useEmblaCarousel({ loop: true, align: "start", slidesToScroll: 1, dragFree: true });
   const catScrollPrev = useCallback(() => catApi?.scrollPrev(), [catApi]);
   const catScrollNext = useCallback(() => catApi?.scrollNext(), [catApi]);
+
+  useEffect(() => {
+    if (!catApi) return;
+    const autoplay = setInterval(() => catApi.scrollNext(), 4000);
+    return () => clearInterval(autoplay);
+  }, [catApi]);
 
   useEffect(() => {
     if (!emblaApi) return;
