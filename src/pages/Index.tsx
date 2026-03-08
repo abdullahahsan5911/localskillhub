@@ -274,7 +274,7 @@ const HeroSectionInline = ({
   );
 };
 
-
+const Index = () => {
   const [searchService, setSearchService] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
 
