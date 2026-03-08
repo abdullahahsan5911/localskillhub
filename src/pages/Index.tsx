@@ -207,38 +207,47 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Categories */}
+      {/* Categories Carousel */}
       <section className="container py-20">
         <div className="flex items-end justify-between mb-10">
           <div>
             <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">Browse by Category</h2>
             <p className="text-muted-foreground mt-2">Find the right professional for your project</p>
           </div>
-          <Link to="/browse" className="hidden md:flex items-center gap-1 text-primary hover:text-brand-glow text-sm font-medium transition-colors duration-200">
-            View All <ArrowRight className="h-4 w-4" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <button onClick={catScrollPrev} className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-200">
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button onClick={catScrollNext} className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-200">
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <Link to="/browse" className="hidden md:flex items-center gap-1 text-primary hover:text-brand-glow text-sm font-medium transition-colors duration-200 ml-2">
+              View All <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-          {categories.map((cat, i) => (
-            <Link
-              key={cat.name}
-              to="/browse"
-              className="group relative aspect-[4/3] rounded-xl overflow-hidden animate-fade-in-up"
-              style={{ animationDelay: `${i * 0.08}s` }}
-            >
-              <img
-                src={cat.image}
-                alt={cat.name}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-background/70 group-hover:bg-background/60 transition-colors duration-300" />
-              <div className="absolute bottom-0 left-0 p-5">
-                <h3 className="text-lg font-display font-semibold text-foreground">{cat.name}</h3>
-                <p className="text-sm text-muted-foreground">{cat.count} professionals</p>
-              </div>
-            </Link>
-          ))}
+        <div ref={catRef} className="overflow-hidden">
+          <div className="flex gap-5">
+            {categories.map((cat) => (
+              <Link
+                key={cat.name}
+                to="/browse"
+                className="group relative flex-[0_0_45%] sm:flex-[0_0_30%] lg:flex-[0_0_22%] aspect-[4/3] rounded-xl overflow-hidden"
+              >
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-background/50 group-hover:bg-background/40 transition-colors duration-300" />
+                <div className="absolute bottom-0 left-0 p-5">
+                  <h3 className="text-lg font-display font-semibold text-foreground">{cat.name}</h3>
+                  <p className="text-sm text-muted-foreground">{cat.count} professionals</p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
