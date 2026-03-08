@@ -13,66 +13,66 @@ import photographyImg from "@/assets/categories/photography.jpg";
 import contentWritingImg from "@/assets/categories/content-writing.jpg";
 
 const bannerSlides = [
-  {
-    title: "Find Local Talent",
-    highlight: "You Can Trust",
-    description: "Connect with verified freelancers in your city. Local reputation, community endorsements, and real trust signals.",
-    image: webDesignImg,
-  },
-  {
-    title: "Hire Designers &",
-    highlight: "Creatives Nearby",
-    description: "From graphic design to video production — discover top-rated professionals in your neighbourhood.",
-    image: graphicDesignImg,
-  },
-  {
-    title: "Grow Your Business",
-    highlight: "With Local Experts",
-    description: "Digital marketing, content writing, and development talent — all verified and community-endorsed.",
-    image: digitalMarketingImg,
-  },
-];
+{
+  title: "Find Local Talent",
+  highlight: "You Can Trust",
+  description: "Connect with verified freelancers in your city. Local reputation, community endorsements, and real trust signals.",
+  image: webDesignImg
+},
+{
+  title: "Hire Designers &",
+  highlight: "Creatives Nearby",
+  description: "From graphic design to video production — discover top-rated professionals in your neighbourhood.",
+  image: graphicDesignImg
+},
+{
+  title: "Grow Your Business",
+  highlight: "With Local Experts",
+  description: "Digital marketing, content writing, and development talent — all verified and community-endorsed.",
+  image: digitalMarketingImg
+}];
+
 
 const categories = [
-  { name: "Web Development", image: webDesignImg, count: "2,340+" },
-  { name: "Graphic Design", image: graphicDesignImg, count: "1,890+" },
-  { name: "Video Production", image: videoProductionImg, count: "980+" },
-  { name: "Digital Marketing", image: digitalMarketingImg, count: "1,560+" },
-  { name: "Photography", image: photographyImg, count: "1,200+" },
-  { name: "Content Writing", image: contentWritingImg, count: "2,100+" },
-];
+{ name: "Web Development", image: webDesignImg, count: "2,340+" },
+{ name: "Graphic Design", image: graphicDesignImg, count: "1,890+" },
+{ name: "Video Production", image: videoProductionImg, count: "980+" },
+{ name: "Digital Marketing", image: digitalMarketingImg, count: "1,560+" },
+{ name: "Photography", image: photographyImg, count: "1,200+" },
+{ name: "Content Writing", image: contentWritingImg, count: "2,100+" }];
+
 
 const stats = [
-  { value: "50K+", label: "Verified Freelancers" },
-  { value: "120K+", label: "Jobs Completed" },
-  { value: "98%", label: "Client Satisfaction" },
-  { value: "200+", label: "Cities Covered" },
-];
+{ value: "50K+", label: "Verified Freelancers" },
+{ value: "120K+", label: "Jobs Completed" },
+{ value: "98%", label: "Client Satisfaction" },
+{ value: "200+", label: "Cities Covered" }];
+
 
 const howItWorks = [
-  {
-    icon: Search,
-    title: "Search Locally",
-    description: "Enter your city and the skill you need. Our geo-filter shows verified talent near you.",
-  },
-  {
-    icon: Shield,
-    title: "Trust & Verify",
-    description: "Check local trust scores, verified badges, community endorsements, and portfolios.",
-  },
-  {
-    icon: Zap,
-    title: "Hire & Collaborate",
-    description: "Send proposals, negotiate, set milestones, and pay securely through escrow.",
-  },
-];
+{
+  icon: Search,
+  title: "Search Locally",
+  description: "Enter your city and the skill you need. Our geo-filter shows verified talent near you."
+},
+{
+  icon: Shield,
+  title: "Trust & Verify",
+  description: "Check local trust scores, verified badges, community endorsements, and portfolios."
+},
+{
+  icon: Zap,
+  title: "Hire & Collaborate",
+  description: "Send proposals, negotiate, set milestones, and pay securely through escrow."
+}];
+
 
 const featuredFreelancers = [
-  { name: "Priya Sharma", skill: "UI/UX Designer", city: "Mumbai", rating: 4.9, jobs: 47, verified: true, rate: "₹2,500/hr" },
-  { name: "Arjun Patel", skill: "Full Stack Dev", city: "Bangalore", rating: 4.8, jobs: 92, verified: true, rate: "₹3,000/hr" },
-  { name: "Sneha Gupta", skill: "Content Writer", city: "Delhi", rating: 4.9, jobs: 124, verified: true, rate: "₹1,200/hr" },
-  { name: "Rahul Verma", skill: "Video Editor", city: "Pune", rating: 4.7, jobs: 38, verified: false, rate: "₹1,800/hr" },
-];
+{ name: "Priya Sharma", skill: "UI/UX Designer", city: "Mumbai", rating: 4.9, jobs: 47, verified: true, rate: "₹2,500/hr" },
+{ name: "Arjun Patel", skill: "Full Stack Dev", city: "Bangalore", rating: 4.8, jobs: 92, verified: true, rate: "₹3,000/hr" },
+{ name: "Sneha Gupta", skill: "Content Writer", city: "Delhi", rating: 4.9, jobs: 124, verified: true, rate: "₹1,200/hr" },
+{ name: "Rahul Verma", skill: "Video Editor", city: "Pune", rating: 4.7, jobs: 38, verified: false, rate: "₹1,800/hr" }];
+
 
 const Index = () => {
   const [searchService, setSearchService] = useState("");
@@ -102,20 +102,20 @@ const Index = () => {
       <section className="relative overflow-hidden">
         {/* Background Image Carousel */}
         <div className="absolute inset-0">
-          {bannerSlides.map((slide, i) => (
-            <div
-              key={i}
-              className="absolute inset-0 transition-opacity duration-700 ease-in-out"
-              style={{ opacity: i === activeSlide ? 1 : 0 }}
-            >
+          {bannerSlides.map((slide, i) =>
+          <div
+            key={i}
+            className="absolute inset-0 transition-opacity duration-700 ease-in-out"
+            style={{ opacity: i === activeSlide ? 1 : 0 }}>
+            
               <img src={slide.image} alt="" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-background/85" />
             </div>
-          ))}
+          )}
         </div>
 
         {/* Static Content */}
-        <div className="container relative z-10 py-24 md:py-36">
+        <div className="container relative z-10 py-24 md:py-36 opacity-75 shadow-none rounded-md">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-muted border border-primary/20 text-primary text-sm font-medium mb-8 animate-fade-in-up">
               <MapPin className="h-4 w-4" />
@@ -124,35 +124,35 @@ const Index = () => {
 
             {/* Animated text that changes with slide */}
             <div className="relative h-[180px] md:h-[200px] lg:h-[220px] mb-6 overflow-hidden">
-              {bannerSlides.map((slide, i) => (
-                <h1
-                  key={i}
-                  className="absolute inset-0 text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-tight transition-all duration-500 ease-in-out"
-                  style={{
-                    opacity: i === activeSlide ? 1 : 0,
-                    transform: i === activeSlide ? "translateY(0)" : "translateY(20px)",
-                  }}
-                >
+              {bannerSlides.map((slide, i) =>
+              <h1
+                key={i}
+                className="absolute inset-0 text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-tight transition-all duration-500 ease-in-out"
+                style={{
+                  opacity: i === activeSlide ? 1 : 0,
+                  transform: i === activeSlide ? "translateY(0)" : "translateY(20px)"
+                }}>
+                
                   {slide.title}
                   <br />
                   <span className="text-primary">{slide.highlight}</span>
                 </h1>
-              ))}
+              )}
             </div>
 
             <div className="relative h-[28px] md:h-[32px] mb-10 overflow-hidden">
-              {bannerSlides.map((slide, i) => (
-                <p
-                  key={i}
-                  className="absolute inset-0 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto transition-all duration-500 ease-in-out"
-                  style={{
-                    opacity: i === activeSlide ? 1 : 0,
-                    transform: i === activeSlide ? "translateY(0)" : "translateY(12px)",
-                  }}
-                >
+              {bannerSlides.map((slide, i) =>
+              <p
+                key={i}
+                className="absolute inset-0 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto transition-all duration-500 ease-in-out"
+                style={{
+                  opacity: i === activeSlide ? 1 : 0,
+                  transform: i === activeSlide ? "translateY(0)" : "translateY(12px)"
+                }}>
+                
                   {slide.description}
                 </p>
-              ))}
+              )}
             </div>
 
             {/* Search Bar - always visible */}
@@ -165,8 +165,8 @@ const Index = () => {
                     placeholder="What service are you looking for?"
                     className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm"
                     value={searchService}
-                    onChange={(e) => setSearchService(e.target.value)}
-                  />
+                    onChange={(e) => setSearchService(e.target.value)} />
+                  
                 </div>
                 <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
                   <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
@@ -175,8 +175,8 @@ const Index = () => {
                     placeholder="City or Postcode"
                     className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm"
                     value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
-                  />
+                    onChange={(e) => setSearchLocation(e.target.value)} />
+                  
                 </div>
                 <Link to="/browse">
                   <Button className="bg-primary text-primary-foreground font-semibold h-12 px-8 w-full sm:w-auto hover:bg-primary/90 transition-all duration-200">
@@ -190,15 +190,15 @@ const Index = () => {
 
         {/* Dots */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-          {bannerSlides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setActiveSlide(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === activeSlide ? "w-8 bg-primary" : "w-2 bg-muted-foreground/40"
-              }`}
-            />
-          ))}
+          {bannerSlides.map((_, i) =>
+          <button
+            key={i}
+            onClick={() => setActiveSlide(i)}
+            className={`h-2 rounded-full transition-all duration-300 ${
+            i === activeSlide ? "w-8 bg-primary" : "w-2 bg-muted-foreground/40"}`
+            } />
+
+          )}
         </div>
       </section>
 
@@ -206,12 +206,12 @@ const Index = () => {
       <section className="border-y border-border/40 bg-card/30">
         <div className="container py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, i) => (
-              <div key={stat.label} className="text-center animate-fade-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
+            {stats.map((stat, i) =>
+            <div key={stat.label} className="text-center animate-fade-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="text-3xl md:text-4xl font-display font-bold text-primary">{stat.value}</div>
                 <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -238,17 +238,17 @@ const Index = () => {
 
         <div ref={catRef} className="overflow-hidden">
           <div className="flex">
-            {categories.map((cat) => (
-              <div key={cat.name} className="flex-[0_0_45%] sm:flex-[0_0_30%] lg:flex-[0_0_22%] min-w-0 pl-5">
+            {categories.map((cat) =>
+            <div key={cat.name} className="flex-[0_0_45%] sm:flex-[0_0_30%] lg:flex-[0_0_22%] min-w-0 pl-5">
                 <Link
-                  to="/browse"
-                  className="group relative block aspect-[4/3] rounded-xl overflow-hidden"
-                >
+                to="/browse"
+                className="group relative block aspect-[4/3] rounded-xl overflow-hidden">
+                
                   <img
-                    src={cat.image}
-                    alt={cat.name}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
+                  src={cat.image}
+                  alt={cat.name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                
                   <div className="absolute inset-0 bg-background/50 group-hover:bg-background/40 transition-colors duration-300" />
                   <div className="absolute bottom-0 left-0 p-5">
                     <h3 className="text-lg font-display font-semibold text-foreground">{cat.name}</h3>
@@ -256,7 +256,7 @@ const Index = () => {
                   </div>
                 </Link>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -269,8 +269,8 @@ const Index = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {howItWorks.map((step, i) => (
-            <div key={step.title} className="glass-card p-8 text-center group hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 animate-fade-in-up" style={{ animationDelay: `${i * 0.15}s` }}>
+          {howItWorks.map((step, i) =>
+          <div key={step.title} className="glass-card p-8 text-center group hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 animate-fade-in-up" style={{ animationDelay: `${i * 0.15}s` }}>
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary mb-6 transition-shadow duration-300 group-hover:shadow-lg group-hover:shadow-primary/20">
                 <step.icon className="h-6 w-6 text-primary-foreground" />
               </div>
@@ -278,7 +278,7 @@ const Index = () => {
               <h3 className="text-xl font-display font-semibold text-foreground mb-3">{step.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
             </div>
-          ))}
+          )}
         </div>
       </section>
 
@@ -295,8 +295,8 @@ const Index = () => {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredFreelancers.map((fl, i) => (
-            <Link to="/profile/1" key={fl.name} className="glass-card p-6 hover:border-primary/30 transition-all duration-300 group hover:-translate-y-1 animate-fade-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
+          {featuredFreelancers.map((fl, i) =>
+          <Link to="/profile/1" key={fl.name} className="glass-card p-6 hover:border-primary/30 transition-all duration-300 group hover:-translate-y-1 animate-fade-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-display font-bold text-lg transition-shadow duration-300 group-hover:shadow-lg group-hover:shadow-primary/20">
                   {fl.name.charAt(0)}
@@ -321,7 +321,7 @@ const Index = () => {
                 <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors duration-200">View Profile →</span>
               </div>
             </Link>
-          ))}
+          )}
         </div>
       </section>
 
@@ -338,32 +338,32 @@ const Index = () => {
               </p>
               <div className="space-y-4">
                 {[
-                  { icon: Shield, text: "Identity & skill verification" },
-                  { icon: Award, text: "Community endorsement badges" },
-                  { icon: TrendingUp, text: "Local trust scoring system" },
-                  { icon: Users, text: "Region-specific leaderboards" },
-                ].map((item, i) => (
-                  <div key={item.text} className="flex items-center gap-3 animate-slide-in-left" style={{ animationDelay: `${i * 0.1}s` }}>
+                { icon: Shield, text: "Identity & skill verification" },
+                { icon: Award, text: "Community endorsement badges" },
+                { icon: TrendingUp, text: "Local trust scoring system" },
+                { icon: Users, text: "Region-specific leaderboards" }].
+                map((item, i) =>
+                <div key={item.text} className="flex items-center gap-3 animate-slide-in-left" style={{ animationDelay: `${i * 0.1}s` }}>
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-muted">
                       <item.icon className="h-4 w-4 text-primary" />
                     </div>
                     <span className="text-sm text-foreground">{item.text}</span>
                   </div>
-                ))}
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { label: "Local Trust", value: "96%", color: "text-trust-green" },
-                { label: "Skill Score", value: "4.8/5", color: "text-trust-gold" },
-                { label: "Response Time", value: "< 2hrs", color: "text-primary" },
-                { label: "Repeat Hire", value: "72%", color: "text-brand-glow" },
-              ].map((metric, i) => (
-                <div key={metric.label} className="glass-card p-6 text-center hover:border-primary/20 transition-all duration-300 animate-scale-in" style={{ animationDelay: `${i * 0.1}s` }}>
+              { label: "Local Trust", value: "96%", color: "text-trust-green" },
+              { label: "Skill Score", value: "4.8/5", color: "text-trust-gold" },
+              { label: "Response Time", value: "< 2hrs", color: "text-primary" },
+              { label: "Repeat Hire", value: "72%", color: "text-brand-glow" }].
+              map((metric, i) =>
+              <div key={metric.label} className="glass-card p-6 text-center hover:border-primary/20 transition-all duration-300 animate-scale-in" style={{ animationDelay: `${i * 0.1}s` }}>
                   <div className={`text-2xl font-display font-bold ${metric.color}`}>{metric.value}</div>
                   <div className="text-xs text-muted-foreground mt-1">{metric.label}</div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -392,8 +392,8 @@ const Index = () => {
           </div>
         </div>
       </section>
-    </Layout>
-  );
+    </Layout>);
+
 };
 
 export default Index;
