@@ -4,28 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 
+import avatar1 from "@/assets/avatars/avatar-1.jpg";
+import avatar2 from "@/assets/avatars/avatar-2.jpg";
+import avatar3 from "@/assets/avatars/avatar-3.jpg";
+import avatar4 from "@/assets/avatars/avatar-4.jpg";
+import avatar5 from "@/assets/avatars/avatar-5.jpg";
+import avatar6 from "@/assets/avatars/avatar-6.jpg";
+import avatar7 from "@/assets/avatars/avatar-7.jpg";
+import avatar8 from "@/assets/avatars/avatar-8.jpg";
+
 const skills = ["All", "Web Development", "Graphic Design", "Video Production", "Digital Marketing", "Photography", "Content Writing", "Mobile Dev", "Data Science"];
 
-const avatarColors = [
-  "bg-primary",
-  "bg-accent",
-  "bg-trust-gold",
-  "bg-destructive",
-  "bg-brand-glow",
-  "bg-primary",
-  "bg-trust-gold",
-  "bg-accent",
-];
-
 const mockFreelancers = [
-  { id: 1, name: "Priya Sharma", skill: "UI/UX Designer", city: "Mumbai", rating: 4.9, reviews: 47, verified: true, rate: "₹2,500/hr", localScore: 96, tags: ["Figma", "Adobe XD", "Prototyping"], availability: "Available Now" },
-  { id: 2, name: "Arjun Patel", skill: "Full Stack Developer", city: "Bangalore", rating: 4.8, reviews: 92, verified: true, rate: "₹3,000/hr", localScore: 94, tags: ["React", "Node.js", "MongoDB"], availability: "Available Now" },
-  { id: 3, name: "Sneha Gupta", skill: "Content Writer", city: "Delhi", rating: 4.9, reviews: 124, verified: true, rate: "₹1,200/hr", localScore: 98, tags: ["SEO", "Blog", "Copywriting"], availability: "Busy until Mar 15" },
-  { id: 4, name: "Rahul Verma", skill: "Video Editor", city: "Pune", rating: 4.7, reviews: 38, verified: false, rate: "₹1,800/hr", localScore: 85, tags: ["Premiere Pro", "After Effects", "Motion"], availability: "Available Now" },
-  { id: 5, name: "Ananya Singh", skill: "Graphic Designer", city: "Hyderabad", rating: 4.8, reviews: 67, verified: true, rate: "₹2,000/hr", localScore: 91, tags: ["Branding", "Illustration", "Print"], availability: "Available Now" },
-  { id: 6, name: "Vikram Rao", skill: "Digital Marketer", city: "Chennai", rating: 4.6, reviews: 53, verified: true, rate: "₹2,200/hr", localScore: 88, tags: ["Google Ads", "Meta Ads", "Analytics"], availability: "Available Now" },
-  { id: 7, name: "Meera Joshi", skill: "Photographer", city: "Jaipur", rating: 4.9, reviews: 89, verified: true, rate: "₹3,500/hr", localScore: 97, tags: ["Wedding", "Portrait", "Product"], availability: "Busy until Mar 20" },
-  { id: 8, name: "Karan Mehta", skill: "Mobile Developer", city: "Ahmedabad", rating: 4.7, reviews: 41, verified: false, rate: "₹2,800/hr", localScore: 82, tags: ["React Native", "Flutter", "iOS"], availability: "Available Now" },
+  { id: 1, name: "Priya Sharma", skill: "UI/UX Designer", city: "Mumbai", rating: 4.9, reviews: 47, verified: true, rate: "₹2,500/hr", localScore: 96, tags: ["Figma", "Adobe XD", "Prototyping"], availability: "Available Now", avatar: avatar1 },
+  { id: 2, name: "Arjun Patel", skill: "Full Stack Developer", city: "Bangalore", rating: 4.8, reviews: 92, verified: true, rate: "₹3,000/hr", localScore: 94, tags: ["React", "Node.js", "MongoDB"], availability: "Available Now", avatar: avatar2 },
+  { id: 3, name: "Sneha Gupta", skill: "Content Writer", city: "Delhi", rating: 4.9, reviews: 124, verified: true, rate: "₹1,200/hr", localScore: 98, tags: ["SEO", "Blog", "Copywriting"], availability: "Busy until Mar 15", avatar: avatar3 },
+  { id: 4, name: "Rahul Verma", skill: "Video Editor", city: "Pune", rating: 4.7, reviews: 38, verified: false, rate: "₹1,800/hr", localScore: 85, tags: ["Premiere Pro", "After Effects", "Motion"], availability: "Available Now", avatar: avatar4 },
+  { id: 5, name: "Ananya Singh", skill: "Graphic Designer", city: "Hyderabad", rating: 4.8, reviews: 67, verified: true, rate: "₹2,000/hr", localScore: 91, tags: ["Branding", "Illustration", "Print"], availability: "Available Now", avatar: avatar5 },
+  { id: 6, name: "Vikram Rao", skill: "Digital Marketer", city: "Chennai", rating: 4.6, reviews: 53, verified: true, rate: "₹2,200/hr", localScore: 88, tags: ["Google Ads", "Meta Ads", "Analytics"], availability: "Available Now", avatar: avatar6 },
+  { id: 7, name: "Meera Joshi", skill: "Photographer", city: "Jaipur", rating: 4.9, reviews: 89, verified: true, rate: "₹3,500/hr", localScore: 97, tags: ["Wedding", "Portrait", "Product"], availability: "Busy until Mar 20", avatar: avatar7 },
+  { id: 8, name: "Karan Mehta", skill: "Mobile Developer", city: "Ahmedabad", rating: 4.7, reviews: 41, verified: false, rate: "₹2,800/hr", localScore: 82, tags: ["React Native", "Flutter", "iOS"], availability: "Available Now", avatar: avatar8 },
 ];
 
 const BrowseFreelancers = () => {
@@ -35,16 +33,11 @@ const BrowseFreelancers = () => {
 
   return (
     <Layout>
-      {/* Hero Header */}
-      <section className="relative border-b border-border/30">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 right-1/4 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-1/3 w-56 h-56 bg-accent/5 rounded-full blur-3xl" />
-        </div>
-
-        <div className="container relative py-12 md:py-16">
+      {/* Header */}
+      <section className="border-b border-border">
+        <div className="container py-12 md:py-16">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-muted/60 border border-primary/10 text-primary text-xs font-medium mb-5 animate-fade-in-up">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-muted border border-primary/20 text-primary text-xs font-medium mb-5 animate-fade-in-up">
               <TrendingUp className="h-3.5 w-3.5" />
               {mockFreelancers.length} verified professionals near you
             </div>
@@ -53,14 +46,14 @@ const BrowseFreelancers = () => {
               Browse Local Talent
             </h1>
             <p className="text-base text-muted-foreground max-w-xl animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-              Discover trust-verified freelancers in your region. Filter by skill, location, and community ratings.
+              Discover trust-verified freelancers in your region.
             </p>
           </div>
 
           {/* Search Bar */}
-          <div className="glass-card p-2 mt-8 max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+          <div className="bg-card border border-border rounded-xl p-2 mt-8 max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
             <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
+              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary transition-colors focus-within:bg-secondary/80">
                 <Search className="h-4 w-4 text-muted-foreground shrink-0" />
                 <input
                   type="text"
@@ -70,7 +63,7 @@ const BrowseFreelancers = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
+              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary transition-colors focus-within:bg-secondary/80">
                 <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
                 <input
                   type="text"
@@ -95,7 +88,7 @@ const BrowseFreelancers = () => {
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                   activeSkill === skill
                     ? "bg-primary text-primary-foreground"
-                    : "bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border/30"
+                    : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80 border border-border"
                 }`}
               >
                 {skill}
@@ -113,10 +106,10 @@ const BrowseFreelancers = () => {
             <span className="text-xs text-muted-foreground">sorted by relevance</span>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="border-border/50 text-muted-foreground hover:text-foreground gap-2 rounded-full transition-colors duration-200">
+            <Button variant="outline" size="sm" className="border-border text-muted-foreground hover:text-foreground gap-2 rounded-full transition-colors duration-200">
               <SlidersHorizontal className="h-3.5 w-3.5" /> Filters
             </Button>
-            <Button variant="outline" size="sm" className="border-border/50 text-muted-foreground hover:text-foreground gap-2 rounded-full transition-colors duration-200">
+            <Button variant="outline" size="sm" className="border-border text-muted-foreground hover:text-foreground gap-2 rounded-full transition-colors duration-200">
               Sort <ChevronDown className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -127,93 +120,69 @@ const BrowseFreelancers = () => {
             <Link
               to={`/profile/${fl.id}`}
               key={fl.id}
-              className="glass-card p-0 overflow-hidden hover:border-primary/30 transition-all duration-300 group hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5 animate-fade-in-up"
+              className="bg-card border border-border rounded-xl p-6 hover:border-primary/40 transition-all duration-300 group hover:-translate-y-1 hover:shadow-lg animate-fade-in-up"
               style={{ animationDelay: `${idx * 0.05}s` }}
             >
-              {/* Card Top Accent */}
-              <div className={`h-1 w-full ${avatarColors[idx % avatarColors.length]}`} />
-
-              <div className="p-6">
-                {/* Avatar & Info */}
-                <div className="flex items-start gap-3.5 mb-5">
-                  <div className={`w-12 h-12 rounded-xl ${avatarColors[idx % avatarColors.length]} flex items-center justify-center text-primary-foreground font-display font-bold text-lg shrink-0 transition-shadow duration-300 group-hover:shadow-lg`}>
-                    {fl.name.charAt(0)}
+              {/* Avatar & Info */}
+              <div className="flex items-center gap-3.5 mb-4">
+                <img
+                  src={fl.avatar}
+                  alt={fl.name}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-border group-hover:border-primary/40 transition-colors duration-300"
+                />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-foreground text-sm truncate">{fl.name}</span>
+                    {fl.verified && <CheckCircle className="h-4 w-4 text-primary shrink-0" />}
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-semibold text-foreground text-sm truncate">{fl.name}</span>
-                      {fl.verified && <CheckCircle className="h-4 w-4 text-trust-green shrink-0" />}
-                    </div>
-                    <span className="text-xs text-muted-foreground block">{fl.skill}</span>
-                    <div className="flex items-center gap-1 mt-1">
-                      <MapPin className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">{fl.city}</span>
-                    </div>
-                  </div>
+                  <span className="text-xs text-muted-foreground block">{fl.skill}</span>
                 </div>
+              </div>
 
-                {/* Stats Row */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-trust-gold/10">
-                    <Star className="h-3 w-3 text-trust-gold fill-trust-gold" />
-                    <span className="text-xs font-semibold text-trust-gold">{fl.rating}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Briefcase className="h-3 w-3" />
-                    <span>{fl.reviews} reviews</span>
-                  </div>
-                </div>
+              {/* Location & Rating */}
+              <div className="flex items-center gap-4 mb-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />{fl.city}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Star className="h-3 w-3 text-trust-gold fill-trust-gold" />{fl.rating}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Briefcase className="h-3 w-3" />{fl.reviews}
+                </span>
+              </div>
 
-                {/* Trust Score */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Local Trust Score</span>
-                    <span className="text-xs font-bold text-trust-green">{fl.localScore}%</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-accent transition-all duration-700"
-                      style={{ width: `${fl.localScore}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1.5 mb-5">
-                  {fl.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-secondary/80 text-muted-foreground border border-border/30"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between pt-4 border-t border-border/30">
-                  <div>
-                    <span className="text-sm font-bold text-primary">{fl.rate}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors duration-200">
-                    View Profile
-                    <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </div>
-                </div>
-
-                {/* Availability */}
-                <div className="mt-3">
-                  <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${
-                    fl.availability === "Available Now"
-                      ? "text-trust-green"
-                      : "text-muted-foreground"
-                  }`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${
-                      fl.availability === "Available Now" ? "bg-trust-green animate-pulse" : "bg-muted-foreground"
-                    }`} />
-                    {fl.availability}
+              {/* Tags */}
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {fl.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-secondary text-muted-foreground"
+                  >
+                    {tag}
                   </span>
+                ))}
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between pt-4 border-t border-border">
+                <span className="text-sm font-bold text-primary">{fl.rate}</span>
+                <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors duration-200">
+                  View Profile
+                  <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </div>
+              </div>
+
+              {/* Availability */}
+              <div className="mt-3">
+                <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${
+                  fl.availability === "Available Now" ? "text-primary" : "text-muted-foreground"
+                }`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${
+                    fl.availability === "Available Now" ? "bg-primary animate-pulse" : "bg-muted-foreground"
+                  }`} />
+                  {fl.availability}
+                </span>
               </div>
             </Link>
           ))}
@@ -221,7 +190,7 @@ const BrowseFreelancers = () => {
 
         {/* Load More */}
         <div className="flex justify-center mt-12">
-          <Button variant="outline" className="border-border/50 text-muted-foreground hover:text-foreground rounded-full px-8 transition-colors duration-200">
+          <Button variant="outline" className="border-border text-muted-foreground hover:text-foreground rounded-full px-8 transition-colors duration-200">
             Load More Freelancers
           </Button>
         </div>
