@@ -108,8 +108,173 @@ const CarouselNav = ({ onPrev, onNext, canPrev, canNext }: { onPrev: () => void;
     </button>
   </div>
 );
+const heroSlides = [
+  { image: webDesignImg, label: "Web Development" },
+  { image: graphicDesignImg, label: "Graphic Design" },
+  { image: photographyImg, label: "Photography" },
+  { image: videoProductionImg, label: "Video Production" },
+  { image: digitalMarketingImg, label: "Digital Marketing" },
+  { image: contentWritingImg, label: "Content Writing" },
+];
 
-const Index = () => {
+const HeroSectionInline = ({
+  searchService,
+  setSearchService,
+  searchLocation,
+  setSearchLocation,
+}: {
+  searchService: string;
+  setSearchService: (v: string) => void;
+  searchLocation: string;
+  setSearchLocation: (v: string) => void;
+}) => {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % heroSlides.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <section className="bg-foreground text-primary-foreground border-b border-border/40 min-h-[85vh] flex items-center">
+      <div className="container py-16 md:py-20">
+        {/* Title on top */}
+        <motion.h1
+          className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.08] tracking-tight mb-10 text-center"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        >
+          Hire The World's Best{" "}
+          <span className="text-brand">Freelancers</span>
+        </motion.h1>
+
+        {/* Side by side: Search + Image Slider */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          {/* Left — Search & Info */}
+          <motion.div
+            className="flex flex-col gap-6"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <p className="text-primary-foreground/60 text-lg md:text-xl max-w-lg leading-relaxed">
+              Trusted professionals in 200+ cities. Verified skills, community endorsements, real results.
+            </p>
+
+            {/* Search Bar */}
+            <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-3 border border-primary-foreground/10">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary-foreground/5">
+                  <Search className="h-5 w-5 text-primary-foreground/40 shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="What service are you looking for?"
+                    className="bg-transparent w-full text-primary-foreground placeholder:text-primary-foreground/40 outline-none text-sm"
+                    value={searchService}
+                    onChange={(e) => setSearchService(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary-foreground/5">
+                  <MapPin className="h-5 w-5 text-primary-foreground/40 shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="City or Postcode"
+                    className="bg-transparent w-full text-primary-foreground placeholder:text-primary-foreground/40 outline-none text-sm"
+                    value={searchLocation}
+                    onChange={(e) => setSearchLocation(e.target.value)}
+                  />
+                </div>
+                <Link to="/browse">
+                  <Button className="w-full h-12 rounded-xl font-semibold bg-brand hover:bg-brand-glow text-foreground text-base gap-2 group">
+                    Search Freelancers
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Avatars */}
+            <div className="flex items-center gap-3 mt-2">
+              <div className="flex -space-x-2">
+                {[avatar1, avatar2, avatar3, avatar4, avatar5].map((av, i) => (
+                  <motion.img
+                    key={i}
+                    src={av}
+                    alt=""
+                    className="w-8 h-8 rounded-full border-2 border-foreground object-cover"
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4, delay: 0.8 + i * 0.1 }}
+                  />
+                ))}
+              </div>
+              <span className="text-sm text-primary-foreground/60">
+                Join <strong className="text-primary-foreground">50,000+</strong> active freelancers
+              </span>
+            </div>
+          </motion.div>
+
+          {/* Right — Image Slider (side by side thumbnails) */}
+          <motion.div
+            className="relative"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {/* Main Image */}
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border-2 border-border/30">
+              {heroSlides.map((slide, i) => (
+                <motion.img
+                  key={i}
+                  src={slide.image}
+                  alt={slide.label}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  initial={false}
+                  animate={{ opacity: i === current ? 1 : 0, scale: i === current ? 1 : 1.05 }}
+                  transition={{ duration: 0.7, ease: "easeInOut" }}
+                />
+              ))}
+              {/* Label overlay */}
+              <motion.div
+                className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/80 to-transparent p-6"
+                key={current}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <span className="text-primary-foreground font-display font-semibold text-lg">
+                  {heroSlides[current].label}
+                </span>
+              </motion.div>
+            </div>
+
+            {/* Thumbnail Strip */}
+            <div className="flex gap-2 mt-3">
+              {heroSlides.map((slide, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrent(i)}
+                  className={`relative flex-1 aspect-[3/2] rounded-lg overflow-hidden border-2 transition-all duration-300 ${
+                    i === current
+                      ? "border-brand ring-2 ring-brand/30 scale-105"
+                      : "border-border/20 opacity-50 hover:opacity-80"
+                  }`}
+                >
+                  <img src={slide.image} alt={slide.label} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+
   const [searchService, setSearchService] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
 
@@ -121,92 +286,12 @@ const Index = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="bg-foreground text-primary-foreground border-b border-border/40">
-        <div className="container py-20 md:py-28">
-          <div className="max-w-4xl mx-auto text-center">
-            <motion.h1
-              className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.1] tracking-tight mb-6"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            >
-              Hire The World's Best
-              <br />
-              <span className="text-brand">Freelancers</span> on LocalSkillHub
-            </motion.h1>
-            <motion.p
-              className="text-primary-foreground/60 text-lg md:text-xl mt-5 max-w-2xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              Trusted professionals in 200+ cities. Verified skills, community endorsements, real results.
-            </motion.p>
-
-            {/* Search */}
-            <motion.div
-              className="mt-10 bg-primary-foreground/10 backdrop-blur-sm rounded-full p-2 max-w-3xl mx-auto border border-primary-foreground/10"
-              initial={{ opacity: 0, y: 20, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.5 }}
-            >
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="flex-1 flex items-center gap-3 px-4 py-2 rounded-full bg-transparent">
-                  <Search className="h-5 w-5 text-primary-foreground/40 shrink-0" />
-                  <input
-                    type="text"
-                    placeholder="What service are you looking for?"
-                    className="bg-transparent w-full text-primary-foreground placeholder:text-primary-foreground/40 outline-none text-sm"
-                    value={searchService}
-                    onChange={(e) => setSearchService(e.target.value)}
-                  />
-                </div>
-                <div className="w-px h-8 bg-primary-foreground/20 hidden sm:block self-center" />
-                <div className="flex-1 flex items-center gap-3 px-4 py-2 rounded-full bg-transparent">
-                  <MapPin className="h-5 w-5 text-primary-foreground/40 shrink-0" />
-                  <input
-                    type="text"
-                    placeholder="City or Postcode"
-                    className="bg-transparent w-full text-primary-foreground placeholder:text-primary-foreground/40 outline-none text-sm"
-                    value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
-                  />
-                </div>
-                <Link to="/browse">
-                  <Button className="h-10 rounded-full px-8 w-full sm:w-auto font-semibold bg-brand hover:bg-brand-glow text-foreground">
-                    Search
-                  </Button>
-                </Link>
-              </div>
-            </motion.div>
-
-            {/* Avatars */}
-            <motion.div
-              className="mt-8 flex items-center justify-center gap-3"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-            >
-              <div className="flex -space-x-2">
-                {[avatar1, avatar2, avatar3, avatar4, avatar5].map((av, i) => (
-                  <motion.img
-                    key={i}
-                    src={av}
-                    alt=""
-                    className="w-8 h-8 rounded-full border-2 border-foreground object-cover"
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4, delay: 0.9 + i * 0.1 }}
-                  />
-                ))}
-              </div>
-              <span className="text-sm text-primary-foreground/60">
-                Join <strong className="text-primary-foreground">50,000+</strong> active freelancers
-              </span>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+      <HeroSectionInline
+        searchService={searchService}
+        setSearchService={setSearchService}
+        searchLocation={searchLocation}
+        setSearchLocation={setSearchLocation}
+      />
 
       {/* Browse Categories — Carousel */}
       <section className="bg-foreground pb-20">
