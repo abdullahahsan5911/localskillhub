@@ -3,6 +3,8 @@ import { Search, MapPin, ArrowRight, CheckCircle, Shield, Users, Zap, Star, Brie
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
+import { AnimatedSection, StaggerContainer, StaggerItem, FloatingElement } from "@/components/home/AnimatedSection";
+import { motion } from "framer-motion";
 
 import webDesignImg from "@/assets/categories/web-design.jpg";
 import graphicDesignImg from "@/assets/categories/graphic-design.jpg";
