@@ -129,6 +129,19 @@ const HeroSectionInline = ({
   setSearchLocation: (v: string) => void;
 }) => {
   const [current, setCurrent] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+
+  const handleSwipe = useCallback(() => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) setCurrent((p) => (p + 1) % heroSlides.length);
+      else setCurrent((p) => (p - 1 + heroSlides.length) % heroSlides.length);
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -225,7 +238,12 @@ const HeroSectionInline = ({
             transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
             {/* Main Image */}
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border-2 border-border/30">
+            <div
+              className="relative aspect-[4/3] rounded-2xl overflow-hidden border-2 border-border/30 touch-pan-y"
+              onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+              onTouchMove={(e) => { touchEndX.current = e.touches[0].clientX; }}
+              onTouchEnd={handleSwipe}
+            >
               {heroSlides.map((slide, i) => (
                 <motion.img
                   key={i}
