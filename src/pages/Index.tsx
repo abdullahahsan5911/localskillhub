@@ -3,6 +3,8 @@ import { Search, MapPin, ArrowRight, CheckCircle, Shield, Users, Zap, Star, Brie
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
+import { AnimatedSection, StaggerContainer, StaggerItem, FloatingElement } from "@/components/home/AnimatedSection";
+import { motion } from "framer-motion";
 
 import webDesignImg from "@/assets/categories/web-design.jpg";
 import graphicDesignImg from "@/assets/categories/graphic-design.jpg";
@@ -122,17 +124,32 @@ const Index = () => {
       <section className="bg-foreground text-primary-foreground border-b border-border/40">
         <div className="container py-20 md:py-28">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.1] tracking-tight mb-6">
+            <motion.h1
+              className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.1] tracking-tight mb-6"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            >
               Hire The World's Best
               <br />
               <span className="text-brand">Freelancers</span> on LocalSkillHub
-            </h1>
-            <p className="text-primary-foreground/60 text-lg md:text-xl mt-5 max-w-2xl mx-auto">
+            </motion.h1>
+            <motion.p
+              className="text-primary-foreground/60 text-lg md:text-xl mt-5 max-w-2xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
               Trusted professionals in 200+ cities. Verified skills, community endorsements, real results.
-            </p>
+            </motion.p>
 
             {/* Search */}
-            <div className="mt-10 bg-primary-foreground/10 backdrop-blur-sm rounded-full p-2 max-w-3xl mx-auto border border-primary-foreground/10">
+            <motion.div
+              className="mt-10 bg-primary-foreground/10 backdrop-blur-sm rounded-full p-2 max-w-3xl mx-auto border border-primary-foreground/10"
+              initial={{ opacity: 0, y: 20, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.5 }}
+            >
               <div className="flex flex-col sm:flex-row gap-2">
                 <div className="flex-1 flex items-center gap-3 px-4 py-2 rounded-full bg-transparent">
                   <Search className="h-5 w-5 text-primary-foreground/40 shrink-0" />
@@ -161,19 +178,32 @@ const Index = () => {
                   </Button>
                 </Link>
               </div>
-            </div>
+            </motion.div>
 
             {/* Avatars */}
-            <div className="mt-8 flex items-center justify-center gap-3">
+            <motion.div
+              className="mt-8 flex items-center justify-center gap-3"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+            >
               <div className="flex -space-x-2">
                 {[avatar1, avatar2, avatar3, avatar4, avatar5].map((av, i) => (
-                  <img key={i} src={av} alt="" className="w-8 h-8 rounded-full border-2 border-foreground object-cover" />
+                  <motion.img
+                    key={i}
+                    src={av}
+                    alt=""
+                    className="w-8 h-8 rounded-full border-2 border-foreground object-cover"
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4, delay: 0.9 + i * 0.1 }}
+                  />
                 ))}
               </div>
               <span className="text-sm text-primary-foreground/60">
                 Join <strong className="text-primary-foreground">50,000+</strong> active freelancers
               </span>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -181,50 +211,64 @@ const Index = () => {
       {/* Browse Categories — Carousel */}
       <section className="bg-foreground pb-20">
         <div className="container">
-          <div className="flex items-center justify-between mb-6">
-            <p className="text-primary-foreground/40 text-sm font-medium tracking-wide uppercase">Browse Categories</p>
-            <div className="flex gap-2">
-              <button
-                onClick={catCarousel.prev}
-                disabled={!catCarousel.canPrev}
-                className="w-9 h-9 rounded-full border border-primary-foreground/20 flex items-center justify-center disabled:opacity-20 hover:bg-primary-foreground/10 transition-colors"
-              >
-                <ChevronLeft className="h-4 w-4 text-primary-foreground" />
-              </button>
-              <button
-                onClick={catCarousel.next}
-                disabled={!catCarousel.canNext}
-                className="w-9 h-9 rounded-full border border-primary-foreground/20 flex items-center justify-center disabled:opacity-20 hover:bg-primary-foreground/10 transition-colors"
-              >
-                <ChevronRight className="h-4 w-4 text-primary-foreground" />
-              </button>
+          <AnimatedSection>
+            <div className="flex items-center justify-between mb-6">
+              <p className="text-primary-foreground/40 text-sm font-medium tracking-wide uppercase">Browse Categories</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={catCarousel.prev}
+                  disabled={!catCarousel.canPrev}
+                  className="w-9 h-9 rounded-full border border-primary-foreground/20 flex items-center justify-center disabled:opacity-20 hover:bg-primary-foreground/10 transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4 text-primary-foreground" />
+                </button>
+                <button
+                  onClick={catCarousel.next}
+                  disabled={!catCarousel.canNext}
+                  className="w-9 h-9 rounded-full border border-primary-foreground/20 flex items-center justify-center disabled:opacity-20 hover:bg-primary-foreground/10 transition-colors"
+                >
+                  <ChevronRight className="h-4 w-4 text-primary-foreground" />
+                </button>
+              </div>
             </div>
-          </div>
+          </AnimatedSection>
           <div className="overflow-hidden">
-            <div
+            <motion.div
               className="flex gap-4 transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${catCarousel.index * (100 / 6)}%)` }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
-              {categories.map((cat) => (
-                <Link
+              {categories.map((cat, i) => (
+                <motion.div
                   key={cat.name}
-                  to="/browse"
-                  className="group relative aspect-[4/3] rounded-xl overflow-hidden flex-shrink-0"
+                  className="flex-shrink-0"
                   style={{ width: "calc((100% - 5 * 1rem) / 6)" }}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.05 }}
                 >
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-foreground/60 group-hover:bg-foreground/40 transition-colors duration-300" />
-                  <div className="absolute bottom-0 left-0 p-4">
-                    <h3 className="text-sm font-semibold text-primary-foreground">{cat.name}</h3>
-                    <p className="text-xs text-primary-foreground/50">{cat.count} freelancers</p>
-                  </div>
-                </Link>
+                  <Link
+                    to="/browse"
+                    className="group relative aspect-[4/3] rounded-xl overflow-hidden block"
+                  >
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-foreground/60 group-hover:bg-foreground/40 transition-colors duration-300" />
+                    <div className="absolute bottom-0 left-0 p-4">
+                      <h3 className="text-sm font-semibold text-primary-foreground">{cat.name}</h3>
+                      <p className="text-xs text-primary-foreground/50">{cat.count} freelancers</p>
+                    </div>
+                  </Link>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -233,35 +277,45 @@ const Index = () => {
       <section className="bg-card border-y border-border/40">
         <div className="container py-20">
           <div className="max-w-3xl">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-              Why hire on LocalSkillHub?
-            </h2>
-            <p className="text-muted-foreground mb-12 text-lg">
-              Hiring freelancers on LocalSkillHub is seamless and secure.
-            </p>
+            <AnimatedSection>
+              <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
+                Why hire on LocalSkillHub?
+              </h2>
+              <p className="text-muted-foreground mb-12 text-lg">
+                Hiring freelancers on LocalSkillHub is seamless and secure.
+              </p>
+            </AnimatedSection>
 
-            <div className="grid sm:grid-cols-2 gap-x-12 gap-y-10">
+            <StaggerContainer className="grid sm:grid-cols-2 gap-x-12 gap-y-10" staggerDelay={0.15}>
               {whyHire.map((item) => (
-                <div key={item.title} className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <item.icon className="h-5 w-5 text-primary" />
+                <StaggerItem key={item.title}>
+                  <div className="flex gap-4 group">
+                    <motion.div
+                      className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center"
+                      whileHover={{ scale: 1.15, rotate: 5 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <item.icon className="h-5 w-5 text-primary" />
+                    </motion.div>
+                    <div>
+                      <h3 className="font-semibold text-foreground text-base mb-1">{item.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground text-base mb-1">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
-                  </div>
-                </div>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerContainer>
 
-            <div className="mt-12 flex gap-4">
-              <Button className="h-12 rounded-full px-8 font-semibold bg-brand hover:bg-brand-glow text-foreground">
-                Get Started
-              </Button>
-              <Button variant="outline" className="h-12 rounded-full px-8 font-semibold">
-                Browse Freelancers
-              </Button>
-            </div>
+            <AnimatedSection delay={0.4}>
+              <div className="mt-12 flex gap-4">
+                <Button className="h-12 rounded-full px-8 font-semibold bg-brand hover:bg-brand-glow text-foreground">
+                  Get Started
+                </Button>
+                <Button variant="outline" className="h-12 rounded-full px-8 font-semibold">
+                  Browse Freelancers
+                </Button>
+              </div>
+            </AnimatedSection>
           </div>
         </div>
       </section>
@@ -269,12 +323,14 @@ const Index = () => {
       {/* Featured Freelancers — Carousel */}
       <section className="container py-20">
         <div className="flex items-end justify-between mb-12">
-          <div>
-            <p className="text-sm font-semibold text-brand mb-2">Our Freelancers</p>
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground tracking-tight max-w-2xl">
-              Hire top freelancers hand-selected by the LocalSkillHub team.
-            </h2>
-          </div>
+          <AnimatedSection direction="left">
+            <div>
+              <p className="text-sm font-semibold text-brand mb-2">Our Freelancers</p>
+              <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground tracking-tight max-w-2xl">
+                Hire top freelancers hand-selected by the LocalSkillHub team.
+              </h2>
+            </div>
+          </AnimatedSection>
           <CarouselNav onPrev={flCarousel.prev} onNext={flCarousel.next} canPrev={flCarousel.canPrev} canNext={flCarousel.canNext} />
         </div>
 
@@ -283,61 +339,75 @@ const Index = () => {
             className="flex gap-6 transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${flCarousel.index * (100 / 4)}%)` }}
           >
-            {featuredFreelancers.map((fl) => (
-              <Link
+            {featuredFreelancers.map((fl, i) => (
+              <motion.div
                 key={fl.name}
-                to="/profile/1"
-                className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg transition-all duration-300 group flex flex-col items-center text-center flex-shrink-0"
+                className="flex-shrink-0"
                 style={{ width: "calc((100% - 3 * 1.5rem) / 4)" }}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
               >
-                <div className="relative mb-4">
-                  <img src={fl.avatar} alt={fl.name} className="w-20 h-20 rounded-full object-cover border-2 border-background shadow-sm" />
-                  {fl.verified && (
-                    <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5">
-                      <CheckCircle className="h-5 w-5 text-trust-green" />
+                <Link
+                  to="/profile/1"
+                  className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg transition-all duration-300 group flex flex-col items-center text-center block"
+                >
+                  <motion.div
+                    className="relative mb-4"
+                    whileHover={{ scale: 1.08 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <img src={fl.avatar} alt={fl.name} className="w-20 h-20 rounded-full object-cover border-2 border-background shadow-sm" />
+                    {fl.verified && (
+                      <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5">
+                        <CheckCircle className="h-5 w-5 text-trust-green" />
+                      </div>
+                    )}
+                  </motion.div>
+
+                  <h3 className="font-semibold text-foreground text-lg">{fl.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">{fl.skill} • {fl.city}</p>
+
+                  <div className="flex items-center gap-2 mb-6">
+                    <div className="flex items-center gap-1 text-sm font-medium text-foreground bg-secondary px-2.5 py-1 rounded-full">
+                      <Star className="h-3.5 w-3.5 text-trust-gold fill-trust-gold" /> {fl.rating}
                     </div>
-                  )}
-                </div>
-
-                <h3 className="font-semibold text-foreground text-lg">{fl.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{fl.skill} • {fl.city}</p>
-
-                <div className="flex items-center gap-2 mb-6">
-                  <div className="flex items-center gap-1 text-sm font-medium text-foreground bg-secondary px-2.5 py-1 rounded-full">
-                    <Star className="h-3.5 w-3.5 text-trust-gold fill-trust-gold" /> {fl.rating}
+                    <div className="text-sm text-muted-foreground bg-secondary px-2.5 py-1 rounded-full">
+                      {fl.jobs} jobs
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground bg-secondary px-2.5 py-1 rounded-full">
-                    {fl.jobs} jobs
-                  </div>
-                </div>
 
-                <div className="w-full mt-auto">
-                  <Button variant="outline" className="w-full rounded-full font-medium group-hover:bg-foreground group-hover:text-primary-foreground transition-colors">
-                    View Profile
-                  </Button>
-                </div>
-              </Link>
+                  <div className="w-full mt-auto">
+                    <Button variant="outline" className="w-full rounded-full font-medium group-hover:bg-foreground group-hover:text-primary-foreground transition-colors">
+                      View Profile
+                    </Button>
+                  </div>
+                </Link>
+              </motion.div>
             ))}
           </div>
         </div>
 
-        <div className="mt-12 text-center">
+        <AnimatedSection className="mt-12 text-center">
           <Button className="h-12 rounded-full px-8 font-semibold bg-brand hover:bg-brand-glow text-foreground">
             Browse All Freelancers
           </Button>
-        </div>
+        </AnimatedSection>
       </section>
 
       {/* Testimonials — Carousel */}
       <section className="bg-card py-20">
         <div className="container">
           <div className="flex items-end justify-between mb-12">
-            <div>
-              <p className="text-sm font-semibold text-brand mb-2">Success Stories</p>
-              <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground tracking-tight">
-                See what clients are saying.
-              </h2>
-            </div>
+            <AnimatedSection direction="left">
+              <div>
+                <p className="text-sm font-semibold text-brand mb-2">Success Stories</p>
+                <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground tracking-tight">
+                  See what clients are saying.
+                </h2>
+              </div>
+            </AnimatedSection>
             <CarouselNav onPrev={testCarousel.prev} onNext={testCarousel.next} canPrev={testCarousel.canPrev} canNext={testCarousel.canNext} />
           </div>
 
@@ -346,11 +416,16 @@ const Index = () => {
               className="flex gap-6 transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${testCarousel.index * (100 / 3)}%)` }}
             >
-              {testimonials.map((t) => (
-                <div
+              {testimonials.map((t, i) => (
+                <motion.div
                   key={t.name}
                   className="bg-background border border-border/60 rounded-2xl p-8 flex flex-col flex-shrink-0"
                   style={{ width: "calc((100% - 2 * 1.5rem) / 3)" }}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
                 >
                   <Quote className="h-8 w-8 text-brand/30 mb-4" />
                   <p className="text-base text-foreground leading-relaxed mb-8 flex-grow">{t.text}</p>
@@ -361,7 +436,7 @@ const Index = () => {
                       <div className="text-xs text-muted-foreground">{t.role}</div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -370,7 +445,7 @@ const Index = () => {
 
       {/* CTA */}
       <section className="py-24">
-        <div className="container max-w-4xl text-center">
+        <AnimatedSection className="container max-w-4xl text-center">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground mb-6">
             Hiring on behalf<br />of your company?
           </h2>
@@ -378,33 +453,50 @@ const Index = () => {
             Work with your team to hire and manage creative talent all in one place.
           </p>
           <Link to="/post-job">
-            <Button className="h-12 rounded-full px-10 font-semibold bg-brand hover:bg-brand-glow text-foreground text-base">
-              Contact Us
-            </Button>
+            <motion.div
+              className="inline-block"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <Button className="h-12 rounded-full px-10 font-semibold bg-brand hover:bg-brand-glow text-foreground text-base">
+                Contact Us
+              </Button>
+            </motion.div>
           </Link>
-        </div>
+        </AnimatedSection>
       </section>
 
       {/* Bottom Stats */}
       <section className="bg-foreground text-primary-foreground">
         <div className="container py-24 text-center">
-          <p className="text-sm font-semibold mb-4">LocalSkillHub</p>
-          <h2 className="text-3xl md:text-5xl font-display font-bold mb-16 max-w-3xl mx-auto">
-            Tap into your city's largest professional community.
-          </h2>
+          <AnimatedSection>
+            <p className="text-sm font-semibold mb-4">LocalSkillHub</p>
+            <h2 className="text-3xl md:text-5xl font-display font-bold mb-16 max-w-3xl mx-auto">
+              Tap into your city's largest professional community.
+            </h2>
+          </AnimatedSection>
 
-          <div className="grid sm:grid-cols-3 gap-10 max-w-4xl mx-auto divide-x divide-primary-foreground/10">
+          <StaggerContainer className="grid sm:grid-cols-3 gap-10 max-w-4xl mx-auto divide-x divide-primary-foreground/10" staggerDelay={0.2}>
             {[
               { value: "50M+", label: "Over 50 million professionals in the LocalSkillHub community" },
               { value: "Billions", label: "Over 1 billion projects created across the globe on LocalSkillHub" },
               { value: "2008", label: "Founded in 2008, LocalSkillHub has built a trusted network for over 15 years" },
             ].map((s) => (
-              <div key={s.value} className="px-6">
-                <div className="text-3xl md:text-4xl font-display font-bold mb-3">{s.value}</div>
-                <div className="text-sm text-primary-foreground/60 leading-relaxed">{s.label}</div>
-              </div>
+              <StaggerItem key={s.value}>
+                <div className="px-6">
+                  <motion.div
+                    className="text-3xl md:text-4xl font-display font-bold mb-3"
+                    whileInView={{ scale: [0.8, 1.05, 1] }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    {s.value}
+                  </motion.div>
+                  <div className="text-sm text-primary-foreground/60 leading-relaxed">{s.label}</div>
+                </div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
     </Layout>
