@@ -8,8 +8,14 @@ import BrowseFreelancers from "./pages/BrowseFreelancers";
 import FreelancerProfile from "./pages/FreelancerProfile";
 import PostJob from "./pages/PostJob";
 import Jobs from "./pages/Jobs";
+import JobDetail from "./pages/JobDetail";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
+import FreelancerDashboard from "./pages/FreelancerDashboard";
+import ClientDashboard from "./pages/ClientDashboard";
+import Messages from "./pages/Messages";
+import Contracts from "./pages/Contracts";
+import Community from "./pages/Community";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,8 +32,14 @@ const App = () => (
           <Route path="/profile/:id" element={<FreelancerProfile />} />
           <Route path="/post-job" element={<PostJob />} />
           <Route path="/jobs" element={<Jobs />} />
+          <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/dashboard/freelancer" element={<FreelancerDashboard />} />
+          <Route path="/dashboard/client" element={<ClientDashboard />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/contracts" element={<Contracts />} />
+          <Route path="/community" element={<Community />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
