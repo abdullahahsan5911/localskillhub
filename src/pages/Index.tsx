@@ -70,6 +70,29 @@ const testimonials = [
   { name: "Rajesh Kumar", role: "Creative Director", text: "The endorsement system gives real confidence. We've built lasting relationships with freelancers found here.", avatar: avatar6 },
 ];
 
+// --- Reusable Swipe Hook ---
+function useSwipe(onLeft: () => void, onRight: () => void) {
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+
+  const handlers = {
+    onTouchStart: (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; },
+    onTouchMove: (e: React.TouchEvent) => { touchEndX.current = e.touches[0].clientX; },
+    onTouchEnd: () => {
+      if (touchStartX.current === null || touchEndX.current === null) return;
+      const diff = touchStartX.current - touchEndX.current;
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) onLeft();
+        else onRight();
+      }
+      touchStartX.current = null;
+      touchEndX.current = null;
+    },
+  };
+
+  return handlers;
+}
+
 // --- Reusable Carousel Hook ---
 function useCarouselScroll(itemsPerView: number, totalItems: number, autoPlayMs?: number) {
   const [index, setIndex] = useState(0);
@@ -86,7 +109,9 @@ function useCarouselScroll(itemsPerView: number, totalItems: number, autoPlayMs?
     return () => clearInterval(timer);
   }, [autoPlayMs, maxIndex]);
 
-  return { index, next, prev, canPrev: index > 0, canNext: index < maxIndex };
+  const swipeHandlers = useSwipe(next, prev);
+
+  return { index, next, prev, canPrev: index > 0, canNext: index < maxIndex, swipeHandlers };
 }
 
 // --- Carousel Navigation Buttons ---
