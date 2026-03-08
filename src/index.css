@@ -68,7 +68,15 @@
   }
 }
 
-@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+
   .glass-card {
     @apply bg-surface-glass/60 backdrop-blur-xl border border-border/50 rounded-xl transition-all duration-300;
   }
