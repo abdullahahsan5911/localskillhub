@@ -178,61 +178,62 @@ const HeroSectionInline = ({
   return (
     <section className="bg-foreground text-primary-foreground border-b border-border/40 min-h-[85vh] flex items-center">
       <div className="container py-16 md:py-20">
-        {/* Title on top */}
-        <motion.h1
-          className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.08] tracking-tight mb-10 text-center"
-          initial={{ opacity: 0, y: 40 }}
+        {/* Search Bar on top */}
+        <motion.div
+          className="mb-10"
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
-          Hire The World's Best{" "}
-          <span className="text-brand">Freelancers</span>
-        </motion.h1>
+          <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-3 border border-primary-foreground/10 max-w-3xl">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary-foreground/5 flex-1">
+                <Search className="h-5 w-5 text-primary-foreground/40 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="What service are you looking for?"
+                  className="bg-transparent w-full text-primary-foreground placeholder:text-primary-foreground/40 outline-none text-sm"
+                  value={searchService}
+                  onChange={(e) => setSearchService(e.target.value)}
+                />
+              </div>
+              <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary-foreground/5 flex-1">
+                <MapPin className="h-5 w-5 text-primary-foreground/40 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="City or Postcode"
+                  className="bg-transparent w-full text-primary-foreground placeholder:text-primary-foreground/40 outline-none text-sm"
+                  value={searchLocation}
+                  onChange={(e) => setSearchLocation(e.target.value)}
+                />
+              </div>
+              <Link to="/browse">
+                <Button className="w-full sm:w-auto h-12 rounded-xl font-semibold bg-brand hover:bg-brand-glow text-foreground text-base gap-2 group px-8">
+                  Search
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </motion.div>
 
-        {/* Side by side: Search + Image Slider */}
+        {/* Side by side: Heading + Image Slider */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          {/* Left — Search & Info */}
+          {/* Left — Heading & Info */}
           <motion.div
             className="flex flex-col gap-6"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
           >
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.08] tracking-tight text-left">
+              Hire The World's Best{" "}
+              <span className="text-brand">Freelancers</span>
+            </h1>
+
             <p className="text-primary-foreground/60 text-lg md:text-xl max-w-lg leading-relaxed">
               Trusted professionals in 200+ cities. Verified skills, community endorsements, real results.
             </p>
-
-            {/* Search Bar */}
-            <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-3 border border-primary-foreground/10">
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary-foreground/5">
-                  <Search className="h-5 w-5 text-primary-foreground/40 shrink-0" />
-                  <input
-                    type="text"
-                    placeholder="What service are you looking for?"
-                    className="bg-transparent w-full text-primary-foreground placeholder:text-primary-foreground/40 outline-none text-sm"
-                    value={searchService}
-                    onChange={(e) => setSearchService(e.target.value)}
-                  />
-                </div>
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary-foreground/5">
-                  <MapPin className="h-5 w-5 text-primary-foreground/40 shrink-0" />
-                  <input
-                    type="text"
-                    placeholder="City or Postcode"
-                    className="bg-transparent w-full text-primary-foreground placeholder:text-primary-foreground/40 outline-none text-sm"
-                    value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
-                  />
-                </div>
-                <Link to="/browse">
-                  <Button className="w-full h-12 rounded-xl font-semibold bg-brand hover:bg-brand-glow text-foreground text-base gap-2 group">
-                    Search Freelancers
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
 
             {/* Avatars */}
             <div className="flex items-center gap-3 mt-2">
@@ -255,14 +256,13 @@ const HeroSectionInline = ({
             </div>
           </motion.div>
 
-          {/* Right — Image Slider (side by side thumbnails) */}
+          {/* Right — Image Slider */}
           <motion.div
             className="relative"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            {/* Main Image */}
             <div
               className="relative aspect-[4/3] rounded-2xl overflow-hidden border-2 border-border/30 touch-pan-y"
               onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
@@ -280,7 +280,6 @@ const HeroSectionInline = ({
                   transition={{ duration: 0.7, ease: "easeInOut" }}
                 />
               ))}
-              {/* Label overlay */}
               <motion.div
                 className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/80 to-transparent p-6"
                 key={current}
