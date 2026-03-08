@@ -77,11 +77,7 @@ const featuredFreelancers = [
 const Index = () => {
   const [searchService, setSearchService] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [activeSlide, setActiveSlide] = useState(0);
-
-  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
 
   const [catRef, catApi] = useEmblaCarousel({ loop: true, align: "start", slidesToScroll: 1 });
   const catScrollPrev = useCallback(() => catApi?.scrollPrev(), [catApi]);
