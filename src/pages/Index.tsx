@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
-import { Search, MapPin, ArrowRight, Shield, Star, Users, Zap, CheckCircle, TrendingUp, Award, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { Search, MapPin, ArrowRight, CheckCircle, Shield, Users, Zap, Star, Briefcase, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
-import useEmblaCarousel from "embla-carousel-react";
 
 import webDesignImg from "@/assets/categories/web-design.jpg";
 import graphicDesignImg from "@/assets/categories/graphic-design.jpg";
@@ -12,388 +11,309 @@ import digitalMarketingImg from "@/assets/categories/digital-marketing.jpg";
 import photographyImg from "@/assets/categories/photography.jpg";
 import contentWritingImg from "@/assets/categories/content-writing.jpg";
 
-const bannerSlides = [
-{
-  title: "Find Local Talent",
-  highlight: "You Can Trust",
-  description: "Connect with verified freelancers in your city. Local reputation, community endorsements, and real trust signals.",
-  image: webDesignImg
-},
-{
-  title: "Hire Designers &",
-  highlight: "Creatives Nearby",
-  description: "From graphic design to video production — discover top-rated professionals in your neighbourhood.",
-  image: graphicDesignImg
-},
-{
-  title: "Grow Your Business",
-  highlight: "With Local Experts",
-  description: "Digital marketing, content writing, and development talent — all verified and community-endorsed.",
-  image: digitalMarketingImg
-}];
-
+import avatar1 from "@/assets/avatars/avatar-1.jpg";
+import avatar2 from "@/assets/avatars/avatar-2.jpg";
+import avatar3 from "@/assets/avatars/avatar-3.jpg";
+import avatar4 from "@/assets/avatars/avatar-4.jpg";
+import avatar5 from "@/assets/avatars/avatar-5.jpg";
+import avatar6 from "@/assets/avatars/avatar-6.jpg";
 
 const categories = [
-{ name: "Web Development", image: webDesignImg, count: "2,340+" },
-{ name: "Graphic Design", image: graphicDesignImg, count: "1,890+" },
-{ name: "Video Production", image: videoProductionImg, count: "980+" },
-{ name: "Digital Marketing", image: digitalMarketingImg, count: "1,560+" },
-{ name: "Photography", image: photographyImg, count: "1,200+" },
-{ name: "Content Writing", image: contentWritingImg, count: "2,100+" }];
-
-
-const stats = [
-{ value: "50K+", label: "Verified Freelancers" },
-{ value: "120K+", label: "Jobs Completed" },
-{ value: "98%", label: "Client Satisfaction" },
-{ value: "200+", label: "Cities Covered" }];
-
-
-const howItWorks = [
-{
-  icon: Search,
-  title: "Search Locally",
-  description: "Enter your city and the skill you need. Our geo-filter shows verified talent near you."
-},
-{
-  icon: Shield,
-  title: "Trust & Verify",
-  description: "Check local trust scores, verified badges, community endorsements, and portfolios."
-},
-{
-  icon: Zap,
-  title: "Hire & Collaborate",
-  description: "Send proposals, negotiate, set milestones, and pay securely through escrow."
-}];
-
+  { name: "Web Development", image: webDesignImg, count: "2,340+" },
+  { name: "Graphic Design", image: graphicDesignImg, count: "1,890+" },
+  { name: "Video Production", image: videoProductionImg, count: "980+" },
+  { name: "Digital Marketing", image: digitalMarketingImg, count: "1,560+" },
+  { name: "Photography", image: photographyImg, count: "1,200+" },
+  { name: "Content Writing", image: contentWritingImg, count: "2,100+" },
+];
 
 const featuredFreelancers = [
-{ name: "Priya Sharma", skill: "UI/UX Designer", city: "Mumbai", rating: 4.9, jobs: 47, verified: true, rate: "₹2,500/hr" },
-{ name: "Arjun Patel", skill: "Full Stack Dev", city: "Bangalore", rating: 4.8, jobs: 92, verified: true, rate: "₹3,000/hr" },
-{ name: "Sneha Gupta", skill: "Content Writer", city: "Delhi", rating: 4.9, jobs: 124, verified: true, rate: "₹1,200/hr" },
-{ name: "Rahul Verma", skill: "Video Editor", city: "Pune", rating: 4.7, jobs: 38, verified: false, rate: "₹1,800/hr" }];
+  { name: "Priya Sharma", skill: "UI/UX Designer", city: "Mumbai", rating: 4.9, jobs: 47, verified: true, rate: "₹2,500/hr", avatar: avatar1 },
+  { name: "Arjun Patel", skill: "Full Stack Dev", city: "Bangalore", rating: 4.8, jobs: 92, verified: true, rate: "₹3,000/hr", avatar: avatar2 },
+  { name: "Sneha Gupta", skill: "Content Writer", city: "Delhi", rating: 4.9, jobs: 124, verified: true, rate: "₹1,200/hr", avatar: avatar3 },
+  { name: "Rahul Verma", skill: "Video Editor", city: "Pune", rating: 4.7, jobs: 38, verified: false, rate: "₹1,800/hr", avatar: avatar4 },
+  { name: "Ananya Desai", skill: "Photographer", city: "Hyderabad", rating: 4.8, jobs: 67, verified: true, rate: "₹2,000/hr", avatar: avatar5 },
+  { name: "Vikram Singh", skill: "Digital Marketer", city: "Chennai", rating: 4.6, jobs: 55, verified: true, rate: "₹1,500/hr", avatar: avatar6 },
+];
 
+const whyHire = [
+  { icon: Shield, title: "Verified & Trusted", description: "Every freelancer goes through identity checks, skill verification, and community endorsements." },
+  { icon: MapPin, title: "Local Talent, Real Connections", description: "Work with professionals in your city. Meet face-to-face, build lasting relationships." },
+  { icon: Zap, title: "Fast & Secure Payments", description: "Escrow-protected payments with milestone tracking. Pay only when you're satisfied." },
+  { icon: Users, title: "Community Endorsed", description: "See who's trusted by your local community through endorsements and ratings." },
+];
+
+const testimonials = [
+  { name: "Meera Iyer", role: "Startup Founder", text: "Found an incredible UI designer in my city within hours. The local trust system gave me total confidence.", avatar: avatar3 },
+  { name: "Rohit Kapoor", role: "Agency Director", text: "We've hired 12 freelancers through LocalSkillHub. Quality is consistently excellent and communication is seamless.", avatar: avatar2 },
+  { name: "Divya Nair", role: "Small Business Owner", text: "The fact that I could meet my freelancer in person made all the difference. Highly recommend for local projects.", avatar: avatar5 },
+];
+
+const stats = [
+  { value: "50K+", label: "Verified Freelancers" },
+  { value: "120K+", label: "Projects Completed" },
+  { value: "98%", label: "Client Satisfaction" },
+  { value: "200+", label: "Cities Covered" },
+];
 
 const Index = () => {
   const [searchService, setSearchService] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
-  const [activeSlide, setActiveSlide] = useState(0);
-
-  const [catRef, catApi] = useEmblaCarousel({ loop: true, align: "start", slidesToScroll: 1 });
-  const catScrollPrev = useCallback(() => catApi?.scrollPrev(), [catApi]);
-  const catScrollNext = useCallback(() => catApi?.scrollNext(), [catApi]);
-
-  useEffect(() => {
-    if (!catApi) return;
-    const autoplay = setInterval(() => catApi.scrollNext(), 4000);
-    return () => clearInterval(autoplay);
-  }, [catApi]);
-
-  useEffect(() => {
-    const autoplay = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % bannerSlides.length);
-    }, 5000);
-    return () => clearInterval(autoplay);
-  }, []);
 
   return (
     <Layout>
-      {/* Hero with Background Carousel */}
-      <section className="relative overflow-hidden">
-        {/* Background Image Carousel */}
-        <div className="absolute inset-0">
-          {bannerSlides.map((slide, i) =>
-          <div
-            key={i}
-            className="absolute inset-0 transition-opacity duration-700 ease-in-out"
-            style={{ opacity: i === activeSlide ? 1 : 0 }}>
-            
-              <img src={slide.image} alt="" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-background/85" />
-            </div>
-          )}
-        </div>
+      {/* Hero */}
+      <section className="bg-foreground text-primary-foreground border-b border-border/40">
+        <div className="container py-20 md:py-28">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.1] tracking-tight mb-6">
+              Hire The World's Best
+              <br />
+              <span className="text-brand">Freelancers</span> on LocalSkillHub
+            </h1>
+            <p className="text-primary-foreground/60 text-lg md:text-xl mt-5 max-w-2xl mx-auto">
+              Trusted professionals in 200+ cities. Verified skills, community endorsements, real results.
+            </p>
 
-        {/* Static Content */}
-        <div className="container relative z-10 py-24 md:py-36 opacity-75 shadow-none rounded-md">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-muted border border-primary/20 text-primary text-sm font-medium mb-8 animate-fade-in-up">
-              <MapPin className="h-4 w-4" />
-              Region-Specific • Trust-Verified • Community-Driven
-            </div>
-
-            {/* Animated text that changes with slide */}
-            <div className="relative h-[180px] md:h-[200px] lg:h-[220px] mb-6 overflow-hidden">
-              {bannerSlides.map((slide, i) =>
-              <h1
-                key={i}
-                className="absolute inset-0 text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-tight transition-all duration-500 ease-in-out"
-                style={{
-                  opacity: i === activeSlide ? 1 : 0,
-                  transform: i === activeSlide ? "translateY(0)" : "translateY(20px)"
-                }}>
-                
-                  {slide.title}
-                  <br />
-                  <span className="text-primary">{slide.highlight}</span>
-                </h1>
-              )}
-            </div>
-
-            <div className="relative h-[28px] md:h-[32px] mb-10 overflow-hidden">
-              {bannerSlides.map((slide, i) =>
-              <p
-                key={i}
-                className="absolute inset-0 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto transition-all duration-500 ease-in-out"
-                style={{
-                  opacity: i === activeSlide ? 1 : 0,
-                  transform: i === activeSlide ? "translateY(0)" : "translateY(12px)"
-                }}>
-                
-                  {slide.description}
-                </p>
-              )}
-            </div>
-
-            {/* Search Bar - always visible */}
-            <div className="glass-card p-2 max-w-2xl mx-auto">
+            {/* Search */}
+            <div className="mt-10 bg-primary-foreground/10 backdrop-blur-sm rounded-full p-2 max-w-3xl mx-auto border border-primary-foreground/10">
               <div className="flex flex-col sm:flex-row gap-2">
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
-                  <Search className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="flex-1 flex items-center gap-3 px-4 py-2 rounded-full bg-transparent">
+                  <Search className="h-5 w-5 text-primary-foreground/40 shrink-0" />
                   <input
                     type="text"
                     placeholder="What service are you looking for?"
-                    className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm"
+                    className="bg-transparent w-full text-primary-foreground placeholder:text-primary-foreground/40 outline-none text-sm"
                     value={searchService}
-                    onChange={(e) => setSearchService(e.target.value)} />
-                  
+                    onChange={(e) => setSearchService(e.target.value)}
+                  />
                 </div>
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
-                  <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="w-px h-8 bg-primary-foreground/20 hidden sm:block self-center"></div>
+                <div className="flex-1 flex items-center gap-3 px-4 py-2 rounded-full bg-transparent">
+                  <MapPin className="h-5 w-5 text-primary-foreground/40 shrink-0" />
                   <input
                     type="text"
                     placeholder="City or Postcode"
-                    className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm"
+                    className="bg-transparent w-full text-primary-foreground placeholder:text-primary-foreground/40 outline-none text-sm"
                     value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)} />
-                  
+                    onChange={(e) => setSearchLocation(e.target.value)}
+                  />
                 </div>
                 <Link to="/browse">
-                  <Button className="bg-primary text-primary-foreground font-semibold h-12 px-8 w-full sm:w-auto hover:bg-primary/90 transition-all duration-200">
+                  <Button className="h-10 rounded-full px-8 w-full sm:w-auto font-semibold bg-brand hover:bg-brand-glow text-foreground">
                     Search
                   </Button>
                 </Link>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Dots */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-          {bannerSlides.map((_, i) =>
-          <button
-            key={i}
-            onClick={() => setActiveSlide(i)}
-            className={`h-2 rounded-full transition-all duration-300 ${
-            i === activeSlide ? "w-8 bg-primary" : "w-2 bg-muted-foreground/40"}`
-            } />
-
-          )}
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section className="border-y border-border/40 bg-card/30">
-        <div className="container py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, i) =>
-            <div key={stat.label} className="text-center animate-fade-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
-                <div className="text-3xl md:text-4xl font-display font-bold text-primary">{stat.value}</div>
-                <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
+            {/* Avatars row */}
+            <div className="mt-8 flex items-center justify-center gap-3">
+              <div className="flex -space-x-2">
+                {[avatar1, avatar2, avatar3, avatar4, avatar5].map((av, i) => (
+                  <img key={i} src={av} alt="" className="w-8 h-8 rounded-full border-2 border-foreground object-cover" />
+                ))}
               </div>
-            )}
+              <span className="text-sm text-primary-foreground/60">
+                Join <strong className="text-primary-foreground">50,000+</strong> active freelancers
+              </span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Categories Carousel */}
-      <section className="container py-20">
-        <div className="flex items-end justify-between mb-10">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">Browse by Category</h2>
-            <p className="text-muted-foreground mt-2">Find the right professional for your project</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={catScrollPrev} className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-200">
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button onClick={catScrollNext} className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-200">
-              <ChevronRight className="h-4 w-4" />
-            </button>
-            <Link to="/browse" className="hidden md:flex items-center gap-1 text-primary hover:text-brand-glow text-sm font-medium transition-colors duration-200 ml-2">
-              View All <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-
-        <div ref={catRef} className="overflow-hidden">
-          <div className="flex">
-            {categories.map((cat) =>
-            <div key={cat.name} className="flex-[0_0_45%] sm:flex-[0_0_30%] lg:flex-[0_0_22%] min-w-0 pl-5">
-                <Link
+      {/* Browse Categories */}
+      <section className="bg-foreground pb-20">
+        <div className="container">
+          <p className="text-center text-primary-foreground/40 text-sm mb-6 font-medium tracking-wide uppercase">Browse Categories</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {categories.map((cat) => (
+              <Link
+                key={cat.name}
                 to="/browse"
-                className="group relative block aspect-[4/3] rounded-xl overflow-hidden">
-                
-                  <img
+                className="group relative aspect-[4/3] rounded-xl overflow-hidden"
+              >
+                <img
                   src={cat.image}
                   alt={cat.name}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                
-                  <div className="absolute inset-0 bg-background/50 group-hover:bg-background/40 transition-colors duration-300" />
-                  <div className="absolute bottom-0 left-0 p-5">
-                    <h3 className="text-lg font-display font-semibold text-foreground">{cat.name}</h3>
-                    <p className="text-sm text-muted-foreground">{cat.count} professionals</p>
-                  </div>
-                </Link>
-              </div>
-            )}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-foreground/60 group-hover:bg-foreground/40 transition-colors duration-300" />
+                <div className="absolute bottom-0 left-0 p-4">
+                  <h3 className="text-sm font-semibold text-primary-foreground">{cat.name}</h3>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="container py-20">
-        <div className="text-center mb-14">
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">How It Works</h2>
-          <p className="text-muted-foreground mt-2 max-w-lg mx-auto">Three simple steps to find trusted local talent</p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8">
-          {howItWorks.map((step, i) =>
-          <div key={step.title} className="glass-card p-8 text-center group hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 animate-fade-in-up" style={{ animationDelay: `${i * 0.15}s` }}>
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary mb-6 transition-shadow duration-300 group-hover:shadow-lg group-hover:shadow-primary/20">
-                <step.icon className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <div className="text-xs text-muted-foreground font-medium mb-2">Step {i + 1}</div>
-              <h3 className="text-xl font-display font-semibold text-foreground mb-3">{step.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+      {/* Why Hire Section */}
+      <section className="bg-card border-y border-border/40">
+        <div className="container py-20">
+          <div className="max-w-3xl">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
+              Why hire on LocalSkillHub?
+            </h2>
+            <p className="text-muted-foreground mb-12 text-lg">
+              Hiring freelancers on LocalSkillHub is seamless and secure.
+            </p>
+            
+            <div className="grid sm:grid-cols-2 gap-x-12 gap-y-10">
+              {whyHire.map((item) => (
+                <div key={item.title} className="flex gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <item.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground text-base mb-1">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
+            
+            <div className="mt-12 flex gap-4">
+              <Button className="h-12 rounded-full px-8 font-semibold bg-brand hover:bg-brand-glow text-foreground">
+                Get Started
+              </Button>
+              <Button variant="outline" className="h-12 rounded-full px-8 font-semibold">
+                Browse Freelancers
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Featured Freelancers */}
       <section className="container py-20">
-        <div className="flex items-end justify-between mb-10">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">Top Local Talent</h2>
-            <p className="text-muted-foreground mt-2">Highly rated freelancers in your region</p>
-          </div>
-          <Link to="/browse" className="hidden md:flex items-center gap-1 text-primary hover:text-brand-glow text-sm font-medium transition-colors duration-200">
-            Browse All <ArrowRight className="h-4 w-4" />
-          </Link>
+        <div className="mb-12">
+          <p className="text-sm font-semibold text-brand mb-2">Our Freelancers</p>
+          <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground tracking-tight max-w-2xl">
+            Hire top freelancers hand-selected by the LocalSkillHub team.
+          </h2>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredFreelancers.map((fl, i) =>
-          <Link to="/profile/1" key={fl.name} className="glass-card p-6 hover:border-primary/30 transition-all duration-300 group hover:-translate-y-1 animate-fade-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-display font-bold text-lg transition-shadow duration-300 group-hover:shadow-lg group-hover:shadow-primary/20">
-                  {fl.name.charAt(0)}
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-semibold text-foreground text-sm">{fl.name}</span>
-                    {fl.verified && <CheckCircle className="h-4 w-4 text-trust-green" />}
-                  </div>
-                  <span className="text-xs text-muted-foreground">{fl.skill}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-                <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{fl.city}</span>
-                <span className="flex items-center gap-1"><Star className="h-3 w-3 text-trust-gold" />{fl.rating}</span>
-                <span>{fl.jobs} jobs</span>
-              </div>
-
-              <div className="flex items-center justify-between pt-4 border-t border-border/40">
-                <span className="text-sm font-semibold text-primary">{fl.rate}</span>
-                <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors duration-200">View Profile →</span>
-              </div>
-            </Link>
-          )}
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide mb-8">
+          {['All', 'Web Developers', 'Brand Designers', 'Illustrators', 'UI/UX Designers'].map((tab, i) => (
+            <button key={tab} className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap ${i === 0 ? 'bg-foreground text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'}`}>
+              {tab}
+            </button>
+          ))}
         </div>
-      </section>
 
-      {/* Trust Section */}
-      <section className="container py-20">
-        <div className="glass-card p-10 md:p-16">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-6">
-                Built on <span className="text-primary">Local Trust</span>
-              </h2>
-              <p className="text-muted-foreground mb-8 leading-relaxed">
-                Unlike global platforms, LocalSkillHub combines official verification, community endorsements, and local reputation signals to give you confidence in every hire.
-              </p>
-              <div className="space-y-4">
-                {[
-                { icon: Shield, text: "Identity & skill verification" },
-                { icon: Award, text: "Community endorsement badges" },
-                { icon: TrendingUp, text: "Local trust scoring system" },
-                { icon: Users, text: "Region-specific leaderboards" }].
-                map((item, i) =>
-                <div key={item.text} className="flex items-center gap-3 animate-slide-in-left" style={{ animationDelay: `${i * 0.1}s` }}>
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-muted">
-                      <item.icon className="h-4 w-4 text-primary" />
-                    </div>
-                    <span className="text-sm text-foreground">{item.text}</span>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {featuredFreelancers.map((fl) => (
+            <Link
+              key={fl.name}
+              to="/profile/1"
+              className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg transition-all duration-300 group flex flex-col items-center text-center"
+            >
+              <div className="relative mb-4">
+                <img src={fl.avatar} alt={fl.name} className="w-20 h-20 rounded-full object-cover border-2 border-background shadow-sm" />
+                {fl.verified && (
+                  <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5">
+                    <CheckCircle className="h-5 w-5 text-trust-green" />
                   </div>
                 )}
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-              { label: "Local Trust", value: "96%", color: "text-trust-green" },
-              { label: "Skill Score", value: "4.8/5", color: "text-trust-gold" },
-              { label: "Response Time", value: "< 2hrs", color: "text-primary" },
-              { label: "Repeat Hire", value: "72%", color: "text-brand-glow" }].
-              map((metric, i) =>
-              <div key={metric.label} className="glass-card p-6 text-center hover:border-primary/20 transition-all duration-300 animate-scale-in" style={{ animationDelay: `${i * 0.1}s` }}>
-                  <div className={`text-2xl font-display font-bold ${metric.color}`}>{metric.value}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{metric.label}</div>
+              
+              <h3 className="font-semibold text-foreground text-lg">{fl.name}</h3>
+              <p className="text-sm text-muted-foreground mb-4">{fl.skill} • {fl.city}</p>
+              
+              <div className="flex items-center gap-2 mb-6">
+                <div className="flex items-center gap-1 text-sm font-medium text-foreground bg-secondary px-2.5 py-1 rounded-full">
+                  <Star className="h-3.5 w-3.5 text-trust-gold fill-trust-gold" /> {fl.rating}
                 </div>
-              )}
-            </div>
+                <div className="text-sm text-muted-foreground bg-secondary px-2.5 py-1 rounded-full">
+                  {fl.jobs} jobs completed
+                </div>
+              </div>
+              
+              <div className="w-full mt-auto">
+                <Button variant="outline" className="w-full rounded-full font-medium group-hover:bg-foreground group-hover:text-primary-foreground transition-colors">
+                  View Profile
+                </Button>
+              </div>
+            </Link>
+          ))}
+        </div>
+        
+        <div className="mt-12 text-center">
+          <Button className="h-12 rounded-full px-8 font-semibold bg-brand hover:bg-brand-glow text-foreground">
+            Browse All Freelancers
+          </Button>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="bg-card py-20">
+        <div className="container">
+          <div className="mb-12">
+            <p className="text-sm font-semibold text-brand mb-2">Success Stories</p>
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground tracking-tight">
+              See what clients are saying.
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map((t) => (
+              <div key={t.name} className="bg-background border border-border/60 rounded-2xl p-8 flex flex-col">
+                <p className="text-base text-foreground leading-relaxed mb-8 flex-grow">"{t.text}"</p>
+                <div className="flex items-center gap-3">
+                  <img src={t.avatar} alt={t.name} className="w-10 h-10 rounded-full object-cover" />
+                  <div>
+                    <div className="text-sm font-semibold text-foreground">{t.name}</div>
+                    <div className="text-xs text-muted-foreground">{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="container py-20">
-        <div className="text-center max-w-2xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-            Ready to Connect Locally?
+      <section className="py-24">
+        <div className="container max-w-4xl text-center">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground mb-6">
+            Hiring on behalf<br />of your company?
           </h2>
-          <p className="text-muted-foreground mb-8">
-            Join thousands of freelancers and clients building trust in their local communities.
+          <p className="text-muted-foreground text-lg mb-10 max-w-2xl mx-auto">
+            Work with your team to hire and manage creative talent all in one place.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/signup">
-              <Button className="bg-primary text-primary-foreground font-semibold h-12 px-8 hover:bg-primary/90 transition-all duration-200">
-                Join as Freelancer
-              </Button>
-            </Link>
-            <Link to="/post-job">
-              <Button variant="outline" className="h-12 px-8 border-border text-foreground hover:bg-secondary transition-all duration-200">
-                Post a Job
-              </Button>
-            </Link>
+          <Link to="/post-job">
+            <Button className="h-12 rounded-full px-10 font-semibold bg-brand hover:bg-brand-glow text-foreground text-base">
+              Contact Us
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Bottom Stats Banner */}
+      <section className="bg-foreground text-primary-foreground">
+        <div className="container py-24 text-center">
+          <p className="text-sm font-semibold mb-4">LocalSkillHub</p>
+          <h2 className="text-3xl md:text-5xl font-display font-bold mb-16 max-w-3xl mx-auto">
+            Tap into your city's largest professional community.
+          </h2>
+          
+          <div className="grid sm:grid-cols-3 gap-10 max-w-4xl mx-auto divide-x divide-primary-foreground/10">
+            {[
+              { value: "50M+", label: "Over 50 million professionals in the LocalSkillHub community" },
+              { value: "Billions", label: "Over 1 billion projects created across the globe on LocalSkillHub" },
+              { value: "2008", label: "Founded in 2008, LocalSkillHub has built a trusted network for over 15 years" },
+            ].map((s) => (
+              <div key={s.value} className="px-6">
+                <div className="text-3xl md:text-4xl font-display font-bold mb-3">{s.value}</div>
+                <div className="text-sm text-primary-foreground/60 leading-relaxed">{s.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
-    </Layout>);
-
+    </Layout>
+  );
 };
 
 export default Index;
