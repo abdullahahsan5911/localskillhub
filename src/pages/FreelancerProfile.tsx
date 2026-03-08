@@ -9,12 +9,12 @@ import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 
 const portfolio = [
-  { title: "E-commerce Redesign", category: "Web Design", color: "from-primary to-brand-glow" },
-  { title: "Brand Identity System", category: "Branding", color: "from-trust-gold to-primary" },
-  { title: "Mobile Banking App", category: "UI/UX", color: "from-accent to-trust-green" },
-  { title: "SaaS Dashboard", category: "Web App", color: "from-brand-glow to-accent" },
-  { title: "Restaurant Website", category: "Web Design", color: "from-primary to-accent" },
-  { title: "Fitness App UI", category: "Mobile", color: "from-trust-gold to-brand-glow" },
+  { title: "E-commerce Redesign", category: "Web Design", color: "bg-primary" },
+  { title: "Brand Identity System", category: "Branding", color: "bg-trust-gold" },
+  { title: "Mobile Banking App", category: "UI/UX", color: "bg-accent" },
+  { title: "SaaS Dashboard", category: "Web App", color: "bg-brand-glow" },
+  { title: "Restaurant Website", category: "Web Design", color: "bg-primary" },
+  { title: "Fitness App UI", category: "Mobile", color: "bg-trust-gold" },
 ];
 
 const reviews = [
@@ -36,7 +36,7 @@ const FreelancerProfile = () => {
       {/* Profile Header */}
       <section className="relative border-b border-border/30 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-brand/5 rounded-full blur-3xl" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-accent/5 rounded-full blur-3xl" />
         </div>
 
@@ -44,11 +44,12 @@ const FreelancerProfile = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
             className="flex flex-col md:flex-row gap-8 items-start"
           >
             {/* Avatar */}
             <div className="relative">
-              <div className="w-28 h-28 rounded-2xl gradient-brand flex items-center justify-center text-primary-foreground font-display font-bold text-5xl shrink-0 shadow-xl shadow-primary/20">
+              <div className="w-28 h-28 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground font-display font-bold text-5xl shrink-0 shadow-xl shadow-primary/10">
                 P
               </div>
               <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-trust-green border-2 border-background flex items-center justify-center">
@@ -78,7 +79,7 @@ const FreelancerProfile = () => {
                   { icon: GraduationCap, label: "College Verified", color: "text-brand-glow bg-brand-glow/10 border-brand-glow/20" },
                   { icon: Zap, label: "Fast Responder", color: "text-accent bg-accent/10 border-accent/20" },
                 ].map((badge) => (
-                  <span key={badge.label} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${badge.color}`}>
+                  <span key={badge.label} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors duration-200 ${badge.color}`}>
                     <badge.icon className="h-3 w-3" />{badge.label}
                   </span>
                 ))}
@@ -87,17 +88,17 @@ const FreelancerProfile = () => {
 
             {/* Actions */}
             <div className="flex flex-col gap-3 shrink-0 w-full md:w-auto">
-              <Button className="gradient-brand text-primary-foreground font-semibold glow-sm gap-2 h-11">
+              <Button className="bg-primary text-primary-foreground font-semibold gap-2 h-11 hover:bg-primary/90 transition-all duration-200">
                 <MessageSquare className="h-4 w-4" /> Contact
               </Button>
-              <Button variant="outline" className="border-border text-foreground gap-2 h-11">
+              <Button variant="outline" className="border-border text-foreground gap-2 h-11 transition-colors duration-200">
                 <Mail className="h-4 w-4" /> Send Proposal
               </Button>
               <div className="flex gap-2">
-                <Button variant="outline" size="icon" className="border-border text-muted-foreground hover:text-foreground h-9 w-9">
+                <Button variant="outline" size="icon" className="border-border text-muted-foreground hover:text-foreground h-9 w-9 transition-colors duration-200">
                   <Heart className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="icon" className="border-border text-muted-foreground hover:text-foreground h-9 w-9">
+                <Button variant="outline" size="icon" className="border-border text-muted-foreground hover:text-foreground h-9 w-9 transition-colors duration-200">
                   <Share2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -127,7 +128,7 @@ const FreelancerProfile = () => {
               <h2 className="text-xl font-display font-semibold text-foreground mb-4">Skills</h2>
               <div className="flex flex-wrap gap-2">
                 {["UI Design", "UX Research", "Figma", "Adobe XD", "Prototyping", "Design Systems", "Mobile Design", "Web Design", "Wireframing", "User Testing"].map((skill) => (
-                  <span key={skill} className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground border border-border/30">{skill}</span>
+                  <span key={skill} className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground border border-border/30 transition-colors duration-200 hover:border-primary/20">{skill}</span>
                 ))}
               </div>
             </section>
@@ -142,12 +143,12 @@ const FreelancerProfile = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    className="glass-card overflow-hidden group cursor-pointer hover:border-primary/30 transition-all hover:-translate-y-1"
+                    className="glass-card overflow-hidden group cursor-pointer hover:border-primary/30 transition-all duration-300 hover:-translate-y-1"
                   >
-                    <div className={`aspect-[4/3] bg-gradient-to-br ${item.color} flex items-center justify-center relative`}>
+                    <div className={`aspect-[4/3] ${item.color} flex items-center justify-center relative`}>
                       <span className="text-4xl font-display font-bold text-white/20">{item.title.charAt(0)}</span>
-                      <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition-colors flex items-center justify-center">
-                        <ExternalLink className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition-colors duration-300 flex items-center justify-center">
+                        <ExternalLink className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       </div>
                     </div>
                     <div className="p-4">
@@ -164,7 +165,7 @@ const FreelancerProfile = () => {
               <h2 className="text-xl font-display font-semibold text-foreground mb-4">Work History</h2>
               <div className="space-y-3">
                 {workHistory.map((work) => (
-                  <div key={work.title} className="glass-card p-5 hover:border-primary/20 transition-colors">
+                  <div key={work.title} className="glass-card p-5 hover:border-primary/20 transition-all duration-200">
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="text-sm font-semibold text-foreground">{work.title}</h3>
@@ -224,9 +225,9 @@ const FreelancerProfile = () => {
                 <Shield className="h-4 w-4 text-primary" /> Trust Scores
               </h3>
               {[
-                { label: "Overall", value: 96, color: "from-primary to-brand-glow" },
-                { label: "Local Trust", value: 98, color: "from-trust-green to-accent" },
-                { label: "Skill Score", value: 94, color: "from-trust-gold to-primary" },
+                { label: "Overall", value: 96, color: "bg-primary" },
+                { label: "Local Trust", value: 98, color: "bg-accent" },
+                { label: "Skill Score", value: 94, color: "bg-trust-gold" },
               ].map((score) => (
                 <div key={score.label} className="mb-3">
                   <div className="flex justify-between text-xs mb-1.5">
@@ -238,7 +239,7 @@ const FreelancerProfile = () => {
                       initial={{ width: 0 }}
                       animate={{ width: `${score.value}%` }}
                       transition={{ duration: 0.8, delay: 0.2 }}
-                      className={`h-full rounded-full bg-gradient-to-r ${score.color}`}
+                      className={`h-full rounded-full ${score.color}`}
                     />
                   </div>
                 </div>
@@ -274,7 +275,7 @@ const FreelancerProfile = () => {
                   { name: "IIT Bombay Alumni", type: "Education", icon: GraduationCap },
                   { name: "StartupMH Network", type: "Professional", icon: TrendingUp },
                 ].map((endorsement) => (
-                  <div key={endorsement.name} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/20">
+                  <div key={endorsement.name} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/20 hover:border-primary/20 transition-colors duration-200">
                     <endorsement.icon className="h-4 w-4 text-trust-gold shrink-0" />
                     <div>
                       <div className="text-sm text-foreground font-medium">{endorsement.name}</div>
@@ -295,7 +296,7 @@ const FreelancerProfile = () => {
                   { label: "GitHub", href: "#", icon: ExternalLink },
                   { label: "Behance", href: "#", icon: ExternalLink },
                 ].map((link) => (
-                  <a key={link.label} href={link.href} className="flex items-center gap-2 text-sm text-primary hover:text-brand-glow transition-colors p-2 rounded-lg hover:bg-secondary/30">
+                  <a key={link.label} href={link.href} className="flex items-center gap-2 text-sm text-primary hover:text-brand-glow transition-colors duration-200 p-2 rounded-lg hover:bg-secondary/30">
                     <link.icon className="h-3.5 w-3.5" />{link.label}
                   </a>
                 ))}
@@ -311,7 +312,7 @@ const FreelancerProfile = () => {
                   { name: "Standard Package", price: "₹40,000", desc: "5 pages, 3 revisions, 10-day delivery" },
                   { name: "Premium Package", price: "₹80,000", desc: "Full site, unlimited revisions, 20-day delivery" },
                 ].map((pkg) => (
-                  <div key={pkg.name} className="p-3 rounded-lg bg-secondary/30 border border-border/20 hover:border-primary/20 transition-colors cursor-pointer">
+                  <div key={pkg.name} className="p-3 rounded-lg bg-secondary/30 border border-border/20 hover:border-primary/20 transition-colors duration-200 cursor-pointer">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-medium text-foreground">{pkg.name}</span>
                       <span className="text-sm font-bold text-primary">{pkg.price}</span>

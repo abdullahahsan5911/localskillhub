@@ -7,14 +7,14 @@ import Layout from "@/components/layout/Layout";
 const skills = ["All", "Web Development", "Graphic Design", "Video Production", "Digital Marketing", "Photography", "Content Writing", "Mobile Dev", "Data Science"];
 
 const avatarColors = [
-  "from-primary to-brand-glow",
-  "from-accent to-trust-green",
-  "from-trust-gold to-primary",
-  "from-destructive to-trust-gold",
-  "from-brand-glow to-accent",
-  "from-primary to-accent",
-  "from-trust-gold to-brand-glow",
-  "from-accent to-primary",
+  "bg-primary",
+  "bg-accent",
+  "bg-trust-gold",
+  "bg-destructive",
+  "bg-brand-glow",
+  "bg-primary",
+  "bg-trust-gold",
+  "bg-accent",
 ];
 
 const mockFreelancers = [
@@ -38,29 +38,29 @@ const BrowseFreelancers = () => {
       {/* Hero Header */}
       <section className="relative border-b border-border/30">
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 right-1/4 w-72 h-72 bg-brand/5 rounded-full blur-3xl" />
+          <div className="absolute top-0 right-1/4 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-1/3 w-56 h-56 bg-accent/5 rounded-full blur-3xl" />
         </div>
 
         <div className="container relative py-12 md:py-16">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-muted/60 border border-brand/10 text-primary text-xs font-medium mb-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-muted/60 border border-primary/10 text-primary text-xs font-medium mb-5 animate-fade-in-up">
               <TrendingUp className="h-3.5 w-3.5" />
               {mockFreelancers.length} verified professionals near you
             </div>
 
-            <h1 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-3 tracking-tight">
+            <h1 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-3 tracking-tight animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
               Browse Local Talent
             </h1>
-            <p className="text-base text-muted-foreground max-w-xl">
+            <p className="text-base text-muted-foreground max-w-xl animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
               Discover trust-verified freelancers in your region. Filter by skill, location, and community ratings.
             </p>
           </div>
 
           {/* Search Bar */}
-          <div className="glass-card p-2 mt-8 max-w-3xl">
+          <div className="glass-card p-2 mt-8 max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
             <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50">
+              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
                 <Search className="h-4 w-4 text-muted-foreground shrink-0" />
                 <input
                   type="text"
@@ -70,7 +70,7 @@ const BrowseFreelancers = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50">
+              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
                 <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
                 <input
                   type="text"
@@ -80,7 +80,7 @@ const BrowseFreelancers = () => {
                   onChange={(e) => setLocationQuery(e.target.value)}
                 />
               </div>
-              <Button className="gradient-brand text-primary-foreground font-semibold px-8 h-12 glow-sm">
+              <Button className="bg-primary text-primary-foreground font-semibold px-8 h-12 hover:bg-primary/90 transition-all duration-200">
                 Search
               </Button>
             </div>
@@ -94,7 +94,7 @@ const BrowseFreelancers = () => {
                 onClick={() => setActiveSkill(skill)}
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                   activeSkill === skill
-                    ? "gradient-brand text-primary-foreground shadow-lg shadow-primary/20"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border/30"
                 }`}
               >
@@ -113,10 +113,10 @@ const BrowseFreelancers = () => {
             <span className="text-xs text-muted-foreground">sorted by relevance</span>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="border-border/50 text-muted-foreground hover:text-foreground gap-2 rounded-full">
+            <Button variant="outline" size="sm" className="border-border/50 text-muted-foreground hover:text-foreground gap-2 rounded-full transition-colors duration-200">
               <SlidersHorizontal className="h-3.5 w-3.5" /> Filters
             </Button>
-            <Button variant="outline" size="sm" className="border-border/50 text-muted-foreground hover:text-foreground gap-2 rounded-full">
+            <Button variant="outline" size="sm" className="border-border/50 text-muted-foreground hover:text-foreground gap-2 rounded-full transition-colors duration-200">
               Sort <ChevronDown className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -127,15 +127,16 @@ const BrowseFreelancers = () => {
             <Link
               to={`/profile/${fl.id}`}
               key={fl.id}
-              className="glass-card p-0 overflow-hidden hover:border-primary/30 transition-all duration-300 group hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5"
+              className="glass-card p-0 overflow-hidden hover:border-primary/30 transition-all duration-300 group hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5 animate-fade-in-up"
+              style={{ animationDelay: `${idx * 0.05}s` }}
             >
               {/* Card Top Accent */}
-              <div className={`h-1 w-full bg-gradient-to-r ${avatarColors[idx % avatarColors.length]}`} />
+              <div className={`h-1 w-full ${avatarColors[idx % avatarColors.length]}`} />
 
               <div className="p-6">
                 {/* Avatar & Info */}
                 <div className="flex items-start gap-3.5 mb-5">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${avatarColors[idx % avatarColors.length]} flex items-center justify-center text-primary-foreground font-display font-bold text-lg shrink-0 shadow-lg`}>
+                  <div className={`w-12 h-12 rounded-xl ${avatarColors[idx % avatarColors.length]} flex items-center justify-center text-primary-foreground font-display font-bold text-lg shrink-0 transition-shadow duration-300 group-hover:shadow-lg`}>
                     {fl.name.charAt(0)}
                   </div>
                   <div className="min-w-0">
@@ -171,7 +172,7 @@ const BrowseFreelancers = () => {
                   </div>
                   <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-trust-green to-accent transition-all duration-700"
+                      className="h-full rounded-full bg-accent transition-all duration-700"
                       style={{ width: `${fl.localScore}%` }}
                     />
                   </div>
@@ -194,9 +195,9 @@ const BrowseFreelancers = () => {
                   <div>
                     <span className="text-sm font-bold text-primary">{fl.rate}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                  <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors duration-200">
                     View Profile
-                    <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </div>
                 </div>
 
@@ -220,7 +221,7 @@ const BrowseFreelancers = () => {
 
         {/* Load More */}
         <div className="flex justify-center mt-12">
-          <Button variant="outline" className="border-border/50 text-muted-foreground hover:text-foreground rounded-full px-8">
+          <Button variant="outline" className="border-border/50 text-muted-foreground hover:text-foreground rounded-full px-8 transition-colors duration-200">
             Load More Freelancers
           </Button>
         </div>

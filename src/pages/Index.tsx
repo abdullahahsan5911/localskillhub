@@ -60,33 +60,32 @@ const Index = () => {
     <Layout>
       {/* Hero */}
       <section className="relative overflow-hidden">
-        {/* Background effects */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand/5 rounded-full blur-3xl animate-pulse-glow" />
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-trust-green/5 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: "1.5s" }} />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse-glow" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/5 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: "1.5s" }} />
         </div>
 
         <div className="container relative py-24 md:py-36">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-muted border border-brand/20 text-primary text-sm font-medium mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-muted border border-primary/20 text-primary text-sm font-medium mb-8 animate-fade-in-up">
               <MapPin className="h-4 w-4" />
               Region-Specific • Trust-Verified • Community-Driven
             </div>
 
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-tight mb-6">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-tight mb-6 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
               Find Local Talent
               <br />
-              <span className="text-gradient">You Can Trust</span>
+              <span className="text-primary">You Can Trust</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
               Connect with verified freelancers in your city. Local reputation, community endorsements, and real trust signals — not just reviews.
             </p>
 
-            {/* Search Bar - Bark inspired */}
-            <div className="glass-card p-2 max-w-2xl mx-auto">
+            {/* Search Bar */}
+            <div className="glass-card p-2 max-w-2xl mx-auto animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
               <div className="flex flex-col sm:flex-row gap-2">
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50">
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
                   <Search className="h-5 w-5 text-muted-foreground shrink-0" />
                   <input
                     type="text"
@@ -96,7 +95,7 @@ const Index = () => {
                     onChange={(e) => setSearchService(e.target.value)}
                   />
                 </div>
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50">
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
                   <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
                   <input
                     type="text"
@@ -107,7 +106,7 @@ const Index = () => {
                   />
                 </div>
                 <Link to="/browse">
-                  <Button className="gradient-brand text-primary-foreground font-semibold h-12 px-8 glow-sm w-full sm:w-auto">
+                  <Button className="bg-primary text-primary-foreground font-semibold h-12 px-8 w-full sm:w-auto hover:bg-primary/90 transition-all duration-200">
                     Search
                   </Button>
                 </Link>
@@ -117,7 +116,7 @@ const Index = () => {
             <div className="flex flex-wrap justify-center gap-2 mt-6">
               <span className="text-xs text-muted-foreground">Popular:</span>
               {["Web Design", "Photography", "Content Writing", "Video Editing"].map((tag) => (
-                <span key={tag} className="text-xs text-primary hover:text-brand-glow cursor-pointer transition-colors">
+                <span key={tag} className="text-xs text-primary hover:text-brand-glow cursor-pointer transition-colors duration-200">
                   {tag}
                 </span>
               ))}
@@ -130,9 +129,9 @@ const Index = () => {
       <section className="border-y border-border/40 bg-card/30">
         <div className="container py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-3xl md:text-4xl font-display font-bold text-gradient">{stat.value}</div>
+            {stats.map((stat, i) => (
+              <div key={stat.label} className="text-center animate-fade-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
+                <div className="text-3xl md:text-4xl font-display font-bold text-primary">{stat.value}</div>
                 <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
               </div>
             ))}
@@ -140,31 +139,32 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Categories - Behance inspired grid */}
+      {/* Categories */}
       <section className="container py-20">
         <div className="flex items-end justify-between mb-10">
           <div>
             <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">Browse by Category</h2>
             <p className="text-muted-foreground mt-2">Find the right professional for your project</p>
           </div>
-          <Link to="/browse" className="hidden md:flex items-center gap-1 text-primary hover:text-brand-glow text-sm font-medium transition-colors">
+          <Link to="/browse" className="hidden md:flex items-center gap-1 text-primary hover:text-brand-glow text-sm font-medium transition-colors duration-200">
             View All <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-          {categories.map((cat) => (
+          {categories.map((cat, i) => (
             <Link
               key={cat.name}
               to="/browse"
-              className="group relative aspect-[4/3] rounded-xl overflow-hidden"
+              className="group relative aspect-[4/3] rounded-xl overflow-hidden animate-fade-in-up"
+              style={{ animationDelay: `${i * 0.08}s` }}
             >
               <img
                 src={cat.image}
                 alt={cat.name}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/30 to-transparent" />
+              <div className="absolute inset-0 bg-background/70 group-hover:bg-background/60 transition-colors duration-300" />
               <div className="absolute bottom-0 left-0 p-5">
                 <h3 className="text-lg font-display font-semibold text-foreground">{cat.name}</h3>
                 <p className="text-sm text-muted-foreground">{cat.count} professionals</p>
@@ -183,8 +183,8 @@ const Index = () => {
 
         <div className="grid md:grid-cols-3 gap-8">
           {howItWorks.map((step, i) => (
-            <div key={step.title} className="glass-card p-8 text-center group hover:border-primary/30 transition-colors">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl gradient-brand mb-6 group-hover:glow-sm transition-shadow">
+            <div key={step.title} className="glass-card p-8 text-center group hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 animate-fade-in-up" style={{ animationDelay: `${i * 0.15}s` }}>
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary mb-6 transition-shadow duration-300 group-hover:shadow-lg group-hover:shadow-primary/20">
                 <step.icon className="h-6 w-6 text-primary-foreground" />
               </div>
               <div className="text-xs text-muted-foreground font-medium mb-2">Step {i + 1}</div>
@@ -202,17 +202,16 @@ const Index = () => {
             <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">Top Local Talent</h2>
             <p className="text-muted-foreground mt-2">Highly rated freelancers in your region</p>
           </div>
-          <Link to="/browse" className="hidden md:flex items-center gap-1 text-primary hover:text-brand-glow text-sm font-medium transition-colors">
+          <Link to="/browse" className="hidden md:flex items-center gap-1 text-primary hover:text-brand-glow text-sm font-medium transition-colors duration-200">
             Browse All <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredFreelancers.map((fl) => (
-            <Link to="/profile/1" key={fl.name} className="glass-card p-6 hover:border-primary/30 transition-all group">
-              {/* Avatar */}
+          {featuredFreelancers.map((fl, i) => (
+            <Link to="/profile/1" key={fl.name} className="glass-card p-6 hover:border-primary/30 transition-all duration-300 group hover:-translate-y-1 animate-fade-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full gradient-brand flex items-center justify-center text-primary-foreground font-display font-bold text-lg">
+                <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-display font-bold text-lg transition-shadow duration-300 group-hover:shadow-lg group-hover:shadow-primary/20">
                   {fl.name.charAt(0)}
                 </div>
                 <div>
@@ -232,7 +231,7 @@ const Index = () => {
 
               <div className="flex items-center justify-between pt-4 border-t border-border/40">
                 <span className="text-sm font-semibold text-primary">{fl.rate}</span>
-                <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors">View Profile →</span>
+                <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors duration-200">View Profile →</span>
               </div>
             </Link>
           ))}
@@ -245,7 +244,7 @@ const Index = () => {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-6">
-                Built on <span className="text-gradient">Local Trust</span>
+                Built on <span className="text-primary">Local Trust</span>
               </h2>
               <p className="text-muted-foreground mb-8 leading-relaxed">
                 Unlike global platforms, LocalSkillHub combines official verification, community endorsements, and local reputation signals to give you confidence in every hire.
@@ -256,8 +255,8 @@ const Index = () => {
                   { icon: Award, text: "Community endorsement badges" },
                   { icon: TrendingUp, text: "Local trust scoring system" },
                   { icon: Users, text: "Region-specific leaderboards" },
-                ].map((item) => (
-                  <div key={item.text} className="flex items-center gap-3">
+                ].map((item, i) => (
+                  <div key={item.text} className="flex items-center gap-3 animate-slide-in-left" style={{ animationDelay: `${i * 0.1}s` }}>
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-muted">
                       <item.icon className="h-4 w-4 text-primary" />
                     </div>
@@ -272,8 +271,8 @@ const Index = () => {
                 { label: "Skill Score", value: "4.8/5", color: "text-trust-gold" },
                 { label: "Response Time", value: "< 2hrs", color: "text-primary" },
                 { label: "Repeat Hire", value: "72%", color: "text-brand-glow" },
-              ].map((metric) => (
-                <div key={metric.label} className="glass-card p-6 text-center">
+              ].map((metric, i) => (
+                <div key={metric.label} className="glass-card p-6 text-center hover:border-primary/20 transition-all duration-300 animate-scale-in" style={{ animationDelay: `${i * 0.1}s` }}>
                   <div className={`text-2xl font-display font-bold ${metric.color}`}>{metric.value}</div>
                   <div className="text-xs text-muted-foreground mt-1">{metric.label}</div>
                 </div>
@@ -294,12 +293,12 @@ const Index = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/signup">
-              <Button className="gradient-brand text-primary-foreground font-semibold h-12 px-8 glow-sm">
+              <Button className="bg-primary text-primary-foreground font-semibold h-12 px-8 hover:bg-primary/90 transition-all duration-200">
                 Join as Freelancer
               </Button>
             </Link>
             <Link to="/post-job">
-              <Button variant="outline" className="h-12 px-8 border-border text-foreground hover:bg-secondary">
+              <Button variant="outline" className="h-12 px-8 border-border text-foreground hover:bg-secondary transition-all duration-200">
                 Post a Job
               </Button>
             </Link>

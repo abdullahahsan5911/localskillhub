@@ -51,7 +51,7 @@ const JobDetail = () => {
       {/* Breadcrumb */}
       <div className="border-b border-border/30">
         <div className="container py-3 flex items-center gap-2 text-sm">
-          <Link to="/jobs" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+          <Link to="/jobs" className="text-muted-foreground hover:text-foreground transition-colors duration-200 flex items-center gap-1">
             <ArrowLeft className="h-4 w-4" /> Back to Jobs
           </Link>
         </div>
@@ -76,10 +76,10 @@ const JobDetail = () => {
                   </div>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-9 w-9">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-9 w-9 transition-colors duration-200">
                     <Heart className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-9 w-9">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-9 w-9 transition-colors duration-200">
                     <Share2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -124,8 +124,8 @@ const JobDetail = () => {
                 <h2 className="text-lg font-display font-semibold text-foreground mb-3">Project Milestones</h2>
                 <div className="space-y-3">
                   {job.milestones.map((m, i) => (
-                    <div key={m.name} className="flex items-center gap-4 p-4 rounded-xl bg-secondary/40 border border-border/30">
-                      <div className="w-8 h-8 rounded-full gradient-brand flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
+                    <div key={m.name} className="flex items-center gap-4 p-4 rounded-xl bg-secondary/40 border border-border/30 hover:border-primary/20 transition-colors duration-200">
+                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
                         {i + 1}
                       </div>
                       <div className="flex-1">
@@ -144,7 +144,7 @@ const JobDetail = () => {
           <div className="space-y-6">
             {/* Apply */}
             <div className="glass-card p-6">
-              <Button className="w-full gradient-brand text-primary-foreground font-semibold h-12 glow-sm gap-2 mb-4">
+              <Button className="w-full bg-primary text-primary-foreground font-semibold h-12 gap-2 mb-4 hover:bg-primary/90 transition-all duration-200">
                 <Send className="h-4 w-4" /> Submit Proposal
               </Button>
               <p className="text-xs text-muted-foreground text-center">
@@ -156,7 +156,7 @@ const JobDetail = () => {
             <div className="glass-card p-6">
               <h3 className="text-sm font-semibold text-foreground mb-4">About the Client</h3>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-11 h-11 rounded-lg gradient-brand flex items-center justify-center text-primary-foreground font-bold">T</div>
+                <div className="w-11 h-11 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">T</div>
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-semibold text-foreground">{job.client}</span>
@@ -187,7 +187,7 @@ const JobDetail = () => {
               <h3 className="text-sm font-semibold text-foreground mb-4">Similar Jobs</h3>
               <div className="space-y-3">
                 {similarJobs.map((j) => (
-                  <div key={j.title} className="p-3 rounded-lg bg-secondary/30 border border-border/20 hover:border-primary/20 transition-colors cursor-pointer">
+                  <div key={j.title} className="p-3 rounded-lg bg-secondary/30 border border-border/20 hover:border-primary/20 transition-colors duration-200 cursor-pointer">
                     <span className="text-sm font-medium text-foreground block">{j.title}</span>
                     <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
                       <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{j.city}</span>

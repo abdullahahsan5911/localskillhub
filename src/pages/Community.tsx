@@ -71,7 +71,7 @@ const Community = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className={`flex items-center gap-4 p-3 rounded-xl transition-colors cursor-pointer hover:bg-secondary/30 ${
+                    className={`flex items-center gap-4 p-3 rounded-xl transition-colors duration-200 cursor-pointer hover:bg-secondary/30 ${
                       user.rank <= 3 ? "bg-secondary/20 border border-border/20" : ""
                     }`}
                   >
@@ -80,7 +80,7 @@ const Community = () => {
                     }`}>
                       {user.badge || `#${user.rank}`}
                     </span>
-                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-brand-glow flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0`}>
+                    <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
                       {user.name.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -106,9 +106,9 @@ const Community = () => {
               </h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 {upcomingEvents.map((event) => (
-                  <div key={event.title} className="p-4 rounded-xl bg-secondary/30 border border-border/20 hover:border-primary/20 transition-colors cursor-pointer group">
+                  <div key={event.title} className="p-4 rounded-xl bg-secondary/30 border border-border/20 hover:border-primary/20 transition-all duration-200 cursor-pointer group">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{event.type}</span>
-                    <h3 className="text-sm font-semibold text-foreground mt-2 group-hover:text-primary transition-colors">{event.title}</h3>
+                    <h3 className="text-sm font-semibold text-foreground mt-2 group-hover:text-primary transition-colors duration-200">{event.title}</h3>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                       <Calendar className="h-3 w-3" /> {event.date}
                     </div>
@@ -119,7 +119,7 @@ const Community = () => {
                       <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                         <Users className="h-3 w-3" /> {event.attendees} attending
                       </span>
-                      <Button size="sm" variant="outline" className="h-6 text-[10px] border-border/50 text-foreground">
+                      <Button size="sm" variant="outline" className="h-6 text-[10px] border-border/50 text-foreground transition-colors duration-200">
                         RSVP
                       </Button>
                     </div>
@@ -138,7 +138,7 @@ const Community = () => {
               </h3>
               <div className="space-y-3">
                 {badges.map((badge) => (
-                  <div key={badge.label} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/20">
+                  <div key={badge.label} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/20 hover:border-primary/20 transition-colors duration-200">
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${badge.color}`}>
                       <badge.icon className="h-4 w-4" />
                     </div>
@@ -157,7 +157,7 @@ const Community = () => {
               <h3 className="text-sm font-semibold text-foreground mb-4">Your Badges</h3>
               <div className="flex flex-wrap gap-2">
                 {["College Verified", "Community Member", "Top Rated", "Fast Responder"].map((badge) => (
-                  <span key={badge} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                  <span key={badge} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 transition-colors duration-200">
                     <CheckCircle className="h-3 w-3" /> {badge}
                   </span>
                 ))}
