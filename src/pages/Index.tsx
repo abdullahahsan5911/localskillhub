@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Search, MapPin, ArrowRight, CheckCircle, Shield, Users, Zap, Star, Briefcase, Clock, ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { Search, MapPin, ArrowRight, CheckCircle, Shield, Users, Zap, Star, Briefcase, Clock, ChevronLeft, ChevronRight, Quote, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -185,35 +185,46 @@ const HeroSectionInline = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-3 border border-primary-foreground/10 max-w-3xl">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary-foreground/5 flex-1">
-                <Search className="h-5 w-5 text-primary-foreground/40 shrink-0" />
-                <input
-                  type="text"
-                  placeholder="What service are you looking for?"
-                  className="bg-transparent w-full text-primary-foreground placeholder:text-primary-foreground/40 outline-none text-sm"
-                  value={searchService}
-                  onChange={(e) => setSearchService(e.target.value)}
-                />
-              </div>
-              <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary-foreground/5 flex-1">
-                <MapPin className="h-5 w-5 text-primary-foreground/40 shrink-0" />
-                <input
-                  type="text"
-                  placeholder="City or Postcode"
-                  className="bg-transparent w-full text-primary-foreground placeholder:text-primary-foreground/40 outline-none text-sm"
-                  value={searchLocation}
-                  onChange={(e) => setSearchLocation(e.target.value)}
-                />
-              </div>
-              <Link to="/browse">
-                <Button className="w-full sm:w-auto h-12 rounded-xl font-semibold bg-brand hover:bg-brand-glow text-foreground text-base gap-2 group px-8">
-                  Search
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </Link>
+          <div className="flex items-center gap-3 max-w-5xl border border-primary-foreground/15 rounded-full px-2 py-1.5 bg-primary-foreground/5 backdrop-blur-sm">
+            {/* Filter Button */}
+            <button className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-primary-foreground/15 text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 transition-colors text-sm font-medium shrink-0">
+              <SlidersHorizontal className="h-4 w-4" />
+              Filter
+            </button>
+
+            {/* Search Input */}
+            <div className="flex items-center gap-2.5 flex-1 min-w-0 px-2">
+              <Search className="h-4 w-4 text-primary-foreground/40 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search freelancers, skills, services..."
+                className="bg-transparent w-full text-primary-foreground placeholder:text-primary-foreground/40 outline-none text-sm"
+                value={searchService}
+                onChange={(e) => setSearchService(e.target.value)}
+              />
             </div>
+
+            {/* Tab Pills */}
+            <div className="hidden md:flex items-center border-l border-primary-foreground/15 pl-3 gap-1 shrink-0">
+              {["Freelancers", "Projects", "Services", "Cities"].map((tab, i) => (
+                <button
+                  key={tab}
+                  className={`px-3.5 py-2 rounded-full text-sm font-medium transition-colors ${
+                    i === 0
+                      ? "bg-primary-foreground text-foreground"
+                      : "text-primary-foreground/50 hover:text-primary-foreground hover:bg-primary-foreground/10"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* Sort Dropdown */}
+            <button className="hidden sm:flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-primary-foreground/15 text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 transition-colors text-sm shrink-0">
+              <span className="text-xs">Recommended</span>
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
           </div>
         </motion.div>
 
