@@ -1,193 +1,129 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  FileText, CheckCircle, Clock, DollarSign, Shield, AlertCircle,
-  Download, ChevronRight, Calendar, Users, Star
-} from "lucide-react";
+import { FiFileText, FiDollarSign, FiCalendar, FiDownload } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
 
-const contracts = [
-  {
-    id: 1, title: "E-commerce Website Redesign", client: "TechStart Solutions",
-    total: "₹60,000", paid: "₹30,000", status: "active",
-    milestones: [
-      { name: "Wireframes & Research", amount: "₹10,000", status: "completed" },
-      { name: "Homepage Design", amount: "₹20,000", status: "completed" },
-      { name: "Inner Pages", amount: "₹15,000", status: "in_progress" },
-      { name: "Final Handoff", amount: "₹15,000", status: "pending" },
-    ],
-    startDate: "Feb 15, 2026", endDate: "Mar 30, 2026"
-  },
-  {
-    id: 2, title: "Portfolio Website", client: "Raj Photography",
-    total: "₹20,000", paid: "₹8,000", status: "active",
-    milestones: [
-      { name: "Design Mockups", amount: "₹8,000", status: "completed" },
-      { name: "Development", amount: "₹8,000", status: "in_progress" },
-      { name: "Launch", amount: "₹4,000", status: "pending" },
-    ],
-    startDate: "Mar 1, 2026", endDate: "Mar 22, 2026"
-  },
-  {
-    id: 3, title: "Brand Identity Package", client: "GreenLeaf Co.",
-    total: "₹25,000", paid: "₹25,000", status: "completed",
-    milestones: [
-      { name: "Research & Concepts", amount: "₹8,000", status: "completed" },
-      { name: "Logo & Colors", amount: "₹10,000", status: "completed" },
-      { name: "Brand Guidelines", amount: "₹7,000", status: "completed" },
-    ],
-    startDate: "Jan 10, 2026", endDate: "Feb 5, 2026"
-  },
-];
-
-const milestoneStatusConfig: Record<string, { color: string; icon: typeof CheckCircle; label: string }> = {
-  completed: { color: "text-trust-green bg-trust-green/10", icon: CheckCircle, label: "Completed" },
-  in_progress: { color: "text-primary bg-primary/10", icon: Clock, label: "In Progress" },
-  pending: { color: "text-muted-foreground bg-secondary", icon: AlertCircle, label: "Pending" },
-};
-
-const contractStatusConfig: Record<string, string> = {
-  active: "bg-trust-green/10 text-trust-green",
-  completed: "bg-primary/10 text-primary",
-  disputed: "bg-destructive/10 text-destructive",
-};
-
 const Contracts = () => {
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [expandedContract, setExpandedContract] = useState<number | null>(1);
-
-  const filtered = activeFilter === "all" ? contracts : contracts.filter(c => c.status === activeFilter);
+  const contracts = [
+    { 
+      id: 1, 
+      title: "Website Redesign", 
+      client: "FoodieHub", 
+      freelancer: "Priya Sharma",
+      status: "Active", 
+      budget: "₹25,000", 
+      startDate: "Mar 5, 2026",
+      endDate: "Mar 20, 2026",
+      milestones: [
+        { title: "Initial Design", amount: "₹8,000", status: "Completed", paid: true },
+        { title: "Development", amount: "₹12,000", status: "In Progress", paid: false },
+        { title: "Final Delivery", amount: "₹5,000", status: "Pending", paid: false },
+      ]
+    },
+    { 
+      id: 2, 
+      title: "Logo Design", 
+      client: "StartupXYZ", 
+      freelancer: "Ananya Singh",
+      status: "Completed", 
+      budget: "₹8,000", 
+      startDate: "Feb 28, 2026",
+      endDate: "Mar 10, 2026",
+      milestones: [
+        { title: "Concept Design", amount: "₹4,000", status: "Completed", paid: true },
+        { title: "Final Files", amount: "₹4,000", status: "Completed", paid: true },
+      ]
+    },
+  ];
 
   return (
     <Layout>
-      <div className="container py-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">Contracts & Payments</h1>
-            <p className="text-muted-foreground text-sm mt-1">Manage milestones, escrow, and invoices</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="border-border text-foreground gap-2 transition-colors duration-200">
-              <Download className="h-4 w-4" /> Export Invoices
-            </Button>
-          </div>
-        </div>
+      <section className="bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Contracts</h1>
+          <p className="text-gray-600 mb-8">View and manage your project agreements</p>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: "Active Contracts", value: "2", icon: FileText, color: "text-primary" },
-            { label: "In Escrow", value: "₹30,000", icon: Shield, color: "text-trust-gold" },
-            { label: "Total Earned", value: "₹5,47,500", icon: DollarSign, color: "text-trust-green" },
-            { label: "Completed", value: "8", icon: CheckCircle, color: "text-brand-glow" },
-          ].map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="glass-card p-5 hover:border-primary/20 transition-all duration-300"
-            >
-              <stat.icon className={`h-5 w-5 ${stat.color} mb-3`} />
-              <div className="text-2xl font-display font-bold text-foreground">{stat.value}</div>
-              <div className="text-xs text-muted-foreground mt-1">{stat.label}</div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Filter Tabs */}
-        <div className="flex gap-1 mb-6 p-1 glass-card w-fit">
-          {["all", "active", "completed"].map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`px-5 py-2 rounded-lg text-sm font-medium capitalize transition-all duration-200 ${
-                activeFilter === filter
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
-        </div>
-
-        {/* Contracts */}
-        <div className="space-y-4">
-          {filtered.map((contract) => (
-            <motion.div
-              key={contract.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass-card overflow-hidden"
-            >
-              {/* Header */}
-              <button
-                onClick={() => setExpandedContract(expandedContract === contract.id ? null : contract.id)}
-                className="w-full flex items-center justify-between p-6 text-left hover:bg-secondary/20 transition-colors duration-200"
-              >
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
-                    {contract.client.charAt(0)}
+          <div className="space-y-6">
+            {contracts.map((contract) => (
+              <div key={contract.id} className="bg-white border border-gray-200 rounded-2xl p-6">
+                <div className="flex items-start justify-between mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">{contract.title}</h2>
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <span>Client: {contract.client}</span>
+                      <span>•</span>
+                      <span>Freelancer: {contract.freelancer}</span>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-base font-semibold text-foreground truncate">{contract.title}</h3>
-                    <p className="text-xs text-muted-foreground">{contract.client} • {contract.startDate} → {contract.endDate}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 shrink-0">
-                  <div className="text-right hidden sm:block">
-                    <div className="text-sm font-semibold text-primary">{contract.total}</div>
-                    <div className="text-[10px] text-muted-foreground">{contract.paid} paid</div>
-                  </div>
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${contractStatusConfig[contract.status]}`}>
+                  <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+                    contract.status === "Active" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"
+                  }`}>
                     {contract.status}
                   </span>
-                  <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expandedContract === contract.id ? "rotate-90" : ""}`} />
                 </div>
-              </button>
 
-              {/* Expanded Milestones */}
-              {expandedContract === contract.id && (
-                <div className="px-6 pb-6 border-t border-border/30 pt-4">
-                  <h4 className="text-sm font-semibold text-foreground mb-3">Milestones</h4>
-                  <div className="space-y-3">
-                    {contract.milestones.map((m) => {
-                      const config = milestoneStatusConfig[m.status];
-                      return (
-                        <div key={m.name} className="flex items-center gap-4 p-3 rounded-xl bg-secondary/30 border border-border/20 hover:border-primary/20 transition-colors duration-200">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${config.color}`}>
-                            <config.icon className="h-4 w-4" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium text-foreground">{m.name}</span>
-                            <span className={`text-[10px] block ${config.color.split(" ")[0]}`}>{config.label}</span>
-                          </div>
-                          <span className="text-sm font-semibold text-foreground">{m.amount}</span>
-                          {m.status === "in_progress" && (
-                            <Button size="sm" className="h-7 text-[10px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-200">
-                              Request Release
-                            </Button>
+                <div className="grid grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <FiDollarSign className="h-5 w-5 text-gray-600" />
+                    <div>
+                      <p className="text-xs text-gray-600">Total Budget</p>
+                      <p className="font-semibold text-gray-900">{contract.budget}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <FiCalendar className="h-5 w-5 text-gray-600" />
+                    <div>
+                      <p className="text-xs text-gray-600">Start Date</p>
+                      <p className="font-semibold text-gray-900">{contract.startDate}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <FiCalendar className="h-5 w-5 text-gray-600" />
+                    <div>
+                      <p className="text-xs text-gray-600">End Date</p>
+                      <p className="font-semibold text-gray-900">{contract.endDate}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Milestones</h3>
+                  <div className="space-y-2">
+                    {contract.milestones.map((milestone, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium text-gray-900">{milestone.title}</p>
+                          <p className="text-sm text-gray-600">{milestone.amount}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            milestone.status === "Completed" ? "bg-green-100 text-green-700" :
+                            milestone.status === "In Progress" ? "bg-blue-100 text-blue-700" :
+                            "bg-gray-200 text-gray-700"
+                          }`}>
+                            {milestone.status}
+                          </span>
+                          {milestone.paid && (
+                            <span className="text-xs text-green-600 font-medium">✓ Paid</span>
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
-                  <div className="flex gap-3 mt-4">
-                    <Button variant="outline" size="sm" className="border-border text-foreground gap-2 transition-colors duration-200">
-                      <Download className="h-3.5 w-3.5" /> Download Invoice
-                    </Button>
-                    <Button variant="outline" size="sm" className="border-border text-foreground gap-2 transition-colors duration-200">
-                      <FileText className="h-3.5 w-3.5" /> View Contract
-                    </Button>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              )}
-            </motion.div>
-          ))}
+
+                <div className="mt-6 pt-6 border-t border-gray-200 flex gap-3">
+                  <Button variant="outline" className="border-gray-300 rounded-full gap-2">
+                    <FiDownload className="h-4 w-4" /> Download Contract
+                  </Button>
+                  <Button className="bg-blue-600 text-white hover:bg-blue-700 rounded-full">
+                    View Details
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
     </Layout>
   );
 };

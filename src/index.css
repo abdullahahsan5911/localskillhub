@@ -12,41 +12,41 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    --foreground: 0 0% 9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card-foreground: 0 0% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover-foreground: 0 0% 9%;
 
-    --primary: 0 0% 0%;
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary-foreground: 0 0% 9%;
 
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 0 0% 90%;
-    --accent-foreground: 0 0% 0%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 0%;
-    --input: 0 0% 0%;
-    --ring: 0 0% 0%;
+    --border: 0 0% 89%;
+    --input: 0 0% 89%;
+    --ring: 217 91% 60%;
 
-    --radius: 0rem;
+    --radius: 0.5rem;
 
-    --brand: 160 84% 39%;
-    --brand-glow: 160 84% 50%;
-    --brand-muted: 160 30% 93%;
-    --trust-green: 160 84% 39%;
-    --trust-gold: 40 80% 55%;
-    --surface-glass: 0 0% 97%;
+    --brand: 217 91% 60%;
+    --brand-glow: 217 91% 70%;
+    --brand-muted: 217 30% 95%;
+    --trust-green: 142 71% 45%;
+    --trust-gold: 38 92% 50%;
+    --surface-glass: 0 0% 98%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 0 0% 0%;

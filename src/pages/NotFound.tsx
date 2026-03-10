@@ -1,23 +1,32 @@
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import Layout from "@/components/layout/Layout";
 
 const NotFound = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-  }, [location.pathname]);
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
-        <a href="/" className="text-primary underline hover:text-primary/90">
-          Return to Home
-        </a>
-      </div>
-    </div>
+    <Layout>
+      <section className="bg-white py-20">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
+          <h1 className="text-9xl font-bold text-gray-200 mb-4">404</h1>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Page Not Found</h2>
+          <p className="text-lg text-gray-600 mb-8">
+            Sorry, the page you're looking for doesn't exist or has been moved.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Link to="/">
+              <Button className="bg-blue-600 text-white hover:bg-blue-700 rounded-full px-8 py-6">
+                Go Home
+              </Button>
+            </Link>
+            <Link to="/browse">
+              <Button variant="outline" className="border-2 border-gray-300 rounded-full px-8 py-6">
+                Browse Freelancers
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    </Layout>
   );
 };
 

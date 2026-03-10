@@ -8,9 +8,9 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="min-h-screen gradient-page">
+    <div className="min-h-screen bg-white">
       <Navbar />
-      <main className="pt-16">{children}</main>
+      <main>{children}</main>
       <Footer />
     </div>
   );

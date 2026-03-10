@@ -1,16 +1,13 @@
 import { useState } from "react";
-import { MapPin, Search, Star, CheckCircle, Briefcase, Clock, Filter, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { FiSearch, FiMapPin, FiClock, FiDollarSign } from "react-icons/fi";
+import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
 
 const mockJobs = [
   { id: 1, title: "Website Redesign for Restaurant", client: "FoodieHub", city: "Mumbai", budget: "₹15,000 - ₹25,000", type: "Fixed", skills: ["React", "Figma", "CSS"], posted: "2 hours ago", proposals: 5, remote: false },
-  { id: 2, title: "Social Media Marketing Campaign", client: "GreenLeaf Co.", city: "Bangalore", budget: "₹8,000 - ₹12,000", type: "Fixed", skills: ["Instagram", "Facebook Ads", "Content"], posted: "5 hours ago", proposals: 12, remote: true },
-  { id: 3, title: "Mobile App UI/UX Design", client: "TechStart", city: "Delhi", budget: "₹2,000 - ₹3,000/hr", type: "Hourly", skills: ["Figma", "Mobile Design", "Prototyping"], posted: "1 day ago", proposals: 8, remote: true },
-  { id: 4, title: "Product Photography for E-commerce", client: "StyleBazaar", city: "Pune", budget: "₹5,000 - ₹10,000", type: "Fixed", skills: ["Product Photography", "Photo Editing", "Lightroom"], posted: "3 hours ago", proposals: 3, remote: false },
-  { id: 5, title: "WordPress Blog Development", client: "HealthFirst", city: "Hyderabad", budget: "₹10,000 - ₹18,000", type: "Fixed", skills: ["WordPress", "PHP", "SEO"], posted: "6 hours ago", proposals: 7, remote: true },
-  { id: 6, title: "Video Editing for YouTube Channel", client: "TechReviewer", city: "Chennai", budget: "₹1,500 - ₹2,500/hr", type: "Hourly", skills: ["Premiere Pro", "After Effects", "Motion Graphics"], posted: "1 day ago", proposals: 15, remote: true },
+  { id: 2, title: "Social Media Marketing Campaign", client: "GreenLeaf Co.", city: "Bangalore", budget: "₹8,000 - ₹12,000", type: "Fixed", skills: ["Instagram", "Facebook Ads"], posted: "5 hours ago", proposals: 12, remote: true },
+  { id: 3, title: "Mobile App UI/UX Design", client: "TechStart", city: "Delhi", budget: "₹2,000 - ₹3,000/hr", type: "Hourly", skills: ["Figma", "Mobile Design"], posted: "1 day ago", proposals: 8, remote: true },
 ];
 
 const Jobs = () => {
@@ -18,72 +15,78 @@ const Jobs = () => {
 
   return (
     <Layout>
-      <section className="border-b border-border/40 bg-card/30">
-        <div className="container py-10">
-          <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">Find Local Jobs</h1>
-          <p className="text-muted-foreground">Browse opportunities in your region</p>
-
-          <div className="glass-card p-2 mt-6 max-w-2xl">
+      <section className="border-b border-gray-200 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Find Local Jobs</h1>
+          <p className="text-lg text-gray-600 mb-8">Browse opportunities in your region</p>
+          
+          <div className="bg-white border border-gray-300 rounded-2xl p-2 max-w-2xl shadow-sm">
             <div className="flex gap-2">
-              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/50 transition-colors focus-within:bg-secondary">
-                <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50">
+                <FiSearch className="h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search jobs by title, skill, or keyword..."
-                  className="bg-transparent w-full text-foreground placeholder:text-muted-foreground outline-none text-sm"
+                  placeholder="Search jobs..."
+                  className="bg-transparent w-full outline-none"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Button className="bg-primary text-primary-foreground font-semibold px-6 hover:bg-primary/90 transition-all duration-200">Search</Button>
+              <Button className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl px-8">Search</Button>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="container py-8">
-        <div className="flex items-center justify-between mb-6">
-          <span className="text-sm text-muted-foreground">{mockJobs.length} jobs available</span>
-          <div className="flex gap-3">
-            <Button variant="outline" size="sm" className="border-border text-foreground gap-2 transition-colors duration-200">
-              <Filter className="h-4 w-4" /> Filters
-            </Button>
-            <Button variant="outline" size="sm" className="border-border text-foreground gap-2 transition-colors duration-200">
-              Sort: Latest <ChevronDown className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+      <section className="bg-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="space-y-4">
+            {mockJobs.map((job) => (
+              <Link
+                key={job.id}
+                to={`/jobs/${job.id}`}
+                className="block bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{job.title}</h3>
+                    <p className="text-gray-600">{job.client}</p>
+                  </div>
+                  <span className="px-3 py-1.5 bg-blue-50 text-blue-700 text-sm font-medium rounded-full">{job.type}</span>
+                </div>
+                
+                <div className="flex items-center gap-6 text-sm text-gray-600 mb-4">
+                  <div className="flex items-center gap-1.5">
+                    <FiMapPin className="h-4 w-4" />
+                    <span>{job.city}</span>
+                    {job.remote && <span className="text-green-600">(Remote OK)</span>}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <FiDollarSign className="h-4 w-4" />
+                    <span className="font-semibold text-gray-900">{job.budget}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <FiClock className="h-4 w-4" />
+                    <span>{job.posted}</span>
+                  </div>
+                </div>
 
-        <div className="space-y-4">
-          {mockJobs.map((job, i) => (
-            <div key={job.id} className="glass-card p-6 hover:border-primary/30 transition-all duration-300 group cursor-pointer animate-fade-in-up" style={{ animationDelay: `${i * 0.05}s` }}>
-              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-display font-semibold text-foreground group-hover:text-primary transition-colors duration-200 mb-1">{job.title}</h3>
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">
-                    <span>{job.client}</span>
-                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{job.city}</span>
-                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{job.posted}</span>
-                    {job.remote && (
-                      <span className="px-2 py-0.5 rounded text-xs bg-trust-green/10 text-trust-green font-medium">Remote OK</span>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {job.skills.map((skill) => (
-                      <span key={skill} className="px-2 py-0.5 rounded text-xs bg-secondary text-muted-foreground">{skill}</span>
-                    ))}
-                  </div>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {job.skills.map((skill) => (
+                    <span key={skill} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">{skill}</span>
+                  ))}
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="text-lg font-display font-bold text-primary">{job.budget}</div>
-                  <div className="text-xs text-muted-foreground">{job.type} Price</div>
-                  <div className="text-xs text-muted-foreground mt-2">
-                    <Briefcase className="h-3 w-3 inline mr-1" />{job.proposals} proposals
-                  </div>
+
+                <div className="text-sm text-gray-600">
+                  <span className="font-medium">{job.proposals}</span> proposals submitted
                 </div>
-              </div>
-            </div>
-          ))}
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Button variant="outline" className="border-2 border-gray-300 px-8 py-6 rounded-full">Load More Jobs</Button>
+          </div>
         </div>
       </section>
     </Layout>
