@@ -1,29 +1,86 @@
-import { FiAward, FiMapPin, FiUsers, FiCalendar, FiTrendingUp } from "react-icons/fi";
+import { FiAward, FiMapPin, FiUsers, FiCalendar, FiTrendingUp, FiLoader } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
-import avatar1 from "@/assets/avatars/avatar-1.jpg";
-import avatar2 from "@/assets/avatars/avatar-2.jpg";
-import avatar3 from "@/assets/avatars/avatar-3.jpg";
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface LeaderboardUser {
+  userId: {
+    _id: string;
+    name: string;
+    avatar?: string;
+    location: {
+      city: string;
+    };
+  };
+  localScore: number;
+  completedJobs: number;
+}
+
+interface Event {
+  id: number;
+  title: string;
+  date: string;
+  location: string;
+  attendees: number;
+}
+
+interface Badge {
+  id: string;
+  name: string;
+  description: string;
+}
 
 const Community = () => {
-  const leaderboard = [
-    { rank: 1, name: "Priya Sharma", city: "Mumbai", score: 98, jobs: 132, avatar: avatar1 },
-    { rank: 2, name: "Arjun Patel", city: "Bangalore", score: 96, jobs: 156, avatar: avatar2 },
-    { rank: 3, name: "Sneha Gupta", city: "Delhi", score: 95, jobs: 124, avatar: avatar3 },
-  ];
+  const { user } = useAuth();
+  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [userBadges, setUserBadges] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const events = [
-    { title: "Mumbai Design Meetup", date: "Mar 15, 2026", attendees: 45, location: "Mumbai" },
-    { title: "Freelancer Workshop", date: "Mar 18, 2026", attendees: 32, location: "Bangalore" },
-    { title: "Tech Community Lunch", date: "Mar 22, 2026", attendees: 28, location: "Delhi" },
-  ];
+  useEffect(() => {
+    const fetchCommunityData = async () => {
+      try {
+        setLoading(true);
+        
+        const [leaderboardRes, eventsRes, badgesRes] = await Promise.all([
+          api.getLeaderboard({ limit: 10 }),
+          api.getEvents(),
+          api.getBadges()
+        ]);
 
-  const badges = [
-    { name: "Top Rated", desc: "Maintain 4.8+ rating for 3 months", earned: true },
-    { name: "Fast Responder", desc: "Respond within 1 hour", earned: true },
-    { name: "College Verified", desc: "Verified university credentials", earned: false },
-    { name: "Workshop Attendee", desc: "Attend local community events", earned: true },
-  ];
+        if (leaderboardRes.data) {
+          setLeaderboard((leaderboardRes.data as any).leaderboard || []);
+        }
+
+        if (eventsRes.data) {
+          setEvents((eventsRes.data as any).events || []);
+        }
+
+        if (badgesRes.data) {
+          setBadges((badgesRes.data as any).badges || []);
+          
+          // Set user's earned badges from verification status
+          if ((user as any)?.verification) {
+            const earned: string[] = [];
+            if ((user as any).verification.email) earned.push('email');
+            if ((user as any).verification.phone) earned.push('phone');
+            if ((user as any).verification.identity) earned.push('id');
+            if ((user as any).verification.education) earned.push('college');
+            setUserBadges(earned);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch community data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCommunityData();
+  }, [user]);
 
   return (
     <Layout>
@@ -48,30 +105,45 @@ const Community = () => {
                   <FiTrendingUp className="h-6 w-6 text-blue-600" />
                   <h2 className="text-2xl font-bold text-gray-900">Local Leaderboard</h2>
                 </div>
-                <div className="space-y-4">
-                  {leaderboard.map((user) => (
-                    <div key={user.rank} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-bold text-lg">
-                        {user.rank}
-                      </div>
-                      <img src={user.avatar} alt={user.name} className="w-12 h-12 rounded-full object-cover" />
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{user.name}</h3>
-                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                          <span className="flex items-center gap-1">
-                            <FiMapPin className="h-3.5 w-3.5" /> {user.city}
-                          </span>
-                          <span>•</span>
-                          <span>{user.jobs} jobs</span>
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <FiLoader className="h-8 w-8 text-blue-600 animate-spin" />
+                  </div>
+                ) : leaderboard.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <p>No leaderboard data available yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {leaderboard.map((item, index) => {
+                      const freelancer = item.userId;
+                      return (
+                        <div key={freelancer._id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-bold text-lg">
+                            {index + 1}
+                          </div>
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                            {freelancer.name?.charAt(0).toUpperCase() || '?'}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900">{freelancer.name || 'Anonymous'}</h3>
+                            <div className="flex items-center gap-3 text-sm text-gray-600">
+                              <span className="flex items-center gap-1">
+                                <FiMapPin className="h-3.5 w-3.5" /> {freelancer.location?.city || 'Unknown'}
+                              </span>
+                              <span>•</span>
+                              <span>{item.completedJobs || 0} jobs</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-2xl font-bold text-blue-600">{item.localScore || 0}</p>
+                            <p className="text-xs text-gray-600">Trust Score</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-blue-600">{user.score}</p>
-                        <p className="text-xs text-gray-600">Trust Score</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Upcoming Events */}
@@ -80,27 +152,46 @@ const Community = () => {
                   <FiCalendar className="h-6 w-6 text-blue-600" />
                   <h2 className="text-2xl font-bold text-gray-900">Upcoming Events</h2>
                 </div>
-                <div className="space-y-4">
-                  {events.map((event, idx) => (
-                    <div key={idx} className="p-4 bg-gray-50 rounded-xl">
-                      <h3 className="font-semibold text-gray-900 mb-2">{event.title}</h3>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-                        <span className="flex items-center gap-1">
-                          <FiCalendar className="h-4 w-4" /> {event.date}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <FiMapPin className="h-4 w-4" /> {event.location}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <FiUsers className="h-4 w-4" /> {event.attendees} attending
-                        </span>
-                      </div>
-                      <Button variant="outline" size="sm" className="border-gray-300 rounded-full">
-                        Join Event
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <FiLoader className="h-8 w-8 text-blue-600 animate-spin" />
+                  </div>
+                ) : events.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <p>No upcoming events</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {events.map((event) => {
+                      const eventDate = new Date(event.date);
+                      const formattedDate = eventDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      });
+                      
+                      return (
+                        <div key={event.id} className="p-4 bg-gray-50 rounded-xl">
+                          <h3 className="font-semibold text-gray-900 mb-2">{event.title}</h3>
+                          <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                            <span className="flex items-center gap-1">
+                              <FiCalendar className="h-4 w-4" /> {formattedDate}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <FiMapPin className="h-4 w-4" /> {event.location}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <FiUsers className="h-4 w-4" /> {event.attendees} attending
+                            </span>
+                          </div>
+                          <Button variant="outline" size="sm" className="border-gray-300 rounded-full">
+                            Join Event
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -111,28 +202,41 @@ const Community = () => {
                   <FiAward className="h-6 w-6 text-blue-600" />
                   <h2 className="text-xl font-bold text-gray-900">Your Badges</h2>
                 </div>
-                <div className="space-y-3">
-                  {badges.map((badge, idx) => (
-                    <div key={idx} className={`p-4 rounded-xl border-2 ${
-                      badge.earned ? "border-blue-200 bg-blue-50" : "border-gray-200 bg-gray-50"
-                    }`}>
-                      <div className="flex items-start gap-3">
-                        <div className={`p-2 rounded-lg ${badge.earned ? "bg-blue-600" : "bg-gray-300"}`}>
-                          <FiAward className="h-5 w-5 text-white" />
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <FiLoader className="h-8 w-8 text-blue-600 animate-spin" />
+                  </div>
+                ) : badges.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <p>No badges available</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {badges.map((badge) => {
+                      const earned = userBadges.includes(badge.id);
+                      return (
+                        <div key={badge.id} className={`p-4 rounded-xl border-2 ${
+                          earned ? "border-blue-200 bg-blue-50" : "border-gray-200 bg-gray-50"
+                        }`}>
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-lg ${earned ? "bg-blue-600" : "bg-gray-300"}`}>
+                              <FiAward className="h-5 w-5 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className={`font-semibold mb-1 ${earned ? "text-gray-900" : "text-gray-500"}`}>
+                                {badge.name}
+                              </h3>
+                              <p className="text-xs text-gray-600">{badge.description}</p>
+                              {earned && (
+                                <span className="inline-block mt-2 text-xs font-medium text-blue-700">✓ Earned</span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <h3 className={`font-semibold mb-1 ${badge.earned ? "text-gray-900" : "text-gray-500"}`}>
-                            {badge.name}
-                          </h3>
-                          <p className="text-xs text-gray-600">{badge.desc}</p>
-                          {badge.earned && (
-                            <span className="inline-block mt-2 text-xs font-medium text-blue-700">✓ Earned</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>

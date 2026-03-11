@@ -231,15 +231,27 @@ class ApiService {
   }
 
   // Community endpoints
-  async getLeaderboard(type: 'local' | 'global' = 'local', location?: string) {
-    const queryString = location ? `?location=${location}` : '';
-    return this.request(`/community/leaderboard/${type}${queryString}`, {
+  async getLeaderboard(params?: { city?: string; category?: string; limit?: number }) {
+    const queryString = params ? '?' + new URLSearchParams(params as any).toString() : '';
+    return this.request(`/community/leaderboard${queryString}`, {
       method: 'GET',
     });
   }
 
-  async getBadges(userId: string) {
-    return this.request(`/community/badges/${userId}`, {
+  async getBadges() {
+    return this.request('/community/badges', {
+      method: 'GET',
+    });
+  }
+
+  async getEvents() {
+    return this.request('/community/events', {
+      method: 'GET',
+    });
+  }
+
+  async getUserRank() {
+    return this.request('/community/rank', {
       method: 'GET',
     });
   }
@@ -253,6 +265,211 @@ class ApiService {
 
   async getClientAnalytics() {
     return this.request('/analytics/client', {
+      method: 'GET',
+    });
+  }
+
+  // Verification endpoints
+  async sendEmailVerification() {
+    return this.request('/verify/email/send', {
+      method: 'POST',
+    });
+  }
+
+  async verifyEmail(token: string) {
+    return this.request(`/verify/email/verify/${token}`, {
+      method: 'GET',
+    });
+  }
+
+  async sendPhoneOTP(phoneNumber: string) {
+    return this.request('/verify/phone/send', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber }),
+    });
+  }
+
+  async verifyPhoneOTP(phoneNumber: string, otp: string) {
+    return this.request('/verify/phone/verify', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber, otp }),
+    });
+  }
+
+  async submitIDVerification(formData: FormData) {
+    return this.request('/verify/id/submit', {
+      method: 'POST',
+      headers: {},
+      body: formData as any,
+    });
+  }
+
+  async submitBiometricVerification(formData: FormData) {
+    return this.request('/verify/biometric/verify', {
+      method: 'POST',
+      headers: {},
+      body: formData as any,
+    });
+  }
+
+  async connectLinkedIn(linkedinData: { profileUrl: string; profileData?: any }) {
+    return this.request('/verify/social/linkedin', {
+      method: 'POST',
+      body: JSON.stringify(linkedinData),
+    });
+  }
+
+  async connectGitHub(githubData: { username: string; profileData?: any }) {
+    return this.request('/verify/social/github', {
+      method: 'POST',
+      body: JSON.stringify(githubData),
+    });
+  }
+
+  async getVerificationStatus() {
+    return this.request('/verify/status', {
+      method: 'GET',
+    });
+  }
+
+  async recalculateReputation() {
+    return this.request('/verify/reputation/recalculate', {
+      method: 'POST',
+    });
+  }
+
+  // Reputation endpoints
+  async getReputation(userId?: string) {
+    const endpoint = userId ? `/verify/reputation/${userId}` : '/verify/reputation';
+    return this.request(endpoint, {
+      method: 'GET',
+    });
+  }
+
+  // Geolocation endpoints
+  async findFreelancersNearby(params: {
+    latitude: number;
+    longitude: number;
+    radius?: number;
+    skills?: string[];
+    minRating?: number;
+    limit?: number;
+    available?: boolean;
+  }) {
+    const queryParams = new URLSearchParams();
+    queryParams.append('latitude', params.latitude.toString());
+    queryParams.append('longitude', params.longitude.toString());
+    if (params.radius) queryParams.append('radius', params.radius.toString());
+    if (params.skills) queryParams.append('skills', params.skills.join(','));
+    if (params.minRating) queryParams.append('minRating', params.minRating.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.available !== undefined) queryParams.append('available', params.available.toString());
+
+    return this.request(`/geo/freelancers/nearby?${queryParams.toString()}`, {
+      method: 'GET',
+    });
+  }
+
+  async findJobsNearby(params: {
+    latitude: number;
+    longitude: number;
+    radius?: number;
+    skills?: string[];
+    category?: string;
+    minBudget?: number;
+    maxBudget?: number;
+    limit?: number;
+    remote?: boolean;
+  }) {
+    const queryParams = new URLSearchParams();
+    queryParams.append('latitude', params.latitude.toString());
+    queryParams.append('longitude', params.longitude.toString());
+    if (params.radius) queryParams.append('radius', params.radius.toString());
+    if (params.skills) queryParams.append('skills', params.skills.join(','));
+    if (params.category) queryParams.append('category', params.category);
+    if (params.minBudget) queryParams.append('minBudget', params.minBudget.toString());
+    if (params.maxBudget) queryParams.append('maxBudget', params.maxBudget.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.remote !== undefined) queryParams.append('remote', params.remote.toString());
+
+    return this.request(`/geo/jobs/nearby?${queryParams.toString()}`, {
+      method: 'GET',
+    });
+  }
+
+  async getFreelancersByCity(city: string, params?: {
+    skills?: string[];
+    minRating?: number;
+    available?: boolean;
+    limit?: number;
+  }) {
+    const queryParams = new URLSearchParams();
+    if (params?.skills) queryParams.append('skills', params.skills.join(','));
+    if (params?.minRating) queryParams.append('minRating', params.minRating.toString());
+    if (params?.available !== undefined) queryParams.append('available', params.available.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    return this.request(`/geo/freelancers/city/${encodeURIComponent(city)}${queryString}`, {
+      method: 'GET',
+    });
+  }
+
+  async getJobsByCity(city: string, params?: {
+    category?: string;
+    skills?: string[];
+    minBudget?: number;
+    maxBudget?: number;
+    remote?: boolean;
+    limit?: number;
+  }) {
+    const queryParams = new URLSearchParams();
+    if (params?.category) queryParams.append('category', params.category);
+    if (params?.skills) queryParams.append('skills', params.skills.join(','));
+    if (params?.minBudget) queryParams.append('minBudget', params.minBudget.toString());
+    if (params?.maxBudget) queryParams.append('maxBudget', params.maxBudget.toString());
+    if (params?.remote !== undefined) queryParams.append('remote', params.remote.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    return this.request(`/geo/jobs/city/${encodeURIComponent(city)}${queryString}`, {
+      method: 'GET',
+    });
+  }
+
+  async getMapClusters(params: {
+    type: 'freelancers' | 'jobs';
+    zoom: number;
+    bounds?: {
+      minLat: number;
+      maxLat: number;
+      minLng: number;
+      maxLng: number;
+    };
+  }) {
+    const queryParams = new URLSearchParams();
+    queryParams.append('type', params.type);
+    queryParams.append('zoom', params.zoom.toString());
+    if (params.bounds) {
+      queryParams.append('minLat', params.bounds.minLat.toString());
+      queryParams.append('maxLat', params.bounds.maxLat.toString());
+      queryParams.append('minLng', params.bounds.minLng.toString());
+      queryParams.append('maxLng', params.bounds.maxLng.toString());
+    }
+
+    return this.request(`/geo/map/clusters?${queryParams.toString()}`, {
+      method: 'GET',
+    });
+  }
+
+  async getPopularCities(type: 'freelancers' | 'jobs' = 'freelancers', limit: number = 10) {
+    return this.request(`/geo/cities/popular?type=${type}&limit=${limit}`, {
+      method: 'GET',
+    });
+  }
+
+  async geocodeAddress(address: string) {
+    return this.request(`/geo/map/geocode?address=${encodeURIComponent(address)}`, {
       method: 'GET',
     });
   }

@@ -24,6 +24,8 @@ import reviewRoutes from './routes/reviews.js';
 import verificationRoutes from './routes/verification.js';
 import communityRoutes from './routes/community.js';
 import analyticsRoutes from './routes/analytics.js';
+import verificationNewRoutes from './routes/verificationRoutes.js';
+import geolocationRoutes from './routes/geolocationRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -81,6 +83,8 @@ app.get('/', (req, res) => {
       messages: '/api/messages',
       reviews: '/api/reviews',
       verification: '/api/verification',
+      verificationV2: '/api/verify',
+      geolocation: '/api/geo',
       community: '/api/community',
       analytics: '/api/analytics'
     }
@@ -107,6 +111,8 @@ app.use('/api/contracts', contractRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/verification', verificationRoutes);
+app.use('/api/verify', verificationNewRoutes); // New verification system
+app.use('/api/geo', geolocationRoutes); // Geo-location features
 app.use('/api/community', communityRoutes);
 app.use('/api/analytics', analyticsRoutes);
 

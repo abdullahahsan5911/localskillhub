@@ -18,6 +18,8 @@ import ClientDashboard from "./pages/ClientDashboard";
 import Messages from "./pages/Messages";
 import Contracts from "./pages/Contracts";
 import Community from "./pages/Community";
+import VerificationDashboard from "./pages/VerificationDashboard";
+import MapPage from "./pages/MapPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +46,8 @@ const App = () => (
             <Route path="/messages" element={<Messages />} />
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/verification" element={<VerificationDashboard />} />
+            <Route path="/map" element={<MapPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

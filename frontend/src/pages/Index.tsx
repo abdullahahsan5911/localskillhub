@@ -1,57 +1,70 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { FiSearch, FiMapPin, FiTrendingUp, FiUsers, FiShield, FiZap, FiStar, FiHeart } from "react-icons/fi";
+import { FiSearch, FiMapPin, FiTrendingUp, FiUsers, FiShield, FiHeart, FiLoader } from "react-icons/fi";
 import { HiOutlineLocationMarker } from "react-icons/hi";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
-
-import webDesignImg from "@/assets/categories/web-design.jpg";
-import graphicDesignImg from "@/assets/categories/graphic-design.jpg";
-import videoProductionImg from "@/assets/categories/video-production.jpg";
-import digitalMarketingImg from "@/assets/categories/digital-marketing.jpg";
-import photographyImg from "@/assets/categories/photography.jpg";
-import contentWritingImg from "@/assets/categories/content-writing.jpg";
-
-import avatar1 from "@/assets/avatars/avatar-1.jpg";
-import avatar2 from "@/assets/avatars/avatar-2.jpg";
-import avatar3 from "@/assets/avatars/avatar-3.jpg";
-import avatar4 from "@/assets/avatars/avatar-4.jpg";
-import avatar5 from "@/assets/avatars/avatar-5.jpg";
-import avatar6 from "@/assets/avatars/avatar-6.jpg";
-import avatar7 from "@/assets/avatars/avatar-7.jpg";
-import avatar8 from "@/assets/avatars/avatar-8.jpg";
+import { api } from "@/lib/api";
 
 const categories = [
   "All", "Web Development", "Graphic Design", "Video Production", 
-  "Digital Marketing", "Photography", "Content Writing", "Mobile Apps"
+  "Digital Marketing", "Photography", "Content Writing", "Mobile Apps", "UI/UX Design"
 ];
 
-const featuredWork = [
-  { id: 1, title: "Brand Identity for Eco Startup", creator: "Priya Sharma", category: "Graphic Design", likes: 847, image: graphicDesignImg, avatar: avatar1, verified: true },
-  { id: 2, title: "E-commerce Platform Redesign", creator: "Arjun Patel", category: "Web Development", likes: 1203, image: webDesignImg, avatar: avatar2, verified: true },
-  { id: 3, title: "Wedding Photography Collection", creator: "Meera Joshi", category: "Photography", likes: 956, image: photographyImg, avatar: avatar7, verified: true },
-  { id: 4, title: "Social Media Campaign", creator: "Vikram Rao", category: "Digital Marketing", likes: 623, image: digitalMarketingImg, avatar: avatar6, verified: true },
-  { id: 5, title: "Product Demo Video", creator: "Rahul Verma", category: "Video Production", likes: 1134, image: videoProductionImg, avatar: avatar4, verified: false },
-  { id: 6, title: "Blog Content Strategy", creator: "Sneha Gupta", category: "Content Writing", likes: 445, image: contentWritingImg, avatar: avatar3, verified: true },
-  { id: 7, title: "Mobile App UI Design", creator: "Karan Mehta", category: "Mobile Apps", likes: 892, image: webDesignImg, avatar: avatar8, verified: true },
-  { id: 8, title: "Restaurant Branding", creator: "Ananya Singh", category: "Graphic Design", likes: 731, image: graphicDesignImg, avatar: avatar5, verified: true },
-  { id: 9, title: "Corporate Website", creator: "Priya Sharma", category: "Web Development", likes: 1045, image: webDesignImg, avatar: avatar1, verified: true },
-  { id: 10, title: "Portrait Series", creator: "Meera Joshi", category: "Photography", likes: 1289, image: photographyImg, avatar: avatar7, verified: true },
-  { id: 11, title: "Instagram Ads Campaign", creator: "Vikram Rao", category: "Digital Marketing", likes: 567, image: digitalMarketingImg, avatar: avatar6, verified: true },
-  { id: 12, title: "Product Photography", creator: "Meera Joshi", category: "Photography", likes: 934, image: photographyImg, avatar: avatar7, verified: true },
-];
+interface Freelancer {
+  _id: string;
+  userId: {
+    _id: string;
+    name: string;
+    avatar?: string;
+    verification?: {
+      identity: boolean;
+    };
+  };
+  skills: string[];
+  portfolio?: Array<{
+    title: string;
+    description: string;
+    image: string;
+  }>;
+  rating: number;
+  completedJobs: number;
+}
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState("All");
-  const [liked, setLiked] = useState<number[]>([]);
+  const [liked, setLiked] = useState<string[]>([]);
+  const [freelancers, setFreelancers] = useState<Freelancer[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const toggleLike = (id: number) => {
+  useEffect(() => {
+    const fetchFreelancers = async () => {
+      try {
+        setLoading(true);
+        const response = await api.getFreelancers();
+        if (response.data) {
+          setFreelancers((response.data as any).freelancers || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch freelancers:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFreelancers();
+  }, []);
+
+  const toggleLike = (id: string) => {
     setLiked(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
-  const filteredWork = activeCategory === "All" 
-    ? featuredWork 
-    : featuredWork.filter(work => work.category === activeCategory);
+  const filteredFreelancers = activeCategory === "All" 
+    ? freelancers 
+    : freelancers.filter(f => 
+        f.skills.some(skill => skill.toLowerCase().includes(activeCategory.toLowerCase())) ||
+        activeCategory.toLowerCase().includes(f.skills[0]?.toLowerCase())
+      );
 
   return (
     <Layout>
@@ -116,59 +129,85 @@ const Index = () => {
       {/* Featured Work Grid - Behance Style */}
       <section className="bg-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredWork.map((work) => (
-              <div key={work.id} className="group">
-                <Link to={`/freelancer/${work.creator.toLowerCase().replace(/\s+/g, '-')}`}>
-                  <div className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300">
-                    <div className="relative aspect-[4/3] overflow-hidden">
-                      <img
-                        src={work.image}
-                        alt={work.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          toggleLike(work.id);
-                        }}
-                        className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
-                      >
-                        <FiHeart
-                          className={`h-5 w-5 ${
-                            liked.includes(work.id) ? "fill-red-500 text-red-500" : "text-gray-700"
-                          }`}
-                        />
-                      </button>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors">
-                        {work.title}
-                      </h3>
-                      <div className="flex items-center gap-2 mb-3">
-                        <img
-                          src={work.avatar}
-                          alt={work.creator}
-                          className="w-6 h-6 rounded-full"
-                        />
-                        <span className="text-sm text-gray-600">{work.creator}</span>
-                        {work.verified && (
-                          <FiShield className="h-4 w-4 text-blue-600" />
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between text-sm text-gray-500">
-                        <span className="text-xs bg-gray-100 px-3 py-1 rounded-full">{work.category}</span>
-                        <div className="flex items-center gap-1">
-                          <FiHeart className="h-4 w-4" />
-                          <span>{work.likes}</span>
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <FiLoader className="h-12 w-12 text-blue-600 animate-spin" />
+            </div>
+          ) : filteredFreelancers.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-gray-500 text-lg">No freelancers found. Try a different category.</p>
+              <Link to="/browse">
+                <Button className="mt-6 bg-blue-600 text-white">
+                  Browse All Freelancers
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredFreelancers.map((freelancer) => {
+                const portfolioItem = freelancer.portfolio?.[0];
+                const user = freelancer.userId;
+                
+                return (
+                  <div key={freelancer._id} className="group">
+                    <Link to={`/freelancer/${freelancer._id}`}>
+                      <div className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300">
+                        <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
+                          {portfolioItem?.image ? (
+                            <img
+                              src={portfolioItem.image}
+                              alt={portfolioItem.title || 'Portfolio'}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-6xl font-bold text-blue-600/30">
+                              {user.name?.charAt(0).toUpperCase() || '?'}
+                            </div>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              toggleLike(freelancer._id);
+                            }}
+                            className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
+                          >
+                            <FiHeart
+                              className={`h-5 w-5 ${
+                                liked.includes(freelancer._id) ? "fill-red-500 text-red-500" : "text-gray-700"
+                              }`}
+                            />
+                          </button>
+                        </div>
+                        <div className="p-4">
+                          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                            {portfolioItem?.title || user.name || 'Freelancer Portfolio'}
+                          </h3>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                              {user.name?.charAt(0).toUpperCase() || '?'}
+                            </div>
+                            <span className="text-sm text-gray-600">{user.name || 'Anonymous'}</span>
+                            {user.verification?.identity && (
+                              <FiShield className="h-4 w-4 text-blue-600" />
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between text-sm text-gray-500">
+                            <span className="text-xs bg-gray-100 px-3 py-1 rounded-full line-clamp-1">
+                              {freelancer.skills[0] || 'Freelancer'}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <FiUsers className="h-4 w-4" />
+                              <span>{freelancer.completedJobs || 0} jobs</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   </div>
-                </Link>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
