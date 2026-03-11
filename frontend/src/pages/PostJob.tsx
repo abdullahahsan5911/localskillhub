@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Layout from "@/components/layout/Layout";
 import { CATEGORIES } from "@/constants/categories";
 import api from "@/lib/api";
+import { buildPointLocation, resolveCurrentBrowserLocation } from "@/lib/location";
 import {
   Briefcase, FileText, DollarSign, MapPin, Tag, Clock,
   ChevronRight, ChevronLeft, CheckCircle2, X, Plus, Zap,
@@ -36,6 +37,7 @@ interface JobForm {
   experienceLevel: ExperienceLevel;
   city: string;
   state: string;
+  country: string;
   remoteAllowed: boolean;
   milestones: Milestone[];
   attachments: string[];
@@ -45,9 +47,14 @@ const STEP_TITLES = ["Job Basics", "Requirements", "Budget & Timeline", "Review 
 
 const PostJob = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editJobId = searchParams.get('jobId');
   const [step, setStep] = useState(1);
   const [skillInput, setSkillInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [loadingJob, setLoadingJob] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [resolvedLocation, setResolvedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [error, setError] = useState("");
 
   const [form, setForm] = useState<JobForm>({
@@ -64,12 +71,66 @@ const PostJob = () => {
     experienceLevel: "intermediate",
     city: "",
     state: "",
+    country: "India",
     remoteAllowed: false,
     milestones: [],
     attachments: [],
   });
 
   const update = (key: keyof JobForm, value: any) => setForm(f => ({ ...f, [key]: value }));
+  const updateLocationField = (key: 'city' | 'state' | 'country', value: string) => {
+    setForm(f => ({ ...f, [key]: value }));
+    setResolvedLocation(null);
+  };
+
+  useEffect(() => {
+    const loadExistingJob = async () => {
+      if (!editJobId) return;
+
+      try {
+        setLoadingJob(true);
+        const response = await api.getJob(editJobId);
+        const job = (response.data as any)?.job || response.data;
+        if (!job) return;
+
+        setForm({
+          title: job.title || "",
+          description: job.description || "",
+          category: job.category || "",
+          skills: job.skills || [],
+          budgetType: job.budget?.type || "fixed",
+          budgetAmount: job.budget?.amount || 0,
+          budgetMin: job.budget?.min || 0,
+          budgetMax: job.budget?.max || 0,
+          currency: job.budget?.currency || "INR",
+          duration: job.duration || "medium",
+          experienceLevel: job.experienceLevel || "intermediate",
+          city: job.location?.city || "",
+          state: job.location?.state || "",
+          country: job.location?.country || "India",
+          remoteAllowed: Boolean(job.remoteAllowed),
+          milestones: (job.milestones || []).map((milestone: any) => ({
+            title: milestone.title || "",
+            description: milestone.description || "",
+            amount: milestone.amount || 0,
+            dueDate: milestone.dueDate ? String(milestone.dueDate).slice(0, 10) : "",
+          })),
+          attachments: [],
+        });
+
+        const jobCoords = job.location?.coordinates?.coordinates;
+        if (Array.isArray(jobCoords) && jobCoords.length >= 2) {
+          setResolvedLocation({ latitude: Number(jobCoords[1]), longitude: Number(jobCoords[0]) });
+        }
+      } catch (e: any) {
+        setError(e.message || 'Failed to load job for editing');
+      } finally {
+        setLoadingJob(false);
+      }
+    };
+
+    loadExistingJob();
+  }, [editJobId]);
 
   const addSkill = (e?: React.KeyboardEvent) => {
     if (e && e.key !== "Enter") return;
@@ -94,16 +155,53 @@ const PostJob = () => {
   const removeMilestone = (i: number) => update("milestones", form.milestones.filter((_, j) => j !== i));
 
   const canProceed = () => {
-    if (step === 1) return form.title.trim().length > 5 && form.description.trim().length > 20;
+    if (step === 1) {
+      return form.title.trim().length > 5 && form.description.trim().length > 20 && form.city.trim().length > 0 && form.state.trim().length > 0;
+    }
     if (step === 2) return form.category && form.skills.length > 0;
     if (step === 3) return form.budgetType === "fixed" ? form.budgetAmount > 0 : (form.budgetMin > 0 && form.budgetMax >= form.budgetMin);
     return true;
+  };
+
+  const handleUseCurrentLocation = async () => {
+    try {
+      setLocating(true);
+      setError("");
+      const resolved = await resolveCurrentBrowserLocation();
+      setForm(f => ({
+        ...f,
+        city: resolved.city,
+        state: resolved.state,
+        country: resolved.country || 'India',
+      }));
+      setResolvedLocation({ latitude: resolved.latitude, longitude: resolved.longitude });
+    } catch (e: any) {
+      setError(e.message || 'Unable to detect current location');
+    } finally {
+      setLocating(false);
+    }
   };
 
   const handleSubmit = async () => {
     setSubmitting(true);
     setError("");
     try {
+      let latitude: number;
+      let longitude: number;
+
+      if (resolvedLocation) {
+        latitude = resolvedLocation.latitude;
+        longitude = resolvedLocation.longitude;
+      } else {
+        const geocode = await api.geocodeAddress([form.city, form.state, form.country].filter(Boolean).join(', '));
+        latitude = Number((geocode.data as any)?.latitude);
+        longitude = Number((geocode.data as any)?.longitude);
+      }
+
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        throw new Error('Unable to resolve job location coordinates');
+      }
+
       const payload = {
         title: form.title,
         description: form.description,
@@ -118,15 +216,22 @@ const PostJob = () => {
         },
         duration: form.duration,
         experienceLevel: form.experienceLevel,
-        location: {
+        location: buildPointLocation({
           city: form.city,
           state: form.state,
-        },
+          country: form.country,
+          latitude,
+          longitude,
+        }),
         remoteAllowed: form.remoteAllowed,
         milestones: form.milestones.filter(m => m.title.trim()),
         status: "open",
       };
-      await api.createJob(payload);
+      if (editJobId) {
+        await api.updateJob(editJobId, payload);
+      } else {
+        await api.createJob(payload);
+      }
       navigate("/dashboard/client");
     } catch (e: any) {
       setError(e.message || "Failed to post job");
@@ -143,9 +248,15 @@ const PostJob = () => {
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Post a Job</h1>
-            <p className="text-gray-500 mt-1">Find the perfect freelancer for your project</p>
+            <h1 className="text-3xl font-bold text-gray-900">{editJobId ? 'Edit Job' : 'Post a Job'}</h1>
+            <p className="text-gray-500 mt-1">{editJobId ? 'Update this job so it appears correctly on maps' : 'Find the perfect freelancer for your project'}</p>
           </div>
+
+          {loadingJob && (
+            <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+              Loading job details...
+            </div>
+          )}
 
           {/* Progress bar */}
           <div className="mb-8">
@@ -214,8 +325,20 @@ const PostJob = () => {
 
                 {/* Location */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">Location</label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-2">
+                    <label className="block text-sm font-semibold text-gray-800">Location</label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl"
+                      onClick={handleUseCurrentLocation}
+                      disabled={locating}
+                    >
+                      {locating ? 'Detecting...' : 'Use my current location'}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input
@@ -223,7 +346,7 @@ const PostJob = () => {
                         className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="City (e.g. Mumbai)"
                         value={form.city}
-                        onChange={e => update("city", e.target.value)}
+                        onChange={e => updateLocationField("city", e.target.value)}
                       />
                     </div>
                     <input
@@ -231,9 +354,17 @@ const PostJob = () => {
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="State"
                       value={form.state}
-                      onChange={e => update("state", e.target.value)}
+                      onChange={e => updateLocationField("state", e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Country"
+                      value={form.country}
+                      onChange={e => updateLocationField("country", e.target.value)}
                     />
                   </div>
+                  <p className="text-xs text-gray-500 mt-2">Coordinates are generated automatically from this location for map visibility, or you can fill from your current device location.</p>
                 </div>
 
                 <label className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl cursor-pointer hover:bg-blue-100 transition-colors">

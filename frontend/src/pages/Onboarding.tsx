@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Palette, Search, ArrowRight } from "lucide-react";
+import { Palette, Search, ArrowRight, LocateFixed, Loader2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import api from "@/lib/api";
 import { CATEGORIES } from "@/constants/categories";
 import { CategoryCard } from "@/components/CategoryCard";
+import { buildPointLocation, resolveCurrentBrowserLocation } from "@/lib/location";
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -13,6 +14,9 @@ const Onboarding = () => {
   const [step, setStep] = useState(1);
   const [userRole, setUserRole] = useState<"client" | "freelancer" | "both" | null>(null);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [location, setLocation] = useState({ city: "", state: "", country: "India" });
+  const [resolvedCoords, setResolvedCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locating, setLocating] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -29,9 +33,37 @@ const Onboarding = () => {
     );
   };
 
+  const updateLocationField = (field: "city" | "state" | "country", value: string) => {
+    setLocation(prev => ({ ...prev, [field]: value }));
+    setResolvedCoords(null);
+  };
+
+  const handleUseCurrentLocation = async () => {
+    try {
+      setLocating(true);
+      setError("");
+      const resolved = await resolveCurrentBrowserLocation();
+      setLocation({
+        city: resolved.city,
+        state: resolved.state,
+        country: resolved.country || "India",
+      });
+      setResolvedCoords({ latitude: resolved.latitude, longitude: resolved.longitude });
+    } catch (err: any) {
+      setError(err.message || "Unable to get your current location");
+    } finally {
+      setLocating(false);
+    }
+  };
+
   const handleComplete = async () => {
     if (selectedInterests.length === 0) {
       setError("Please select at least one category to continue");
+      return;
+    }
+
+    if (!location.city.trim() || !location.state.trim() || !location.country.trim()) {
+      setError("Please add your city, state, and country or use your current location");
       return;
     }
 
@@ -39,14 +71,43 @@ const Onboarding = () => {
     setError("");
 
     try {
+      let locationPayload;
+      if (resolvedCoords) {
+        locationPayload = buildPointLocation({
+          city: location.city.trim(),
+          state: location.state.trim(),
+          country: location.country.trim(),
+          latitude: resolvedCoords.latitude,
+          longitude: resolvedCoords.longitude,
+        });
+      } else {
+        const geocode = await api.geocodeAddress([location.city, location.state, location.country].filter(Boolean).join(', '));
+        const latitude = Number((geocode.data as any)?.latitude);
+        const longitude = Number((geocode.data as any)?.longitude);
+
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+          throw new Error("Unable to resolve your location coordinates");
+        }
+
+        locationPayload = buildPointLocation({
+          city: location.city.trim(),
+          state: location.state.trim(),
+          country: location.country.trim(),
+          latitude,
+          longitude,
+        });
+      }
+
       // Update user profile with role and interests
       await api.updateProfile({
         role: userRole,
         interests: selectedInterests,
+        location: locationPayload,
+        onboardingCompleted: true,
       });
 
       // Update auth context
-      updateUser({ role: userRole, interests: selectedInterests });
+      updateUser({ role: userRole, interests: selectedInterests, location: locationPayload, onboardingCompleted: true });
 
       // Save onboarding data to localStorage
       const onboardingData = {
@@ -160,7 +221,7 @@ const Onboarding = () => {
                 Select Your Areas of Expertise
               </h1>
               <p className="text-lg text-gray-600">
-                Choose one or more categories that match your skills or interests
+                Choose one or more categories that match your skills or interests, then add your working location
               </p>
             </div>
 
@@ -175,6 +236,57 @@ const Onboarding = () => {
                   showImage={false}
                 />
               ))}
+            </div>
+
+            <div className="mb-8 rounded-2xl border border-gray-200 bg-gray-50 p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-blue-600" />
+                    Your Base Location
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    This is used for local discovery, maps, and nearby jobs.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleUseCurrentLocation}
+                  disabled={locating || loading}
+                  className="rounded-xl"
+                >
+                  {locating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <LocateFixed className="w-4 h-4 mr-2" />}
+                  {locating ? "Detecting..." : "Use my current location"}
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="City"
+                  value={location.city}
+                  onChange={(e) => updateLocationField("city", e.target.value)}
+                />
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="State"
+                  value={location.state}
+                  onChange={(e) => updateLocationField("state", e.target.value)}
+                />
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Country"
+                  value={location.country}
+                  onChange={(e) => updateLocationField("country", e.target.value)}
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-3">
+                You can enter a detailed location manually or let the browser fill it from your current position.
+              </p>
             </div>
 
             {error && (
@@ -195,23 +307,13 @@ const Onboarding = () => {
               >
                 Back
               </Button>
-              <div className="flex gap-4">
-                <Button
-                  variant="ghost"
-                  onClick={handleComplete}
-                  disabled={loading}
-                  className="px-6 py-6 text-base text-gray-600 hover:text-gray-900 rounded-xl"
-                >
-                  {loading ? "Processing..." : "Skip for now"}
-                </Button>
-                <Button
-                  onClick={handleComplete}
-                  disabled={selectedInterests.length === 0 || loading}
-                  className="bg-blue-600 text-white px-8 py-6 text-base hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-lg hover:shadow-xl transition-shadow"
-                >
-                  {loading ? "Processing..." : "Continue"}
-                </Button>
-              </div>
+              <Button
+                onClick={handleComplete}
+                disabled={selectedInterests.length === 0 || !location.city.trim() || !location.state.trim() || !location.country.trim() || loading}
+                className="bg-blue-600 text-white px-8 py-6 text-base hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-lg hover:shadow-xl transition-shadow"
+              >
+                {loading ? "Processing..." : "Continue"}
+              </Button>
             </div>
 
             {selectedInterests.length > 0 && (

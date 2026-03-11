@@ -7,15 +7,27 @@ import { AppError } from '../middleware/errorHandler.js';
 // @access  Public
 export const getFreelancers = async (req, res, next) => {
   try {
-    const { page = 1, limit = 12, skills, minRate, maxRate, city, search, sort = '-localScore' } = req.query;
+    const {
+      page = 1,
+      limit = 12,
+      skills,
+      minRate,
+      maxRate,
+      city,
+      search,
+      sort = '-localScore',
+      completeOnly = 'true',
+    } = req.query;
 
-    const query = {
-      // Only show profiles that have meaningful content
-      'portfolio.0': { $exists: true },            // at least 1 portfolio item
-      'portfolio.0.images.0': { $exists: true },   // that item must have at least 1 image
-      'skills.0': { $exists: true },               // at least 1 skill
-      title: { $exists: true, $ne: '' },           // a real title
-    };
+    const query = {};
+    const requireCompleteProfile = completeOnly !== 'false';
+
+    if (requireCompleteProfile) {
+      query['portfolio.0'] = { $exists: true };
+      query['portfolio.0.images.0'] = { $exists: true };
+      query['skills.0'] = { $exists: true };
+      query.title = { $exists: true, $ne: '' };
+    }
     if (skills) {
       query['skills.name'] = { $in: Array.isArray(skills) ? skills : [skills] };
     }

@@ -214,3 +214,42 @@ export const geocodeAddress = async (req, res, next) => {
     next(error);
   }
 };
+
+// Reverse geocode coordinates to address fields
+export const reverseGeocodeCoordinates = async (req, res, next) => {
+  try {
+    const { latitude, longitude } = req.query;
+
+    if (!latitude || !longitude) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Latitude and longitude are required'
+      });
+    }
+
+    const result = await GeoLocationService.reverseGeocodeCoordinates(latitude, longitude);
+
+    res.json({
+      status: 'success',
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Backfill stored locations for users and jobs
+export const backfillGeolocations = async (req, res, next) => {
+  try {
+    const limit = req.body?.limit ? parseInt(req.body.limit, 10) : 200;
+    const summary = await GeoLocationService.backfillStoredLocations(limit);
+
+    res.json({
+      status: 'success',
+      message: 'Geolocation backfill completed',
+      data: summary,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

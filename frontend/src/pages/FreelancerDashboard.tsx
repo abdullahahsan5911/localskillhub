@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   LayoutDashboard, Briefcase, FileText, FileCheck,
   MessageSquare, Settings, Plus, Eye, DollarSign,
@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import api from "@/lib/api";
+import { buildPointLocation, resolveCurrentBrowserLocation } from "@/lib/location";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import DashboardLayout, { NavItem } from "@/components/dashboard/DashboardLayout";
 import MessagesTab from "@/components/dashboard/MessagesTab";
@@ -679,7 +680,18 @@ const SettingsTab = ({ user, profile, onRefresh }: any) => {
   const [minRate, setMinRate] = useState(profile?.rates?.minRate?.toString() || "");
   const [maxRate, setMaxRate] = useState(profile?.rates?.maxRate?.toString() || "");
   const [availability, setAvailability] = useState(profile?.availability?.status || "available");
+  const [city, setCity] = useState(user?.location?.city || "");
+  const [state, setState] = useState(user?.location?.state || "");
+  const [country, setCountry] = useState(user?.location?.country || "India");
+  const [resolvedLocation, setResolvedLocation] = useState<{ latitude: number; longitude: number } | null>(() => {
+    const coords = user?.location?.coordinates?.coordinates;
+    return Array.isArray(coords) && coords.length >= 2
+      ? { latitude: Number(coords[1]), longitude: Number(coords[0]) }
+      : null;
+  });
+  const [locating, setLocating] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar || "");
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarFileRef = useRef<HTMLInputElement>(null);
@@ -703,12 +715,32 @@ const SettingsTab = ({ user, profile, onRefresh }: any) => {
 
   const handleSave = async () => {
     try {
+      setSaveError("");
+      let latitude: number;
+      let longitude: number;
+
+      if (resolvedLocation) {
+        latitude = resolvedLocation.latitude;
+        longitude = resolvedLocation.longitude;
+      } else {
+        const geocode = await api.geocodeAddress([city, state, country].filter(Boolean).join(', '));
+        latitude = Number((geocode.data as any)?.latitude);
+        longitude = Number((geocode.data as any)?.longitude);
+      }
+
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        throw new Error('Unable to resolve your location coordinates');
+      }
+
       const profilePayload = {
         title, bio,
         rates: { minRate: Number(minRate), maxRate: Number(maxRate), currency: "INR", rateType: "hourly" },
         availability: { status: availability },
       };
-      await api.updateProfile({ name });
+      await api.updateProfile({
+        name,
+        location: buildPointLocation({ city, state, country, latitude, longitude }),
+      });
       if (profile) {
         await api.updateFreelancerProfile(profilePayload);
       } else {
@@ -717,7 +749,25 @@ const SettingsTab = ({ user, profile, onRefresh }: any) => {
       setSaved(true);
       onRefresh();
       setTimeout(() => setSaved(false), 2000);
-    } catch { /* ignore */ }
+    } catch (error: any) {
+      setSaveError(error.message || 'Unable to save profile');
+    }
+  };
+
+  const handleUseCurrentLocation = async () => {
+    try {
+      setLocating(true);
+      setSaveError('');
+      const resolved = await resolveCurrentBrowserLocation();
+      setCity(resolved.city);
+      setState(resolved.state);
+      setCountry(resolved.country || 'India');
+      setResolvedLocation({ latitude: resolved.latitude, longitude: resolved.longitude });
+    } catch (error: any) {
+      setSaveError(error.message || 'Unable to detect your current location');
+    } finally {
+      setLocating(false);
+    }
   };
 
   return (
@@ -772,6 +822,26 @@ const SettingsTab = ({ user, profile, onRefresh }: any) => {
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Bio</label>
           <textarea rows={3} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" value={bio} onChange={e => setBio(e.target.value)} />
         </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">City</label>
+            <input type="text" className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value={city} onChange={e => { setCity(e.target.value); setResolvedLocation(null); }} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">State</label>
+            <input type="text" className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value={state} onChange={e => { setState(e.target.value); setResolvedLocation(null); }} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Country</label>
+            <input type="text" className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value={country} onChange={e => { setCountry(e.target.value); setResolvedLocation(null); }} />
+          </div>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-gray-500 -mt-1">Map coordinates are generated automatically from this location.</p>
+          <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={handleUseCurrentLocation} disabled={locating}>
+            {locating ? "Detecting..." : "Use my current location"}
+          </Button>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Min Rate (₹/hr)</label>
@@ -796,6 +866,7 @@ const SettingsTab = ({ user, profile, onRefresh }: any) => {
         >
           {saved ? "Saved!" : "Save Changes"}
         </Button>
+        {saveError && <p className="text-sm text-red-600">{saveError}</p>}
       </div>
     </div>
   );
@@ -804,6 +875,7 @@ const SettingsTab = ({ user, profile, onRefresh }: any) => {
 // ─── Main Component ────────────────────────────────────────────────────────────
 const FreelancerDashboard = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("overview");
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [profile, setProfile] = useState<FreelancerProfile | null>(null);
@@ -851,6 +923,13 @@ const FreelancerDashboard = () => {
   }, [(user as any)?._id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const navItems: NavItem[] = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },

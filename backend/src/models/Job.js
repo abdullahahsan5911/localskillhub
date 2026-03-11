@@ -1,5 +1,23 @@
 import mongoose from 'mongoose';
 
+const pointSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true,
+    },
+    coordinates: {
+      type: [Number],
+      validate: {
+        validator: (value) => value === undefined || (Array.isArray(value) && value.length === 2),
+        message: 'Point coordinates must contain [longitude, latitude]',
+      },
+    },
+  },
+  { _id: false }
+);
+
 const jobSchema = new mongoose.Schema({
   clientId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -28,11 +46,8 @@ const jobSchema = new mongoose.Schema({
     state: String,
     country: String,
     coordinates: {
-      type: {
-        type: String,
-        enum: ['Point']
-      },
-      coordinates: [Number] // [longitude, latitude]
+      type: pointSchema,
+      default: undefined,
     },
     radius: {
       type: Number, // in kilometers
@@ -133,6 +148,17 @@ const jobSchema = new mongoose.Schema({
 jobSchema.index({ 'location.coordinates': '2dsphere' });
 jobSchema.index({ status: 1, createdAt: -1 });
 jobSchema.index({ skills: 1 });
+
+jobSchema.pre('validate', function(next) {
+  const coords = this.location?.coordinates?.coordinates;
+  const hasValidPoint = Array.isArray(coords) && coords.length === 2;
+
+  if (this.location?.coordinates && !hasValidPoint) {
+    this.location.coordinates = undefined;
+  }
+
+  next();
+});
 
 const Job = mongoose.model('Job', jobSchema);
 

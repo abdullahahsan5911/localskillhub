@@ -7,6 +7,204 @@ import Job from '../models/Job.js';
  * Supports: City/state filtering, distance-based search, map clustering
  */
 class GeoLocationService {
+  static hasValidPoint(location) {
+    const coords = location?.coordinates?.coordinates || location?.coordinates;
+    return (
+      Array.isArray(coords) &&
+      coords.length >= 2 &&
+      Number.isFinite(Number(coords[0])) &&
+      Number.isFinite(Number(coords[1])) &&
+      !(Number(coords[0]) === 0 && Number(coords[1]) === 0)
+    );
+  }
+
+  static sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  static async resolveStructuredLocation(city, state, country = 'India') {
+    if (!city && !state) return null;
+
+    const result = await this.geocodeAddress([city, state, country].filter(Boolean).join(', '));
+    const latitude = Number(result.latitude);
+    const longitude = Number(result.longitude);
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      return null;
+    }
+
+    return {
+      city: result.city || city || '',
+      state: result.state || state || '',
+      country: result.country || country || 'India',
+      coordinates: {
+        type: 'Point',
+        coordinates: [longitude, latitude],
+      },
+    };
+  }
+
+  static async reverseGeocodeCoordinates(latitude, longitude) {
+    const lat = Number(latitude);
+    const lng = Number(longitude);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      throw new Error('Valid latitude and longitude are required for reverse geocoding');
+    }
+
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}`;
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'LocalSkillHub/1.0 (geocoding service)',
+        'Accept-Language': 'en',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Reverse geocoding request failed with status ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (!result) {
+      throw new Error('No matching address found for these coordinates');
+    }
+
+    return {
+      latitude: lat,
+      longitude: lng,
+      city: result.address?.city || result.address?.town || result.address?.village || result.address?.county || '',
+      state: result.address?.state || '',
+      country: result.address?.country || '',
+      displayName: result.display_name || '',
+    };
+  }
+
+  static async normalizeLocation(location) {
+    if (!location) return location;
+
+    const hasPoint = this.hasValidPoint(location);
+    const city = location.city || '';
+    const state = location.state || '';
+    const country = location.country || 'India';
+
+    if (hasPoint) {
+      if (city && state && country) {
+        return {
+          ...location,
+          country,
+        };
+      }
+
+      const coords = location.coordinates?.coordinates || location.coordinates;
+      const resolved = await this.reverseGeocodeCoordinates(coords[1], coords[0]);
+
+      return {
+        ...location,
+        city: city || resolved.city,
+        state: state || resolved.state,
+        country: location.country || resolved.country || country,
+        coordinates: {
+          type: 'Point',
+          coordinates: [resolved.longitude, resolved.latitude],
+        },
+      };
+    }
+
+    if (!city && !state) {
+      return location;
+    }
+
+    const resolved = await this.resolveStructuredLocation(city, state, country);
+    if (!resolved) {
+      return location;
+    }
+
+    return {
+      ...location,
+      city: resolved.city,
+      state: resolved.state,
+      country: resolved.country,
+      coordinates: resolved.coordinates,
+    };
+  }
+
+  static async backfillStoredLocations(limit = 200) {
+    const summary = {
+      users: { updated: 0, skipped: 0, failed: 0 },
+      jobs: { updated: 0, skipped: 0, failed: 0 },
+    };
+
+    const users = await User.find({ isActive: true }).limit(limit);
+    for (const user of users) {
+      if (this.hasValidPoint(user.location)) {
+        summary.users.skipped += 1;
+        continue;
+      }
+
+      try {
+        const resolved = await this.resolveStructuredLocation(
+          user.location?.city,
+          user.location?.state,
+          user.location?.country
+        );
+
+        if (!resolved) {
+          summary.users.failed += 1;
+          continue;
+        }
+
+        user.location = {
+          ...user.location,
+          city: resolved.city,
+          state: resolved.state,
+          country: resolved.country,
+          coordinates: resolved.coordinates,
+        };
+        await user.save();
+        summary.users.updated += 1;
+        await this.sleep(1100);
+      } catch {
+        summary.users.failed += 1;
+      }
+    }
+
+    const jobs = await Job.find({}).limit(limit);
+    for (const job of jobs) {
+      if (this.hasValidPoint(job.location)) {
+        summary.jobs.skipped += 1;
+        continue;
+      }
+
+      try {
+        const resolved = await this.resolveStructuredLocation(
+          job.location?.city,
+          job.location?.state,
+          job.location?.country
+        );
+
+        if (!resolved) {
+          summary.jobs.failed += 1;
+          continue;
+        }
+
+        job.location = {
+          ...job.location,
+          city: resolved.city,
+          state: resolved.state,
+          country: resolved.country,
+          coordinates: resolved.coordinates,
+        };
+        await job.save();
+        summary.jobs.updated += 1;
+        await this.sleep(1100);
+      } catch {
+        summary.jobs.failed += 1;
+      }
+    }
+
+    return summary;
+  }
+
   /**
    * Find freelancers near a location
    * @param {Number} latitude
@@ -376,14 +574,36 @@ class GeoLocationService {
    * Geocode address to coordinates (using geocoding API)
    */
   static async geocodeAddress(address) {
-    // TODO: Integrate with geocoding service (Google Maps, Mapbox, OpenStreetMap)
-    // For now, return mock data
+    if (!address || !address.trim()) {
+      throw new Error('Address is required for geocoding');
+    }
+
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q=${encodeURIComponent(address)}`;
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'LocalSkillHub/1.0 (geocoding service)',
+        'Accept-Language': 'en',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Geocoding request failed with status ${response.status}`);
+    }
+
+    const results = await response.json();
+    const match = Array.isArray(results) ? results[0] : null;
+
+    if (!match) {
+      throw new Error('No matching coordinates found for this address');
+    }
+
     return {
-      latitude: 19.0760,
-      longitude: 72.8777,
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      country: 'India'
+      latitude: parseFloat(match.lat),
+      longitude: parseFloat(match.lon),
+      city: match.address?.city || match.address?.town || match.address?.village || '',
+      state: match.address?.state || '',
+      country: match.address?.country || '',
+      displayName: match.display_name,
     };
   }
 }

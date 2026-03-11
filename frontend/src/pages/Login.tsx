@@ -25,7 +25,7 @@ const Login = () => {
       const userData = user || JSON.parse(localStorage.getItem("user") || "{}");
       
       // If user hasn't completed onboarding, redirect there
-      if (!userData.role || !userData.interests || userData.interests.length === 0) {
+      if (!userData.onboardingCompleted) {
         navigate("/onboarding");
       } else {
         // Navigate based on role

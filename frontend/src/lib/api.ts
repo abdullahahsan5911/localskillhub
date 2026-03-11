@@ -6,6 +6,7 @@ interface ApiResponse<T> {
   data?: T;
   message?: string;
   error?: string;
+  token?: string;
 }
 
 class ApiService {
@@ -59,8 +60,8 @@ class ApiService {
       body: JSON.stringify(userData),
     });
     
-    if (response.data && (response.data as any).token) {
-      this.setToken((response.data as any).token);
+    if ((response as any).token) {
+      this.setToken((response as any).token);
     }
     
     return response;
@@ -101,7 +102,14 @@ class ApiService {
   }
 
   // Job endpoints
-  async getJobs(params?: { category?: string; city?: string; search?: string; page?: number }) {
+  async getJobs(params?: {
+    category?: string;
+    city?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+    status?: string;
+  }) {
     const queryString = params ? '?' + new URLSearchParams(params as any).toString() : '';
     return this.request(`/jobs${queryString}`, {
       method: 'GET',
@@ -148,7 +156,14 @@ class ApiService {
   }
 
   // Freelancer endpoints
-  async getFreelancers(params?: { skills?: string; city?: string; search?: string; page?: number }) {
+  async getFreelancers(params?: {
+    skills?: string;
+    city?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+    completeOnly?: boolean;
+  }) {
     const queryString = params ? '?' + new URLSearchParams(params as any).toString() : '';
     return this.request(`/freelancers${queryString}`, {
       method: 'GET',
@@ -537,6 +552,22 @@ class ApiService {
   async geocodeAddress(address: string) {
     return this.request(`/geo/map/geocode?address=${encodeURIComponent(address)}`, {
       method: 'GET',
+    });
+  }
+
+  async reverseGeocodeCoordinates(latitude: number, longitude: number) {
+    return this.request(
+      `/geo/map/reverse-geocode?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}`,
+      {
+        method: 'GET',
+      }
+    );
+  }
+
+  async triggerGeolocationBackfill(limit: number = 200) {
+    return this.request('/geo/admin/backfill', {
+      method: 'POST',
+      body: JSON.stringify({ limit }),
     });
   }
 

@@ -31,6 +31,7 @@ interface JobData {
     _id: string;
     name: string;
   };
+  proposals?: Array<{ _id: string }>;
   proposalsCount?: number;
 }
 
@@ -47,9 +48,10 @@ const JobDetail = () => {
   const fetchJobDetail = async () => {
     try {
       setLoading(true);
+      setError("");
       const response = await api.getJob(id!);
       if (response.data) {
-        setJob(response.data as any);
+        setJob(((response.data as any).job || response.data) as JobData);
       }
     } catch (err: any) {
       setError(err.message || "Failed to fetch job details");
@@ -157,7 +159,7 @@ const JobDetail = () => {
                 <FiUsers className="h-5 w-5 text-gray-600" />
                 <div>
                   <p className="text-xs text-gray-600">Proposals</p>
-                  <p className="font-semibold text-gray-900">{job.proposalsCount || 0}</p>
+                  <p className="font-semibold text-gray-900">{job.proposalsCount || job.proposals?.length || 0}</p>
                 </div>
               </div>
             </div>

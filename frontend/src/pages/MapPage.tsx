@@ -10,25 +10,41 @@ const MapPage = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto py-8 px-4">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Region-Specific Discovery</h1>
-          <p className="text-gray-600">
-            Geo-filter by city/state, discover local jobs and freelancers, and sort by distance, rates, and rating.
-          </p>
+      <div className="container mx-auto py-6 px-4">
+        <div className="mb-6 rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100 p-5 sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 mb-2">
+                Local Discovery
+              </p>
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">Map Search</h1>
+              <p className="max-w-2xl text-slate-600">
+                Discover nearby freelancers and jobs with cleaner filters, live region data, and a focused map-first layout.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-sm min-w-[260px]">
+              <Card className="p-3 border-slate-200 shadow-none bg-white/80">
+                <p className="text-slate-500 text-xs mb-1">Discovery</p>
+                <p className="font-semibold text-slate-900">City, state, distance</p>
+              </Card>
+              <Card className="p-3 border-slate-200 shadow-none bg-white/80">
+                <p className="text-slate-500 text-xs mb-1">Sort</p>
+                <p className="font-semibold text-slate-900">Distance, rate, rating</p>
+              </Card>
+            </div>
+          </div>
         </div>
 
-        {/* View Type Toggle */}
-        <Card className="p-4 mb-6">
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-gray-700">View:</span>
-            <div className="flex gap-2">
+        <Card className="p-3 sm:p-4 mb-5 border-slate-200 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-sm font-medium text-slate-700">View Mode</span>
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant={viewType === 'freelancers' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setViewType('freelancers')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 rounded-full"
               >
                 <FiUser className="h-4 w-4" />
                 Freelancers
@@ -37,7 +53,7 @@ const MapPage = () => {
                 variant={viewType === 'jobs' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setViewType('jobs')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 rounded-full"
               >
                 <FiBriefcase className="h-4 w-4" />
                 Jobs
@@ -45,56 +61,7 @@ const MapPage = () => {
             </div>
           </div>
         </Card>
-
-        {/* Map View */}
-        <MapView type={viewType} height="700px" />
-
-        {/* Info Cards */}
-        <div className="grid md:grid-cols-2 gap-6 mt-6">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Freelancer Profile Discovery</h3>
-            <ul className="space-y-2 text-sm text-gray-700">
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">1.</span>
-                <span>Skill tags, rates, and local availability are visible directly in map cards.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">2.</span>
-                <span>Portfolio signals, past jobs + reviews, endorsements, and social proof are highlighted.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">3.</span>
-                <span>Local reputation shown as: Overall Score | Local Trust | Skill Trust.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">4.</span>
-                <span>Use map + feed together to quickly shortlist nearby verified freelancers.</span>
-              </li>
-            </ul>
-          </Card>
-
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Local Job Listing & Hiring Workflow</h3>
-            <ul className="space-y-2 text-sm text-gray-700">
-              <li className="flex items-start gap-2">
-                <span className="text-green-600">✓</span>
-                <span>Clients can post local jobs, define location/remote zone, and set budget/rate.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-600">✓</span>
-                <span>Milestones, invited freelancers, and proposal activity are visible in local job feed cards.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-600">✓</span>
-                <span>Freelancers can assess workflow readiness for proposals, packages, and invite acceptance.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-600">✓</span>
-                <span>Region-first matching improves trust signals and hiring speed.</span>
-              </li>
-            </ul>
-          </Card>
-        </div>
+        <MapView type={viewType} height="480px" />
       </div>
     </Layout>
   );

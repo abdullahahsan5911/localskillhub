@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import User from '../models/User.js';
 import FreelancerProfile from '../models/FreelancerProfile.js';
 import { AppError } from '../middleware/errorHandler.js';
+import GeoLocationService from '../services/geolocation.service.js';
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -53,18 +54,23 @@ export const register = async (req, res, next) => {
       return next(new AppError('Email already registered', 400));
     }
 
+    const normalizedLocation = location
+      ? await GeoLocationService.normalizeLocation(location)
+      : undefined;
+
     // Create user
     const user = await User.create({
       name,
       email,
       passwordHash: password,
-      role: role || 'freelancer',
-      location,
-      interests
+      role: role || 'client',
+      location: normalizedLocation,
+      interests,
+      onboardingCompleted: Boolean(role && normalizedLocation)
     });
 
     // Create freelancer profile if role is freelancer or both
-    if (user.role === 'freelancer' || user.role === 'both') {
+    if ((role === 'freelancer' || role === 'both') && (user.role === 'freelancer' || user.role === 'both')) {
       await FreelancerProfile.create({
         userId: user._id,
         title: `${name} - Professional Freelancer`,
@@ -159,14 +165,19 @@ export const getMe = async (req, res, next) => {
 // @access  Private
 export const updateProfile = async (req, res, next) => {
   try {
+    const normalizedLocation = req.body.location
+      ? await GeoLocationService.normalizeLocation(req.body.location)
+      : undefined;
+
     const fieldsToUpdate = {
       name: req.body.name,
       phone: req.body.phone,
       role: req.body.role,
-      location: req.body.location,
+      location: normalizedLocation,
       socialLinks: req.body.socialLinks,
       interests: req.body.interests,
-      avatar: req.body.avatar
+      avatar: req.body.avatar,
+      onboardingCompleted: req.body.onboardingCompleted,
     };
 
     // Remove undefined fields
@@ -179,6 +190,21 @@ export const updateProfile = async (req, res, next) => {
       fieldsToUpdate,
       { new: true, runValidators: true }
     );
+
+    if ((user.role === 'freelancer' || user.role === 'both')) {
+      const existingProfile = await FreelancerProfile.findOne({ userId: user._id });
+      if (!existingProfile) {
+        await FreelancerProfile.create({
+          userId: user._id,
+          title: `${user.name} - Professional Freelancer`,
+          bio: '',
+          rates: {
+            minRate: 0,
+            maxRate: 0,
+          },
+        });
+      }
+    }
 
     res.json({
       status: 'success',

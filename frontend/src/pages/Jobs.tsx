@@ -37,24 +37,30 @@ const Jobs = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchJobs();
+    fetchJobs(searchQuery, locationQuery);
   }, []);
 
   const fetchJobs = async (search?: string, city?: string) => {
     try {
       setLoading(true);
+      setError("");
       const params: any = {};
       if (search) params.search = search;
       if (city) params.city = city;
+      params.limit = 200;
+      params.status = 'open';
       
       const response = await api.getJobs(params);
       if (response.data && Array.isArray(response.data)) {
         setJobs(response.data);
       } else if (response.data && (response.data as any).jobs) {
         setJobs((response.data as any).jobs);
+      } else {
+        setJobs([]);
       }
     } catch (err: any) {
       setError(err.message || "Failed to fetch jobs");
+      setJobs([]);
     } finally {
       setLoading(false);
     }

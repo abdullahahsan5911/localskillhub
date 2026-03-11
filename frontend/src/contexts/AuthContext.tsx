@@ -10,6 +10,7 @@ interface User {
   interests?: string[];
   isEmailVerified?: boolean;
   location?: any;
+  onboardingCompleted?: boolean;
 }
 
 interface AuthContextType {
@@ -84,6 +85,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (response.status === 'success') {
         const userData = (response.data as any)?.user;
         const token = (response as any).token;
+
+        if (token) {
+          api.setToken(token);
+        }
         
         setUser(userData);
         setIsAuthenticated(true);
@@ -105,6 +110,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (response.status === 'success') {
         const userData = (response.data as any)?.user;
         const token = (response as any).token;
+
+        if (token) {
+          api.setToken(token);
+        }
         
         setUser(userData);
         setIsAuthenticated(true);

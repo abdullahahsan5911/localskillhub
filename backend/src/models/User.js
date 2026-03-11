@@ -1,6 +1,24 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+const pointSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true,
+    },
+    coordinates: {
+      type: [Number],
+      validate: {
+        validator: (value) => value === undefined || (Array.isArray(value) && value.length === 2),
+        message: 'Point coordinates must contain [longitude, latitude]',
+      },
+    },
+  },
+  { _id: false }
+);
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -34,15 +52,8 @@ const userSchema = new mongoose.Schema({
     state: String,
     country: String,
     coordinates: {
-      type: {
-        type: String,
-        enum: ['Point'],
-        default: 'Point'
-      },
-      coordinates: {
-        type: [Number], // [longitude, latitude]
-        default: [0, 0]
-      }
+      type: pointSchema,
+      default: undefined,
     }
   },
   verifiedBadges: [{
@@ -77,6 +88,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  onboardingCompleted: {
+    type: Boolean,
+    default: false
+  },
   followers: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -95,6 +110,22 @@ const userSchema = new mongoose.Schema({
 
 // Index for geospatial queries
 userSchema.index({ 'location.coordinates': '2dsphere' });
+
+userSchema.pre('validate', function(next) {
+  const coords = this.location?.coordinates?.coordinates;
+  const hasValidPoint = Array.isArray(coords) && coords.length === 2;
+
+  if (this.location?.coordinates && !hasValidPoint) {
+    this.location.coordinates = undefined;
+  }
+
+  const hasLocationText = Boolean(this.location?.city || this.location?.state || this.location?.country);
+  if (this.location && !hasLocationText && !this.location.coordinates) {
+    this.location = undefined;
+  }
+
+  next();
+});
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {

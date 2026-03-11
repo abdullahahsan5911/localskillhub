@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import L, { Map as LeafletMap } from 'leaflet';
 import { FiBriefcase, FiFilter, FiMapPin, FiStar, FiUser } from 'react-icons/fi';
 import { Card } from '@/components/ui/card';
@@ -32,6 +33,16 @@ interface MarkerData {
 
 type SortOption = 'distance' | 'rates' | 'rating';
 
+interface MissingMapItem {
+  id: string;
+  title: string;
+  locationLabel: string;
+  type: 'freelancer' | 'job';
+  reason: string;
+  city?: string;
+  state?: string;
+}
+
 const escapeHtml = (value: string) =>
   value
     .replace(/&/g, '&amp;')
@@ -44,6 +55,42 @@ const toNumber = (value: unknown, fallback = 0) => {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
 };
+
+const isValidCoordinatePair = (lat: number, lng: number) => {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return false;
+  if (lat === 0 && lng === 0) return false;
+  return true;
+};
+
+const uniqueSorted = (values: string[]) =>
+  [...new Set(values.map((v) => v.trim()).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b)
+  );
+
+const getLocationMeta = (item: any, itemType: 'freelancer' | 'job') => {
+  if (itemType === 'freelancer') {
+    return {
+      city: item.userId?.location?.city || item.location?.city || '',
+      state: item.userId?.location?.state || item.location?.state || '',
+    };
+  }
+
+  return {
+    city: item.location?.city || '',
+    state: item.location?.state || '',
+  };
+};
+
+const parseCollectionResponse = <T,>(responseData: any, key: 'freelancers' | 'jobs'): T[] => {
+  if (Array.isArray(responseData)) return responseData;
+  if (Array.isArray(responseData?.[key])) return responseData[key];
+  if (Array.isArray(responseData?.data?.[key])) return responseData.data[key];
+  return [];
+};
+
+const buildLocationLabel = (city?: string, state?: string) =>
+  [city, state].filter(Boolean).join(', ') || 'Location missing';
 
 const haversineDistanceKm = (
   lat1: number,
@@ -65,6 +112,12 @@ const haversineDistanceKm = (
 };
 
 const getCoordinates = (item: any, itemType: 'freelancer' | 'job') => {
+  if (item.__resolvedCoordinates) {
+    const lat = toNumber(item.__resolvedCoordinates.lat, NaN);
+    const lng = toNumber(item.__resolvedCoordinates.lng, NaN);
+    return isValidCoordinatePair(lat, lng) ? { lat, lng } : null;
+  }
+
   if (itemType === 'freelancer') {
     const profileCoords = item.location?.coordinates?.coordinates || item.location?.coordinates;
     const userCoords =
@@ -76,27 +129,45 @@ const getCoordinates = (item: any, itemType: 'freelancer' | 'job') => {
       ? userCoords
       : null;
 
-    if (!coords || coords.length < 2) return null;
-    return { lat: toNumber(coords[1]), lng: toNumber(coords[0]) };
+    if (coords && coords.length >= 2) {
+      const lat = toNumber(coords[1], NaN);
+      const lng = toNumber(coords[0], NaN);
+      return isValidCoordinatePair(lat, lng) ? { lat, lng } : null;
+    }
+
+    return null;
   }
 
   const coords = item.location?.coordinates?.coordinates || item.location?.coordinates;
-  if (!Array.isArray(coords) || coords.length < 2) return null;
-  return { lat: toNumber(coords[1]), lng: toNumber(coords[0]) };
+  if (Array.isArray(coords) && coords.length >= 2) {
+    const lat = toNumber(coords[1], NaN);
+    const lng = toNumber(coords[0], NaN);
+    return isValidCoordinatePair(lat, lng) ? { lat, lng } : null;
+  }
+
+  return null;
 };
 
 const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
   const mapDivRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  const markerInstancesRef = useRef<Record<string, L.Marker>>({});
+  const geocodeCacheRef = useRef<Record<string, { lat: number; lng: number } | null>>({});
 
   const [markerData, setMarkerData] = useState<MarkerData[]>([]);
+  const [sourceItems, setSourceItems] = useState<any[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
   const [locationReady, setLocationReady] = useState(!!initialCenter);
   const [center, setCenter] = useState(initialCenter || { lat: 28.6139, lng: 77.2090 });
-  const [radius, setRadius] = useState(50);
+  const [radius, setRadius] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('distance');
+  const [activeResultId, setActiveResultId] = useState<string | null>(null);
+  const [fetchSummary, setFetchSummary] = useState({ fetched: 0, mapped: 0 });
+  const [missingMapItems, setMissingMapItems] = useState<MissingMapItem[]>([]);
+  const [repairingId, setRepairingId] = useState<string | null>(null);
+  const [backfillRunning, setBackfillRunning] = useState(false);
   const [filters, setFilters] = useState<{
     city: string;
     state: string;
@@ -166,6 +237,7 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
     if (!map || !layer) return;
 
     layer.clearLayers();
+    markerInstancesRef.current = {};
 
     const youIcon = L.divIcon({
       className: '',
@@ -189,15 +261,106 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
         popupAnchor: [0, -20],
       });
 
-      L.marker([marker.position.lat, marker.position.lng], { icon })
-        .bindPopup(buildPopupHtml(marker), { maxWidth: 330 })
+      const leafletMarker = L.marker([marker.position.lat, marker.position.lng], { icon })
+        .bindPopup(buildPopupHtml(marker), { maxWidth: 330, closeButton: false })
         .addTo(layer);
+
+      leafletMarker.on('mouseover', () => {
+        setActiveResultId(marker.id);
+        leafletMarker.openPopup();
+      });
+
+      leafletMarker.on('mouseout', () => {
+        if (activeResultId !== marker.id) {
+          leafletMarker.closePopup();
+        }
+      });
+
+      leafletMarker.on('click', () => {
+        setActiveResultId(marker.id);
+        leafletMarker.openPopup();
+      });
+
+      markerInstancesRef.current[marker.id] = leafletMarker;
     });
 
-    map.setView([center.lat, center.lng], map.getZoom());
+    requestAnimationFrame(() => {
+      map.invalidateSize();
+
+      if (markerData.length > 0) {
+        const bounds = L.latLngBounds(
+          markerData.map((marker) => [marker.position.lat, marker.position.lng] as [number, number])
+        );
+        bounds.extend([center.lat, center.lng]);
+        map.fitBounds(bounds, { padding: [36, 36], maxZoom: 11 });
+      } else {
+        map.setView([center.lat, center.lng], 6);
+      }
+    });
   }, [markerData, center]);
 
-  const sortedFeed = useMemo(() => markerData.slice(0, 8), [markerData]);
+  useEffect(() => {
+    if (!activeResultId) return;
+
+    const activeMarker = markerInstancesRef.current[activeResultId];
+    if (activeMarker) {
+      activeMarker.openPopup();
+    }
+  }, [activeResultId]);
+  const visibleResults = useMemo(() => markerData, [markerData]);
+
+  const liveFilterOptions = useMemo(() => {
+    if (type === 'freelancers') {
+      const cities = uniqueSorted(
+        sourceItems.map(
+          (item) => item.userId?.location?.city || item.location?.city || ''
+        )
+      );
+      const states = uniqueSorted(
+        sourceItems.map(
+          (item) => item.userId?.location?.state || item.location?.state || ''
+        )
+      );
+      const skills = uniqueSorted(
+        sourceItems.flatMap((item) =>
+          (item.skills || []).map((skill: any) =>
+            typeof skill === 'string' ? skill : skill.name || ''
+          )
+        )
+      );
+      const rates = sourceItems
+        .map((item) => toNumber(item.rates?.minRate, 0))
+        .filter((value) => value > 0);
+
+      return {
+        cities,
+        states,
+        categories: [] as string[],
+        skills,
+        minValue: rates.length ? Math.min(...rates) : 0,
+        maxValue: rates.length ? Math.max(...rates) : 0,
+      };
+    }
+
+    const cities = uniqueSorted(sourceItems.map((item) => item.location?.city || ''));
+    const states = uniqueSorted(sourceItems.map((item) => item.location?.state || ''));
+    const categories = uniqueSorted(sourceItems.map((item) => item.category || ''));
+    const skills = uniqueSorted(
+      sourceItems.flatMap((item) => (item.skills || []).map((skill: string) => skill || ''))
+    );
+    const budgets = sourceItems
+      .map((item) => toNumber(item.budget?.amount, 0))
+      .filter((value) => value > 0);
+
+    return {
+      cities,
+      states,
+      categories,
+      skills,
+      minValue: budgets.length ? Math.min(...budgets) : 0,
+      maxValue: budgets.length ? Math.max(...budgets) : 0,
+    };
+  }, [sourceItems, type]);
 
   const buildPopupHtml = (marker: MarkerData) => {
     if (marker.type === 'freelancer') {
@@ -290,6 +453,126 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
     </div>`;
   };
 
+  const focusMarker = (entryId: string) => {
+    const marker = markerInstancesRef.current[entryId];
+    const entry = markerData.find((item) => item.id === entryId);
+    const map = mapInstanceRef.current;
+
+    if (!marker || !entry || !map) return;
+
+    setActiveResultId(entryId);
+    map.flyTo([entry.position.lat, entry.position.lng], Math.max(map.getZoom(), 11), {
+      duration: 0.8,
+    });
+    marker.openPopup();
+  };
+
+  const resolveLocationCoordinates = async (city?: string, state?: string) => {
+    const key = `${(city || '').trim().toLowerCase()}|${(state || '').trim().toLowerCase()}`;
+    if (!key || key === '|') return null;
+
+    if (key in geocodeCacheRef.current) {
+      return geocodeCacheRef.current[key];
+    }
+
+    try {
+      const address = [city, state, 'India'].filter(Boolean).join(', ');
+      const response = await api.geocodeAddress(address);
+      const lat = toNumber((response.data as any)?.latitude, NaN);
+      const lng = toNumber((response.data as any)?.longitude, NaN);
+
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        const resolved = { lat, lng };
+        geocodeCacheRef.current[key] = resolved;
+        return resolved;
+      }
+    } catch (error) {
+      console.error('Geocoding failed:', error);
+    }
+
+    geocodeCacheRef.current[key] = null;
+    return null;
+  };
+
+  const buildMissingMapItems = (items: any[], itemType: 'freelancer' | 'job') =>
+    items
+      .filter((item) => !getCoordinates(item, itemType))
+      .map((item) => {
+        const { city, state } = getLocationMeta(item, itemType);
+        return {
+          id: item._id,
+          title: itemType === 'freelancer' ? item.title || item.userId?.name || 'Freelancer' : item.title || 'Job',
+          locationLabel: buildLocationLabel(city, state),
+          type: itemType,
+          reason: city || state ? 'Geocoding failed for this location' : 'No city or state saved',
+          city,
+          state,
+        } satisfies MissingMapItem;
+      });
+
+  const hydrateItemsWithCoordinates = async (items: any[], itemType: 'freelancer' | 'job') => {
+    const hydrated = await Promise.all(
+      items.map(async (item) => {
+        if (getCoordinates(item, itemType)) {
+          return item;
+        }
+
+        const { city, state } = getLocationMeta(item, itemType);
+        if (!city && !state) {
+          return item;
+        }
+
+        const resolved = await resolveLocationCoordinates(city, state);
+        if (!resolved) {
+          return item;
+        }
+
+        return {
+          ...item,
+          __resolvedCoordinates: resolved,
+        };
+      })
+    );
+
+    return { hydrated, missingItems: buildMissingMapItems(hydrated, itemType) };
+  };
+
+  const handleFixLocation = async (item: MissingMapItem) => {
+    if (!item.city && !item.state) return;
+
+    setRepairingId(item.id);
+    try {
+      const resolved = await resolveLocationCoordinates(item.city, item.state);
+      if (!resolved) return;
+
+      const updatedItems = sourceItems.map((sourceItem) =>
+        sourceItem._id === item.id
+          ? { ...sourceItem, __resolvedCoordinates: resolved }
+          : sourceItem
+      );
+
+      const normalized = normalizeAndSort(updatedItems, type === 'freelancers' ? 'freelancer' : 'job');
+      setSourceItems(updatedItems);
+      setMarkerData(normalized);
+      setMissingMapItems(buildMissingMapItems(updatedItems, type === 'freelancers' ? 'freelancer' : 'job'));
+      setFetchSummary({ fetched: updatedItems.length, mapped: normalized.length });
+    } finally {
+      setRepairingId(null);
+    }
+  };
+
+  const handleBackfill = async () => {
+    setBackfillRunning(true);
+    try {
+      await api.triggerGeolocationBackfill(200);
+      await fetchMapData();
+    } catch (error) {
+      console.error('Backfill failed:', error);
+    } finally {
+      setBackfillRunning(false);
+    }
+  };
+
   const normalizeAndSort = (items: any[], itemType: 'freelancer' | 'job') => {
     const cityFilter = filters.city.trim().toLowerCase();
     const stateFilter = filters.state.trim().toLowerCase();
@@ -313,7 +596,7 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
         if (stateFilter && !itemState.includes(stateFilter)) return null;
 
         const distanceKm = haversineDistanceKm(center.lat, center.lng, position.lat, position.lng);
-        if (distanceKm > radius) return null;
+        if (radius !== null && distanceKm > radius) return null;
 
         if (itemType === 'freelancer') {
           const ratingScore = toNumber(item.ratings?.average, 0);
@@ -371,21 +654,38 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
         const response = await api.getFreelancers({
           city: filters.city || undefined,
           search: filters.search || undefined,
+          limit: 200,
+          completeOnly: false,
         });
-        const items = (response.data as any)?.freelancers || (response.data as any)?.data?.freelancers || [];
-        setMarkerData(normalizeAndSort(Array.isArray(items) ? items : [], 'freelancer'));
+        const safeItems = parseCollectionResponse<any>(response.data, 'freelancers');
+        const { hydrated, missingItems } = await hydrateItemsWithCoordinates(safeItems, 'freelancer');
+        const normalized = normalizeAndSort(hydrated, 'freelancer');
+        setSourceItems(hydrated);
+        setMarkerData(normalized);
+        setMissingMapItems(missingItems);
+        setFetchSummary({ fetched: safeItems.length, mapped: normalized.length });
       } else {
         const response = await api.getJobs({
           city: filters.city || undefined,
           category: filters.category,
           search: filters.search || undefined,
+          limit: 200,
+          status: 'open',
         });
-        const items = (response.data as any)?.jobs || (response.data as any)?.data?.jobs || [];
-        setMarkerData(normalizeAndSort(Array.isArray(items) ? items : [], 'job'));
+        const safeItems = parseCollectionResponse<any>(response.data, 'jobs');
+        const { hydrated, missingItems } = await hydrateItemsWithCoordinates(safeItems, 'job');
+        const normalized = normalizeAndSort(hydrated, 'job');
+        setSourceItems(hydrated);
+        setMarkerData(normalized);
+        setMissingMapItems(missingItems);
+        setFetchSummary({ fetched: safeItems.length, mapped: normalized.length });
       }
     } catch (error) {
       console.error('Map feed error:', error);
+      setSourceItems([]);
       setMarkerData([]);
+      setMissingMapItems([]);
+      setFetchSummary({ fetched: 0, mapped: 0 });
     } finally {
       setLoading(false);
     }
@@ -393,7 +693,7 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
 
   return (
     <div className="relative">
-      <Card className="p-4 mb-4">
+      <Card className="p-4 mb-4 relative z-[1200] overflow-visible border-slate-200 shadow-sm bg-white/95 backdrop-blur">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
@@ -407,11 +707,12 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
               </span>
             </div>
 
-            <Select value={radius.toString()} onValueChange={(v) => setRadius(parseInt(v, 10))}>
-              <SelectTrigger className="w-32">
+            <Select value={radius === null ? 'all' : radius.toString()} onValueChange={(v) => setRadius(v === 'all' ? null : parseInt(v, 10))}>
+              <SelectTrigger className="w-40 bg-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[2500]">
+                <SelectItem value="all">Any distance</SelectItem>
                 <SelectItem value="10">10 km</SelectItem>
                 <SelectItem value="25">25 km</SelectItem>
                 <SelectItem value="50">50 km</SelectItem>
@@ -421,10 +722,10 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
             </Select>
 
             <Select value={sortBy} onValueChange={(v: SortOption) => setSortBy(v)}>
-              <SelectTrigger className="w-44">
+              <SelectTrigger className="w-44 bg-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[2500]">
                 <SelectItem value="distance">Sort: Distance</SelectItem>
                 <SelectItem value="rates">Sort: Rates/Budget</SelectItem>
                 <SelectItem value="rating">Sort: Rating</SelectItem>
@@ -434,31 +735,73 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
             <Badge variant="outline" className="text-sm">
               {loading ? 'Loading' : markerData.length} results
             </Badge>
+            {!loading && (
+              <Badge variant="secondary" className="text-xs rounded-full bg-slate-100 text-slate-700 hover:bg-slate-100">
+                API {fetchSummary.fetched} | Map {fetchSummary.mapped}
+              </Badge>
+            )}
           </div>
 
-          <Button variant="outline" size="sm" onClick={() => setShowFilters((s) => !s)}>
-            <FiFilter className="h-4 w-4 mr-2" />
-            Region Filters
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="outline" size="sm" onClick={() => setShowFilters((s) => !s)}>
+              <FiFilter className="h-4 w-4 mr-2" />
+              Region Filters
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleBackfill} disabled={backfillRunning}>
+              {backfillRunning ? 'Backfilling...' : 'Backfill Locations'}
+            </Button>
+          </div>
         </div>
 
         {showFilters && (
-          <div className="mt-4 pt-4 border-t grid md:grid-cols-3 gap-4">
+          <div className="mt-4 pt-4 border-t grid md:grid-cols-2 xl:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">City</label>
-              <Input
-                placeholder="e.g. Bangalore"
-                value={filters.city}
-                onChange={(e) => setFilters((prev) => ({ ...prev, city: e.target.value }))}
-              />
+              <Select
+                value={filters.city || 'all'}
+                onValueChange={(v) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    city: v === 'all' ? '' : v,
+                  }))
+                }
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="All cities" />
+                </SelectTrigger>
+                <SelectContent className="z-[2500]">
+                  <SelectItem value="all">All cities</SelectItem>
+                  {liveFilterOptions.cities.map((city) => (
+                    <SelectItem key={city} value={city}>
+                      {city}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">State</label>
-              <Input
-                placeholder="e.g. Karnataka"
-                value={filters.state}
-                onChange={(e) => setFilters((prev) => ({ ...prev, state: e.target.value }))}
-              />
+              <Select
+                value={filters.state || 'all'}
+                onValueChange={(v) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    state: v === 'all' ? '' : v,
+                  }))
+                }
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="All states" />
+                </SelectTrigger>
+                <SelectContent className="z-[2500]">
+                  <SelectItem value="all">All states</SelectItem>
+                  {liveFilterOptions.states.map((state) => (
+                    <SelectItem key={state} value={state}>
+                      {state}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">Keyword</label>
@@ -472,6 +815,30 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
             {type === 'freelancers' ? (
               <>
                 <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Skill</label>
+                  <Select
+                    value={filters.search || 'all'}
+                    onValueChange={(v) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        search: v === 'all' ? '' : v,
+                      }))
+                    }
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="All skills" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[2500]">
+                      <SelectItem value="all">All skills</SelectItem>
+                      {liveFilterOptions.skills.map((skill) => (
+                        <SelectItem key={skill} value={skill}>
+                          {skill}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">Minimum Rating</label>
                   <Select
                     value={filters.minRating?.toString() || '0'}
@@ -482,10 +849,10 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
                       }))
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Any rating" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[2500]">
                       <SelectItem value="0">Any rating</SelectItem>
                       <SelectItem value="3">3+ stars</SelectItem>
                       <SelectItem value="4">4+ stars</SelectItem>
@@ -506,10 +873,10 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
                       }))
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[2500]">
                       <SelectItem value="all">All</SelectItem>
                       <SelectItem value="true">Available local</SelectItem>
                       <SelectItem value="false">Busy/Unavailable</SelectItem>
@@ -521,16 +888,27 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
               <>
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">Category</label>
-                  <Input
-                    placeholder="Design, Dev, Video..."
-                    value={filters.category || ''}
-                    onChange={(e) =>
+                  <Select
+                    value={filters.category || 'all'}
+                    onValueChange={(v) =>
                       setFilters((prev) => ({
                         ...prev,
-                        category: e.target.value || undefined,
+                        category: v === 'all' ? undefined : v,
                       }))
                     }
-                  />
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="All categories" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[2500]">
+                      <SelectItem value="all">All categories</SelectItem>
+                      {liveFilterOptions.categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">Min Budget (Rs)</label>
@@ -573,10 +951,10 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
                       }))
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[2500]">
                       <SelectItem value="all">All</SelectItem>
                       <SelectItem value="true">Remote/Hybrid</SelectItem>
                       <SelectItem value="false">On-site only</SelectItem>
@@ -585,42 +963,85 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
                 </div>
               </>
             )}
+
+            <div className="md:col-span-2 xl:col-span-4 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-xs text-slate-700">
+              Live data: {sourceItems.length} records, {liveFilterOptions.cities.length} cities,
+              {' '}{liveFilterOptions.states.length} states, {liveFilterOptions.skills.length} skills
+              {type === 'jobs' ? `, ${liveFilterOptions.categories.length} categories` : ''}.
+              {' '}
+              {liveFilterOptions.maxValue > 0
+                ? `Range: Rs ${liveFilterOptions.minValue.toLocaleString()} - Rs ${liveFilterOptions.maxValue.toLocaleString()}`
+                : 'Range will appear when data is available.'}
+            </div>
           </div>
         )}
       </Card>
 
-      <div
-        style={{ height }}
-        className="rounded-xl overflow-hidden border border-gray-200 shadow-sm relative"
-      >
-        {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-[1000]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3" />
-              <p className="text-sm text-gray-600">Loading local map feed...</p>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.65fr)_360px] items-start">
+        <div>
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+            <Badge variant="secondary" className="rounded-full px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-100">
+              {radius === null ? 'Any distance' : `${radius} km radius`}
+            </Badge>
+            <Badge variant="secondary" className="rounded-full px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-100">
+              Sorted by {sortBy}
+            </Badge>
+            {filters.city && (
+              <Badge variant="secondary" className="rounded-full px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-100">
+                City: {filters.city}
+              </Badge>
+            )}
+            {filters.state && (
+              <Badge variant="secondary" className="rounded-full px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-100">
+                State: {filters.state}
+              </Badge>
+            )}
+          </div>
+
+          <div
+            style={{ height }}
+            className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-white relative z-0"
+          >
+            {loading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-[1000]">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3" />
+                  <p className="text-sm text-gray-600">Loading local map feed...</p>
+                </div>
+              </div>
+            )}
+            <div ref={mapDivRef} style={{ height: '100%', width: '100%' }} />
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-5 px-1 text-sm text-slate-600">
+            <div className="flex items-center gap-2">
+              <div className="w-3.5 h-3.5 rounded-full bg-red-500 border-2 border-white shadow" />
+              <span>Your location</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3.5 h-3.5 rounded-full bg-blue-600 border-2 border-white shadow" />
+              <span>Freelancer</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3.5 h-3.5 rounded-full bg-green-600 border-2 border-white shadow" />
+              <span>Job</span>
             </div>
           </div>
-        )}
-        <div ref={mapDivRef} style={{ height: '100%', width: '100%' }} />
-      </div>
+        </div>
 
-      <div className="flex items-center gap-6 mt-3 px-1 text-sm text-gray-600">
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full bg-red-500 border-2 border-white shadow" />
-          <span>Your location</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full bg-blue-600 border-2 border-white shadow" />
-          <span>Freelancer</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full bg-green-600 border-2 border-white shadow" />
-          <span>Job</span>
-        </div>
-      </div>
+        <Card className="p-3 sm:p-4 border-slate-200 shadow-sm bg-white lg:sticky lg:top-24">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">
+                {type === 'freelancers' ? 'All freelancers' : 'All jobs'}
+              </p>
+              <p className="text-xs text-slate-500">Click a result to focus it on the map. Hover markers to preview details.</p>
+            </div>
+            <Badge variant="outline" className="rounded-full">{visibleResults.length}</Badge>
+          </div>
 
-      <div className="mt-6 grid md:grid-cols-2 gap-4">
-        {sortedFeed.map((entry) => {
+          <div className="space-y-3 max-h-[680px] overflow-y-auto pr-1">
+        {visibleResults.map((entry) => {
           if (entry.type === 'freelancer') {
             const f = entry.data;
             const name = f.userId?.name || f.name || 'Freelancer';
@@ -632,9 +1053,17 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
             const localTrust = toNumber(f.localScore, 0);
             const skillTrust = toNumber(f.skillScore, 0);
             const overall = Math.round((localTrust + toNumber(f.globalScore, 0) + skillTrust) / 3);
+            const isActive = activeResultId === entry.id;
 
             return (
-              <Card key={entry.id} className="p-4">
+              <button
+                key={entry.id}
+                type="button"
+                onClick={() => focusMarker(entry.id)}
+                onMouseEnter={() => setActiveResultId(entry.id)}
+                className="block w-full text-left"
+              >
+              <Card className={`p-4 rounded-xl shadow-none transition-colors ${isActive ? 'border-blue-500 bg-blue-50/60' : 'border-slate-200 hover:border-blue-300 hover:bg-slate-50'}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="font-semibold text-gray-900">{name}</h3>
@@ -661,7 +1090,7 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
                   <p>Endorsements: {toNumber((f.endorsements || []).length, 0)}</p>
                 </div>
 
-                <div className="mt-3 rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-900">
+                <div className="mt-3 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-900">
                   <strong>Reputation:</strong> Overall Score {overall} | Local Trust {localTrust} | Skill Trust {skillTrust}
                 </div>
 
@@ -674,6 +1103,7 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
                   </a>
                 </div>
               </Card>
+              </button>
             );
           }
 
@@ -681,9 +1111,17 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
           const city = j.location?.city || 'Unknown city';
           const state = j.location?.state || 'Unknown state';
           const budget = toNumber(j.budget?.amount, 0);
+          const isActive = activeResultId === entry.id;
 
           return (
-            <Card key={entry.id} className="p-4">
+            <button
+              key={entry.id}
+              type="button"
+              onClick={() => focusMarker(entry.id)}
+              onMouseEnter={() => setActiveResultId(entry.id)}
+              className="block w-full text-left"
+            >
+            <Card className={`p-4 rounded-xl shadow-none transition-colors ${isActive ? 'border-green-500 bg-green-50/60' : 'border-slate-200 hover:border-green-300 hover:bg-slate-50'}`}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="font-semibold text-gray-900">{j.title || 'Local Job'}</h3>
@@ -703,7 +1141,7 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
                 <p>Remote zone: {j.remoteAllowed ? 'Enabled' : 'Local on-site'}</p>
               </div>
 
-              <div className="mt-3 rounded-md bg-green-50 px-3 py-2 text-xs text-green-900">
+              <div className="mt-3 rounded-lg bg-green-50 px-3 py-2 text-xs text-green-900">
                 <strong>Hiring workflow:</strong> post local jobs, set budget/rate, add milestones, invite proposals, choose service packages.
               </div>
 
@@ -713,8 +1151,64 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
                 </a>
               </div>
             </Card>
+            </button>
           );
         })}
+            {!loading && missingMapItems.length > 0 && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div>
+                    <p className="text-sm font-semibold text-amber-900">Missing coordinates</p>
+                    <p className="text-xs text-amber-700">Fetched from API but not placed on the map.</p>
+                  </div>
+                  <Badge variant="outline" className="rounded-full border-amber-300 text-amber-800">
+                    {missingMapItems.length}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  {missingMapItems.map((item) => (
+                    <div key={item.id} className="rounded-lg border border-amber-200 bg-white/80 px-3 py-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">{item.title}</p>
+                          <p className="text-xs text-slate-600">{item.locationLabel}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <Badge variant="secondary" className="text-[10px] rounded-full bg-amber-100 text-amber-900 hover:bg-amber-100">
+                            {item.type}
+                          </Badge>
+                          <Link
+                            to={item.type === 'freelancer' ? '/dashboard/freelancer?tab=settings' : `/post-job?jobId=${item.id}`}
+                            className="text-[11px] font-medium text-blue-700 hover:text-blue-800"
+                          >
+                            Edit source record
+                          </Link>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 rounded-full text-[11px] border-amber-300 text-amber-900 hover:bg-amber-100"
+                            disabled={repairingId === item.id || (!item.city && !item.state)}
+                            onClick={() => handleFixLocation(item)}
+                          >
+                            {repairingId === item.id ? 'Fixing...' : 'Fix location'}
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-amber-800 mt-2">{item.reason}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {!loading && visibleResults.length === 0 && (
+              <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
+                No results match the current filter set. Try Any distance or clear city/state filters.
+              </div>
+            )}
+          </div>
+        </Card>
       </div>
     </div>
   );

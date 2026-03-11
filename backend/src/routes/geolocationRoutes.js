@@ -1,5 +1,5 @@
 import express from 'express';
-import { optionalAuth } from '../middleware/auth.js';
+import { optionalAuth, protect } from '../middleware/auth.js';
 import {
   findFreelancersNearby,
   findJobsNearby,
@@ -7,7 +7,9 @@ import {
   getJobsByCity,
   getMapClusters,
   getPopularCities,
-  geocodeAddress
+  geocodeAddress,
+  reverseGeocodeCoordinates,
+  backfillGeolocations
 } from '../controllers/geolocationController.js';
 
 const router = express.Router();
@@ -26,8 +28,12 @@ router.get('/jobs/city/:city', getJobsByCity);
 // Map features
 router.get('/map/clusters', getMapClusters);
 router.get('/map/geocode', geocodeAddress);
+router.get('/map/reverse-geocode', reverseGeocodeCoordinates);
 
 // Popular cities
 router.get('/cities/popular', getPopularCities);
+
+// Protected maintenance endpoint
+router.post('/admin/backfill', protect, backfillGeolocations);
 
 export default router;

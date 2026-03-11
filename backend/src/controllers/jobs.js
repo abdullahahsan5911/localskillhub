@@ -1,5 +1,6 @@
 import Job from '../models/Job.js';
 import { AppError } from '../middleware/errorHandler.js';
+import GeoLocationService from '../services/geolocation.service.js';
 
 // @desc    Get all jobs
 // @route   GET /api/jobs
@@ -108,9 +109,14 @@ export const getMyJobs = async (req, res, next) => {
 // @access  Private (Client/Both)
 export const createJob = async (req, res, next) => {
   try {
+    const normalizedLocation = req.body.location
+      ? await GeoLocationService.normalizeLocation(req.body.location)
+      : undefined;
+
     const job = await Job.create({
       clientId: req.user.id,
-      ...req.body
+      ...req.body,
+      location: normalizedLocation || req.body.location,
     });
 
     res.status(201).json({
@@ -138,7 +144,12 @@ export const updateJob = async (req, res, next) => {
       return next(new AppError('Not authorized to update this job', 403));
     }
 
-    job = await Job.findByIdAndUpdate(req.params.id, req.body, {
+    const updatePayload = { ...req.body };
+    if (req.body.location) {
+      updatePayload.location = await GeoLocationService.normalizeLocation(req.body.location);
+    }
+
+    job = await Job.findByIdAndUpdate(req.params.id, updatePayload, {
       new: true,
       runValidators: true
     });

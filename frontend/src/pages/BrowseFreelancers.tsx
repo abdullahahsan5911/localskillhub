@@ -54,31 +54,37 @@ const BrowseFreelancers = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchFreelancers();
+    fetchFreelancers(activeSkill, searchQuery, locationQuery);
   }, []);
 
-  const fetchFreelancers = async (skillFilter?: string) => {
+  const fetchFreelancers = async (skillFilter?: string, searchValue?: string, cityValue?: string) => {
     try {
       setLoading(true);
+      setError("");
       const params: any = {};
       if (skillFilter && skillFilter !== "All") {
         params.skills = skillFilter;
       }
-      if (locationQuery) {
-        params.city = locationQuery;
+      if (cityValue) {
+        params.city = cityValue;
       }
-      if (searchQuery) {
-        params.search = searchQuery;
+      if (searchValue) {
+        params.search = searchValue;
       }
+      params.limit = 200;
+      params.completeOnly = false;
       
       const response = await api.getFreelancers(params);
       if (response.data && Array.isArray(response.data)) {
         setFreelancers(response.data);
       } else if (response.data && (response.data as any).freelancers) {
         setFreelancers((response.data as any).freelancers);
+      } else {
+        setFreelancers([]);
       }
     } catch (err: any) {
       setError(err.message || "Failed to fetch freelancers");
+      setFreelancers([]);
     } finally {
       setLoading(false);
     }
@@ -86,7 +92,7 @@ const BrowseFreelancers = () => {
 
   const handleSkillFilter = (skill: string) => {
     setActiveSkill(skill);
-    fetchFreelancers(skill);
+    fetchFreelancers(skill, searchQuery, locationQuery);
   };
 
   const formatRate = (rates: FreelancerProfile['rates']) => {
@@ -142,7 +148,7 @@ const BrowseFreelancers = () => {
                 />
               </div>
               <Button 
-                onClick={() => fetchFreelancers(activeSkill)}
+                onClick={() => fetchFreelancers(activeSkill, searchQuery, locationQuery)}
                 className="bg-blue-600 text-white font-semibold px-8 h-12 hover:bg-blue-700 transition-all duration-200 rounded-xl"
               >
                 Search
