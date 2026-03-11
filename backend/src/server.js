@@ -26,6 +26,7 @@ import communityRoutes from './routes/community.js';
 import analyticsRoutes from './routes/analytics.js';
 import verificationNewRoutes from './routes/verificationRoutes.js';
 import geolocationRoutes from './routes/geolocationRoutes.js';
+import uploadRoutes from './routes/upload.js';
 
 // Load environment variables
 dotenv.config();
@@ -115,6 +116,7 @@ app.use('/api/verify', verificationNewRoutes); // New verification system
 app.use('/api/geo', geolocationRoutes); // Geo-location features
 app.use('/api/community', communityRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // 404 Handler
 app.use((req, res) => {

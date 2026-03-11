@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Layout from '@/components/layout/Layout';
-import MapView from '@/components/MapView';
+import MapView from '../components/MapView';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FiUser, FiBriefcase } from 'react-icons/fi';
@@ -13,9 +13,9 @@ const MapPage = () => {
       <div className="container mx-auto py-8 px-4">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Explore Nearby</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Region-Specific Discovery</h1>
           <p className="text-gray-600">
-            Discover local talent and opportunities on the interactive map
+            Geo-filter by city/state, discover local jobs and freelancers, and sort by distance, rates, and rating.
           </p>
         </div>
 
@@ -52,45 +52,45 @@ const MapPage = () => {
         {/* Info Cards */}
         <div className="grid md:grid-cols-2 gap-6 mt-6">
           <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">How It Works</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Freelancer Profile Discovery</h3>
             <ul className="space-y-2 text-sm text-gray-700">
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 font-bold">1.</span>
-                <span>Grant location access to see nearby opportunities</span>
+                <span>Skill tags, rates, and local availability are visible directly in map cards.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 font-bold">2.</span>
-                <span>Use filters to refine results by skills, budget, rating, etc.</span>
+                <span>Portfolio signals, past jobs + reviews, endorsements, and social proof are highlighted.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 font-bold">3.</span>
-                <span>Click markers to view details and profiles</span>
+                <span>Local reputation shown as: Overall Score | Local Trust | Skill Trust.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 font-bold">4.</span>
-                <span>Adjust radius to expand or narrow your search area</span>
+                <span>Use map + feed together to quickly shortlist nearby verified freelancers.</span>
               </li>
             </ul>
           </Card>
 
           <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Why Location Matters</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Local Job Listing & Hiring Workflow</h3>
             <ul className="space-y-2 text-sm text-gray-700">
               <li className="flex items-start gap-2">
                 <span className="text-green-600">✓</span>
-                <span>Build local trust and reputation in your community</span>
+                <span>Clients can post local jobs, define location/remote zone, and set budget/rate.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600">✓</span>
-                <span>Faster communication and in-person meetings</span>
+                <span>Milestones, invited freelancers, and proposal activity are visible in local job feed cards.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600">✓</span>
-                <span>Support your local economy and network</span>
+                <span>Freelancers can assess workflow readiness for proposals, packages, and invite acceptance.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600">✓</span>
-                <span>Access region-specific opportunities and events</span>
+                <span>Region-first matching improves trust signals and hiring speed.</span>
               </li>
             </ul>
           </Card>

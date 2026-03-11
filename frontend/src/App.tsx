@@ -15,6 +15,7 @@ import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import FreelancerDashboard from "./pages/FreelancerDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
+import CombinedDashboard from "./pages/CombinedDashboard";
 import Messages from "./pages/Messages";
 import Contracts from "./pages/Contracts";
 import Community from "./pages/Community";
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/dashboard/freelancer" element={<FreelancerDashboard />} />
             <Route path="/dashboard/client" element={<ClientDashboard />} />
+            <Route path="/dashboard/both" element={<CombinedDashboard />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/community" element={<Community />} />

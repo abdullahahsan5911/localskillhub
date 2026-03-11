@@ -82,6 +82,7 @@ const Messages = () => {
       await api.sendMessage({
         conversationId: selectedChat,
         content: messageText,
+        receiverId: ""
       });
       setMessageText("");
       

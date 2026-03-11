@@ -1,14 +1,27 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FiSearch, FiMapPin, FiTrendingUp, FiUsers, FiShield, FiHeart, FiLoader } from "react-icons/fi";
 import { HiOutlineLocationMarker } from "react-icons/hi";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
 import { api } from "@/lib/api";
+import { CATEGORIES } from "@/constants/categories";
 
-const categories = [
-  "All", "Web Development", "Graphic Design", "Video Production", 
-  "Digital Marketing", "Photography", "Content Writing", "Mobile Apps", "UI/UX Design"
+// Get top categories for filtering
+const topCategoryIds = [
+  "web-development",
+  "graphic-design", 
+  "video-production",
+  "digital-marketing",
+  "photography",
+  "content-writing",
+  "mobile-development",
+  "ui-ux-design"
+];
+
+const filterCategories = [
+  { id: "all", name: "All" },
+  ...CATEGORIES.filter(cat => topCategoryIds.includes(cat.id))
 ];
 
 interface Freelancer {
@@ -21,21 +34,32 @@ interface Freelancer {
       identity: boolean;
     };
   };
-  skills: string[];
+  skills: Array<{ name: string; level: string; yearsOfExperience: number; _id: string }>;
   portfolio?: Array<{
     title: string;
     description: string;
-    image: string;
+    images: string[];
+    imageUrl?: string; // legacy fallback
   }>;
   rating: number;
   completedJobs: number;
 }
 
 const Index = () => {
-  const [activeCategory, setActiveCategory] = useState("All");
+  const navigate = useNavigate();
+  const [activeCategory, setActiveCategory] = useState("all");
   const [liked, setLiked] = useState<string[]>([]);
   const [freelancers, setFreelancers] = useState<Freelancer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [homeSearch, setHomeSearch] = useState("");
+  const [homeLocation, setHomeLocation] = useState("");
+
+  const handleHomeSearch = () => {
+    const params = new URLSearchParams();
+    if (homeSearch) params.set('search', homeSearch);
+    if (homeLocation) params.set('location', homeLocation);
+    navigate(`/browse?${params.toString()}`);
+  };
 
   useEffect(() => {
     const fetchFreelancers = async () => {
@@ -59,12 +83,24 @@ const Index = () => {
     setLiked(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
-  const filteredFreelancers = activeCategory === "All" 
+  const filteredFreelancers = activeCategory === "all" 
     ? freelancers 
     : freelancers.filter(f => 
-        f.skills.some(skill => skill.toLowerCase().includes(activeCategory.toLowerCase())) ||
-        activeCategory.toLowerCase().includes(f.skills[0]?.toLowerCase())
+        f.skills.some(skill => {
+          const activeCat = CATEGORIES.find(c => c.id === activeCategory);
+          const skillName = skill.name;
+          return activeCat && (
+            skillName.toLowerCase().includes(activeCat.name.toLowerCase()) ||
+            activeCat.name.toLowerCase().includes(skillName.toLowerCase())
+          );
+        })
       );
+
+  // Only show profiles that have portfolio images — filter out incomplete accounts
+  const displayFreelancers = filteredFreelancers.filter(f =>
+    f.portfolio && f.portfolio.length > 0 &&
+    (f.portfolio[0].images?.[0] || (f.portfolio[0] as any).imageUrl)
+  );
 
   return (
     <Layout>
@@ -88,6 +124,9 @@ const Index = () => {
                 type="text"
                 placeholder="Search for services..."
                 className="w-full bg-transparent border-none focus:outline-none text-gray-900 placeholder-gray-400"
+                value={homeSearch}
+                onChange={(e) => setHomeSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleHomeSearch()}
               />
             </div>
             <div className="flex-1 flex items-center px-4 py-2 border-t md:border-t-0 md:border-l border-gray-200">
@@ -96,9 +135,15 @@ const Index = () => {
                 type="text"
                 placeholder="Location"
                 className="w-full bg-transparent border-none focus:outline-none text-gray-900 placeholder-gray-400"
+                value={homeLocation}
+                onChange={(e) => setHomeLocation(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleHomeSearch()}
               />
             </div>
-            <Button className="bg-blue-600 text-white font-semibold px-8 py-6 rounded-full hover:bg-blue-700">
+            <Button
+              onClick={handleHomeSearch}
+              className="bg-blue-600 text-white font-semibold px-8 py-6 rounded-full hover:bg-blue-700"
+            >
               Search
             </Button>
           </div>
@@ -109,17 +154,17 @@ const Index = () => {
       <section className="bg-gray-50 border-y border-gray-200 py-6 sticky top-16 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
-            {categories.map((cat) => (
+            {filterCategories.map((cat) => (
               <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
                 className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all ${
-                  activeCategory === cat
+                  activeCategory === cat.id
                     ? "bg-blue-600 text-white"
                     : "bg-white text-gray-700 border border-gray-300 hover:border-blue-600"
                 }`}
               >
-                {cat}
+                {cat.name}
               </button>
             ))}
           </div>
@@ -133,7 +178,7 @@ const Index = () => {
             <div className="flex items-center justify-center py-20">
               <FiLoader className="h-12 w-12 text-blue-600 animate-spin" />
             </div>
-          ) : filteredFreelancers.length === 0 ? (
+          ) : displayFreelancers.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-gray-500 text-lg">No freelancers found. Try a different category.</p>
               <Link to="/browse">
@@ -144,18 +189,18 @@ const Index = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredFreelancers.map((freelancer) => {
+              {displayFreelancers.map((freelancer) => {
                 const portfolioItem = freelancer.portfolio?.[0];
                 const user = freelancer.userId;
                 
                 return (
                   <div key={freelancer._id} className="group">
-                    <Link to={`/freelancer/${freelancer._id}`}>
+                    <Link to={`/profile/${freelancer.userId._id}`}>
                       <div className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300">
                         <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
-                          {portfolioItem?.image ? (
+                          {portfolioItem?.images?.[0] || portfolioItem?.imageUrl ? (
                             <img
-                              src={portfolioItem.image}
+                              src={portfolioItem.images?.[0] || portfolioItem.imageUrl || ''}
                               alt={portfolioItem.title || 'Portfolio'}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             />
@@ -193,7 +238,7 @@ const Index = () => {
                           </div>
                           <div className="flex items-center justify-between text-sm text-gray-500">
                             <span className="text-xs bg-gray-100 px-3 py-1 rounded-full line-clamp-1">
-                              {freelancer.skills[0] || 'Freelancer'}
+                              {freelancer.skills[0]?.name || 'Freelancer'}
                             </span>
                             <div className="flex items-center gap-1">
                               <FiUsers className="h-4 w-4" />

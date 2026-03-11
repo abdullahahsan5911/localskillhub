@@ -9,7 +9,8 @@ import {
   deleteJob,
   searchJobs,
   getNearbyJobs,
-  inviteFreelancers
+  inviteFreelancers,
+  getMyJobs
 } from '../controllers/jobs.js';
 
 const router = express.Router();
@@ -18,6 +19,10 @@ const router = express.Router();
 router.get('/', optionalAuth, cacheMiddleware(300), getJobs);
 router.get('/search', optionalAuth, cacheMiddleware(300), searchJobs);
 router.get('/nearby', optionalAuth, cacheMiddleware(300), getNearbyJobs);
+
+// Protected: must come before /:id to avoid route shadowing
+router.get('/my', protect, authorize('client', 'both'), getMyJobs);
+
 router.get('/:id', optionalAuth, cacheMiddleware(300), getJob);
 
 // Protected routes

@@ -18,6 +18,7 @@ const navLinks = [
   { label: "Explore", href: "/browse" },
   { label: "Jobs", href: "/jobs" },
   { label: "Hire", href: "/post-job" },
+  { label: "Map", href: "/map" },
   { label: "Community", href: "/community" },
 ];
 
@@ -36,6 +37,7 @@ const Navbar = () => {
     if (!user) return "/";
     if (user.role === "client") return "/dashboard/client";
     if (user.role === "freelancer") return "/dashboard/freelancer";
+    if (user.role === "both") return "/dashboard/both";
     return "/";
   };
 

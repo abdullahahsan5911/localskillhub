@@ -72,8 +72,8 @@ class ApiService {
       body: JSON.stringify(credentials),
     });
     
-    if (response.data && (response.data as any).token) {
-      this.setToken((response.data as any).token);
+    if ((response as any).token) {
+      this.setToken((response as any).token);
     }
     
     return response;
@@ -101,7 +101,7 @@ class ApiService {
   }
 
   // Job endpoints
-  async getJobs(params?: { category?: string; location?: string; search?: string; page?: number }) {
+  async getJobs(params?: { category?: string; city?: string; search?: string; page?: number }) {
     const queryString = params ? '?' + new URLSearchParams(params as any).toString() : '';
     return this.request(`/jobs${queryString}`, {
       method: 'GET',
@@ -121,6 +121,26 @@ class ApiService {
     });
   }
 
+  async updateJob(id: string, jobData: any) {
+    return this.request(`/jobs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(jobData),
+    });
+  }
+
+  async deleteJob(id: string) {
+    return this.request(`/jobs/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getMyJobs(params?: { status?: string; page?: number }) {
+    const queryString = params ? '?' + new URLSearchParams(params as any).toString() : '';
+    return this.request(`/jobs/my${queryString}`, {
+      method: 'GET',
+    });
+  }
+
   async getNearbyJobs(lat: number, lng: number, radius: number = 50) {
     return this.request(`/jobs/nearby?lat=${lat}&lng=${lng}&radius=${radius}`, {
       method: 'GET',
@@ -128,7 +148,7 @@ class ApiService {
   }
 
   // Freelancer endpoints
-  async getFreelancers(params?: { skills?: string; location?: string; page?: number }) {
+  async getFreelancers(params?: { skills?: string; city?: string; search?: string; page?: number }) {
     const queryString = params ? '?' + new URLSearchParams(params as any).toString() : '';
     return this.request(`/freelancers${queryString}`, {
       method: 'GET',
@@ -145,6 +165,33 @@ class ApiService {
     return this.request('/freelancers/profile', {
       method: 'PUT',
       body: JSON.stringify(profileData),
+    });
+  }
+
+  async createFreelancerProfile(profileData: any) {
+    return this.request('/freelancers/profile', {
+      method: 'POST',
+      body: JSON.stringify(profileData),
+    });
+  }
+
+  async addPortfolioItem(itemData: any) {
+    return this.request('/freelancers/portfolio', {
+      method: 'POST',
+      body: JSON.stringify(itemData),
+    });
+  }
+
+  async updatePortfolioItem(itemId: string, itemData: any) {
+    return this.request(`/freelancers/portfolio/${itemId}`, {
+      method: 'PUT',
+      body: JSON.stringify(itemData),
+    });
+  }
+
+  async deletePortfolioItem(itemId: string) {
+    return this.request(`/freelancers/portfolio/${itemId}`, {
+      method: 'DELETE',
     });
   }
 
@@ -209,10 +256,16 @@ class ApiService {
     });
   }
 
-  async sendMessage(messageData: { conversationId: string; content: string }) {
+  async sendMessage(messageData: { receiverId: string; content: string; conversationId?: string }) {
     return this.request('/messages', {
       method: 'POST',
       body: JSON.stringify(messageData),
+    });
+  }
+
+  async markMessageRead(messageId: string) {
+    return this.request(`/messages/${messageId}/read`, {
+      method: 'PUT',
     });
   }
 
@@ -227,6 +280,19 @@ class ApiService {
     return this.request('/reviews', {
       method: 'POST',
       body: JSON.stringify(reviewData),
+    });
+  }
+
+  // Follow endpoints
+  async followUser(userId: string) {
+    return this.request(`/users/${userId}/follow`, {
+      method: 'POST',
+    });
+  }
+
+  async unfollowUser(userId: string) {
+    return this.request(`/users/${userId}/follow`, {
+      method: 'DELETE',
     });
   }
 
@@ -472,6 +538,27 @@ class ApiService {
     return this.request(`/geo/map/geocode?address=${encodeURIComponent(address)}`, {
       method: 'GET',
     });
+  }
+
+  // Upload endpoint – sends file to backend which proxies to Cloudinary
+  async uploadFile(file: File, folder?: string): Promise<{ url: string; publicId: string; width: number; height: number }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (folder) formData.append('folder', folder);
+
+    const headers: HeadersInit = {};
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+
+    const response = await fetch(`${this.baseURL}/upload`, {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include',
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Upload failed');
+    return data.data;
   }
 
   // Token management

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { FiSearch, FiMapPin, FiClock, FiDollarSign } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
@@ -29,7 +29,9 @@ interface Job {
 }
 
 const Jobs = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [urlParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(urlParams.get('search') || "");
+  const [locationQuery, setLocationQuery] = useState(urlParams.get('location') || "");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -38,11 +40,12 @@ const Jobs = () => {
     fetchJobs();
   }, []);
 
-  const fetchJobs = async (search?: string) => {
+  const fetchJobs = async (search?: string, city?: string) => {
     try {
       setLoading(true);
       const params: any = {};
       if (search) params.search = search;
+      if (city) params.city = city;
       
       const response = await api.getJobs(params);
       if (response.data && Array.isArray(response.data)) {
@@ -58,7 +61,7 @@ const Jobs = () => {
   };
 
   const handleSearch = () => {
-    fetchJobs(searchQuery);
+    fetchJobs(searchQuery, locationQuery);
   };
 
   const formatBudget = (job: Job) => {
@@ -89,8 +92,8 @@ const Jobs = () => {
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Find Local Jobs</h1>
           <p className="text-lg text-gray-600 mb-8">Browse opportunities in your region</p>
           
-          <div className="bg-white border border-gray-300 rounded-2xl p-2 max-w-2xl shadow-sm">
-            <div className="flex gap-2">
+          <div className="bg-white border border-gray-300 rounded-2xl p-2 max-w-3xl shadow-sm">
+            <div className="flex flex-col sm:flex-row gap-2">
               <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50">
                 <FiSearch className="h-5 w-5 text-gray-400" />
                 <input
@@ -99,6 +102,18 @@ const Jobs = () => {
                   className="bg-transparent w-full outline-none"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                />
+              </div>
+              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50">
+                <FiMapPin className="h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="City or location..."
+                  className="bg-transparent w-full outline-none"
+                  value={locationQuery}
+                  onChange={(e) => setLocationQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 />
               </div>
               <Button 

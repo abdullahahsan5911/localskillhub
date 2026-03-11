@@ -1,102 +1,625 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import Layout from "@/components/layout/Layout";
+import { CATEGORIES } from "@/constants/categories";
+import api from "@/lib/api";
+import {
+  Briefcase, FileText, DollarSign, MapPin, Tag, Clock,
+  ChevronRight, ChevronLeft, CheckCircle2, X, Plus, Zap,
+  Globe, Users, Star
+} from "lucide-react";
+
+type BudgetType = "fixed" | "hourly";
+type Duration = "short" | "medium" | "long";
+type ExperienceLevel = "beginner" | "intermediate" | "expert";
+
+interface Milestone {
+  title: string;
+  description: string;
+  amount: number;
+  dueDate: string;
+}
+
+interface JobForm {
+  title: string;
+  description: string;
+  category: string;
+  skills: string[];
+  budgetType: BudgetType;
+  budgetAmount: number;
+  budgetMin: number;
+  budgetMax: number;
+  currency: string;
+  duration: Duration;
+  experienceLevel: ExperienceLevel;
+  city: string;
+  state: string;
+  remoteAllowed: boolean;
+  milestones: Milestone[];
+  attachments: string[];
+}
+
+const STEP_TITLES = ["Job Basics", "Requirements", "Budget & Timeline", "Review & Post"];
 
 const PostJob = () => {
-  const [formData, setFormData] = useState({
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
+  const [skillInput, setSkillInput] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const [form, setForm] = useState<JobForm>({
     title: "",
     description: "",
-    budget: "",
-    type: "fixed",
+    category: "",
+    skills: [],
+    budgetType: "fixed",
+    budgetAmount: 0,
+    budgetMin: 0,
+    budgetMax: 0,
+    currency: "INR",
+    duration: "medium",
+    experienceLevel: "intermediate",
     city: "",
-    remote: false,
-    skills: "",
+    state: "",
+    remoteAllowed: false,
+    milestones: [],
+    attachments: [],
   });
+
+  const update = (key: keyof JobForm, value: any) => setForm(f => ({ ...f, [key]: value }));
+
+  const addSkill = (e?: React.KeyboardEvent) => {
+    if (e && e.key !== "Enter") return;
+    if (e) e.preventDefault();
+    const skill = skillInput.trim();
+    if (skill && !form.skills.includes(skill)) {
+      update("skills", [...form.skills, skill]);
+      setSkillInput("");
+    }
+  };
+
+  const removeSkill = (skill: string) => update("skills", form.skills.filter(s => s !== skill));
+
+  const addMilestone = () => update("milestones", [...form.milestones, { title: "", description: "", amount: 0, dueDate: "" }]);
+
+  const updateMilestone = (i: number, key: keyof Milestone, val: any) => {
+    const updated = [...form.milestones];
+    updated[i] = { ...updated[i], [key]: val };
+    update("milestones", updated);
+  };
+
+  const removeMilestone = (i: number) => update("milestones", form.milestones.filter((_, j) => j !== i));
+
+  const canProceed = () => {
+    if (step === 1) return form.title.trim().length > 5 && form.description.trim().length > 20;
+    if (step === 2) return form.category && form.skills.length > 0;
+    if (step === 3) return form.budgetType === "fixed" ? form.budgetAmount > 0 : (form.budgetMin > 0 && form.budgetMax >= form.budgetMin);
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    setError("");
+    try {
+      const payload = {
+        title: form.title,
+        description: form.description,
+        category: form.category,
+        skills: form.skills,
+        budget: {
+          type: form.budgetType,
+          amount: form.budgetType === "fixed" ? form.budgetAmount : form.budgetMax,
+          currency: form.currency,
+          min: form.budgetMin || undefined,
+          max: form.budgetMax || undefined,
+        },
+        duration: form.duration,
+        experienceLevel: form.experienceLevel,
+        location: {
+          city: form.city,
+          state: form.state,
+        },
+        remoteAllowed: form.remoteAllowed,
+        milestones: form.milestones.filter(m => m.title.trim()),
+        status: "open",
+      };
+      await api.createJob(payload);
+      navigate("/dashboard/client");
+    } catch (e: any) {
+      setError(e.message || "Failed to post job");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const selectedCat = CATEGORIES.find(c => c.id === form.category);
 
   return (
     <Layout>
-      <section className="bg-white py-12">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Post a Job</h1>
-          <p className="text-gray-600 mb-8">Find the perfect freelancer for your project</p>
+      <div className="min-h-screen bg-gray-50 py-10">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Post a Job</h1>
+            <p className="text-gray-500 mt-1">Find the perfect freelancer for your project</p>
+          </div>
 
-          <div className="bg-white border border-gray-200 rounded-2xl p-8">
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Job Title</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none"
-                  placeholder="e.g. Website Redesign for Restaurant"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                />
-              </div>
+          {/* Progress bar */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              {STEP_TITLES.map((title, i) => {
+                const num = i + 1;
+                const done = step > num;
+                const active = step === num;
+                return (
+                  <div key={title} className="flex items-center gap-2">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                      done ? "bg-green-500 text-white" : active ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-500"
+                    }`}>
+                      {done ? <CheckCircle2 className="w-4 h-4" /> : num}
+                    </div>
+                    <span className={`text-xs font-medium hidden sm:block ${active ? "text-blue-600" : done ? "text-green-600" : "text-gray-400"}`}>
+                      {title}
+                    </span>
+                    {i < STEP_TITLES.length - 1 && (
+                      <div className={`h-0.5 w-6 sm:w-12 mx-1 rounded-full ${done ? "bg-green-400" : "bg-gray-200"}`} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Description</label>
-                <textarea
-                  rows={5}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none resize-none"
-                  placeholder="Describe your project..."
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">Budget</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none"
-                    placeholder="₹15,000 - ₹25,000"
-                    value={formData.budget}
-                    onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                  />
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+            {/* Step 1: Basics */}
+            {step === 1 && (
+              <div className="space-y-5">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <Briefcase className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">Tell us about your project</h2>
+                    <p className="text-sm text-gray-500">Start with a clear title and description</p>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">Location</label>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Job Title *</label>
                   <input
                     type="text"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none"
-                    placeholder="Mumbai"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    placeholder="e.g. Build a React Native Mobile App for Food Delivery"
+                    value={form.title}
+                    onChange={e => update("title", e.target.value)}
+                    maxLength={100}
                   />
+                  <p className="text-xs text-gray-400 mt-1 text-right">{form.title.length}/100</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Description *</label>
+                  <textarea
+                    rows={7}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-all"
+                    placeholder="Describe your project in detail:&#10;&#10;• What needs to be built&#10;• Features required&#10;• Any specific requirements&#10;• Expected deliverables"
+                    value={form.description}
+                    onChange={e => update("description", e.target.value)}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">{form.description.length} characters (min. 20)</p>
+                </div>
+
+                {/* Location */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Location</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="City (e.g. Mumbai)"
+                        value={form.city}
+                        onChange={e => update("city", e.target.value)}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="State"
+                      value={form.state}
+                      onChange={e => update("state", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl cursor-pointer hover:bg-blue-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-blue-600 rounded"
+                    checked={form.remoteAllowed}
+                    onChange={e => update("remoteAllowed", e.target.checked)}
+                  />
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-800">Remote work is acceptable</span>
+                  </div>
+                </label>
+              </div>
+            )}
+
+            {/* Step 2: Requirements */}
+            {step === 2 && (
+              <div className="space-y-5">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
+                    <Tag className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">Skills & Requirements</h2>
+                    <p className="text-sm text-gray-500">Help freelancers understand what you need</p>
+                  </div>
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Category *</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {CATEGORIES.slice(0, 12).map(cat => {
+                      const Icon = cat.icon;
+                      const selected = form.category === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          onClick={() => update("category", cat.id)}
+                          className={`flex items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${
+                            selected
+                              ? "border-blue-500 bg-blue-50 text-blue-700"
+                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                          }`}
+                        >
+                          <Icon className="w-4 h-4 flex-shrink-0" style={{ color: selected ? undefined : cat.color }} />
+                          <span className="truncate">{cat.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {CATEGORIES.length > 12 && (
+                    <div className="mt-2">
+                      <select
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                        value={form.category}
+                        onChange={e => update("category", e.target.value)}
+                      >
+                        <option value="">Or select from all categories...</option>
+                        {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {/* Skills */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Required Skills * (press Enter to add)</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g. React.js, Node.js, MongoDB..."
+                      value={skillInput}
+                      onChange={e => setSkillInput(e.target.value)}
+                      onKeyDown={addSkill}
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {form.skills.map(skill => (
+                      <span key={skill} className="flex items-center gap-1.5 bg-blue-50 text-blue-700 text-sm px-3 py-1 rounded-full">
+                        {skill}
+                        <button onClick={() => removeSkill(skill)} className="hover:text-red-500">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Experience Level */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Experience Level</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { value: "beginner", label: "Beginner", desc: "Entry-level", icon: "🌱" },
+                      { value: "intermediate", label: "Intermediate", desc: "Some experience", icon: "⚡" },
+                      { value: "expert", label: "Expert", desc: "Highly experienced", icon: "🏆" },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => update("experienceLevel", opt.value)}
+                        className={`p-4 rounded-xl border text-center transition-all ${
+                          form.experienceLevel === opt.value
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="text-2xl mb-1">{opt.icon}</div>
+                        <p className={`text-sm font-semibold ${form.experienceLevel === opt.value ? "text-blue-700" : "text-gray-900"}`}>{opt.label}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
+            )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Required Skills</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none"
-                  placeholder="e.g. React, Figma, CSS"
-                  value={formData.skills}
-                  onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-                />
+            {/* Step 3: Budget */}
+            {step === 3 && (
+              <div className="space-y-5">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">Budget & Timeline</h2>
+                    <p className="text-sm text-gray-500">Set your budget expectations</p>
+                  </div>
+                </div>
+
+                {/* Budget type */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Payment Type</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { value: "fixed", label: "Fixed Price", desc: "One-time payment", icon: Zap },
+                      { value: "hourly", label: "Hourly Rate", desc: "Pay per hour", icon: Clock },
+                    ].map(opt => {
+                      const Icon = opt.icon;
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => update("budgetType", opt.value)}
+                          className={`p-4 rounded-xl border flex items-center gap-3 transition-all ${
+                            form.budgetType === opt.value
+                              ? "border-blue-500 bg-blue-50"
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
+                        >
+                          <Icon className={`w-5 h-5 ${form.budgetType === opt.value ? "text-blue-600" : "text-gray-500"}`} />
+                          <div className="text-left">
+                            <p className={`text-sm font-semibold ${form.budgetType === opt.value ? "text-blue-700" : "text-gray-900"}`}>{opt.label}</p>
+                            <p className="text-xs text-gray-500">{opt.desc}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Budget amount */}
+                {form.budgetType === "fixed" ? (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-800 mb-2">Budget Amount (₹) *</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
+                      <input
+                        type="number"
+                        className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="25000"
+                        value={form.budgetAmount || ""}
+                        onChange={e => update("budgetAmount", Number(e.target.value))}
+                        min="0"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-800 mb-2">Hourly Rate Range (₹/hr) *</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">Min ₹</span>
+                        <input
+                          type="number"
+                          className="w-full pl-14 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="500"
+                          value={form.budgetMin || ""}
+                          onChange={e => update("budgetMin", Number(e.target.value))}
+                        />
+                      </div>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">Max ₹</span>
+                        <input
+                          type="number"
+                          className="w-full pl-14 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="2000"
+                          value={form.budgetMax || ""}
+                          onChange={e => update("budgetMax", Number(e.target.value))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Duration */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Project Duration</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { value: "short", label: "Short", desc: "< 1 month" },
+                      { value: "medium", label: "Medium", desc: "1–3 months" },
+                      { value: "long", label: "Long", desc: "> 3 months" },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => update("duration", opt.value)}
+                        className={`p-3 rounded-xl border text-center transition-all ${
+                          form.duration === opt.value
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <p className={`text-sm font-semibold ${form.duration === opt.value ? "text-blue-700" : "text-gray-900"}`}>{opt.label}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Milestones */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-semibold text-gray-800">Milestones (optional)</label>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={addMilestone}
+                      className="rounded-xl gap-1 text-blue-600 border-blue-200"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Add
+                    </Button>
+                  </div>
+                  <div className="space-y-3">
+                    {form.milestones.map((m, i) => (
+                      <div key={i} className="bg-gray-50 rounded-xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Milestone {i + 1}</span>
+                          <button onClick={() => removeMilestone(i)} className="text-gray-400 hover:text-red-500">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="grid sm:grid-cols-2 gap-3">
+                          <input
+                            type="text"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Milestone title"
+                            value={m.title}
+                            onChange={e => updateMilestone(i, "title", e.target.value)}
+                          />
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₹</span>
+                            <input
+                              type="number"
+                              className="w-full pl-7 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Amount"
+                              value={m.amount || ""}
+                              onChange={e => updateMilestone(i, "amount", Number(e.target.value))}
+                            />
+                          </div>
+                        </div>
+                        <input
+                          type="date"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={m.dueDate}
+                          onChange={e => updateMilestone(i, "dueDate", e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
+            )}
 
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="remote"
-                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-600"
-                  checked={formData.remote}
-                  onChange={(e) => setFormData({ ...formData, remote: e.target.checked })}
-                />
-                <label htmlFor="remote" className="text-sm text-gray-700">Remote work is acceptable</label>
+            {/* Step 4: Review */}
+            {step === 4 && (
+              <div className="space-y-5">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-yellow-50 rounded-xl flex items-center justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-yellow-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">Review Your Job</h2>
+                    <p className="text-sm text-gray-500">Double-check before posting</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {[
+                    { label: "Title", value: form.title },
+                    { label: "Category", value: selectedCat?.name || form.category },
+                    { label: "Experience", value: form.experienceLevel },
+                    { label: "Budget", value: form.budgetType === "fixed"
+                      ? `₹${form.budgetAmount.toLocaleString()} (fixed)`
+                      : `₹${form.budgetMin} – ₹${form.budgetMax}/hr` },
+                    { label: "Duration", value: { short: "< 1 month", medium: "1–3 months", long: "> 3 months" }[form.duration] },
+                    { label: "Location", value: [form.city, form.state].filter(Boolean).join(", ") || (form.remoteAllowed ? "Remote" : "Not specified") },
+                  ].map(item => (
+                    <div key={item.label} className="flex items-start justify-between py-3 border-b border-gray-100 last:border-0">
+                      <span className="text-sm text-gray-500">{item.label}</span>
+                      <span className="text-sm font-semibold text-gray-900 text-right max-w-56">{item.value}</span>
+                    </div>
+                  ))}
+
+                  <div className="py-3 border-b border-gray-100">
+                    <span className="text-sm text-gray-500 block mb-2">Skills</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {form.skills.map(s => (
+                        <span key={s} className="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <span className="text-sm text-gray-500 block mb-2">Description</span>
+                    <p className="text-sm text-gray-800 line-clamp-4">{form.description}</p>
+                  </div>
+
+                  {form.milestones.length > 0 && (
+                    <div>
+                      <span className="text-sm text-gray-500 block mb-2">Milestones ({form.milestones.length})</span>
+                      <div className="space-y-2">
+                        {form.milestones.filter(m => m.title).map((m, i) => (
+                          <div key={i} className="flex justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
+                            <span className="text-gray-800">{m.title}</span>
+                            <span className="font-medium">₹{m.amount.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
+                    {error}
+                  </div>
+                )}
               </div>
+            )}
 
-              <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 rounded-full py-6 text-base font-semibold">
-                Post Job
-              </Button>
+            {/* Navigation */}
+            <div className={`flex gap-3 mt-8 ${step > 1 ? "justify-between" : "justify-end"}`}>
+              {step > 1 && (
+                <Button
+                  variant="outline"
+                  onClick={() => setStep(s => s - 1)}
+                  className="rounded-xl gap-2"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Back
+                </Button>
+              )}
+              {step < 4 ? (
+                <Button
+                  onClick={() => setStep(s => s + 1)}
+                  disabled={!canProceed()}
+                  className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl gap-2 disabled:opacity-50"
+                >
+                  Continue <ChevronRight className="w-4 h-4" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl gap-2 px-8"
+                >
+                  {submitting ? "Posting..." : "Post Job"}
+                  {!submitting && <CheckCircle2 className="w-4 h-4" />}
+                </Button>
+              )}
             </div>
           </div>
         </div>
-      </section>
+      </div>
     </Layout>
   );
 };

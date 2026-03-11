@@ -33,6 +33,8 @@ const Login = () => {
           navigate("/dashboard/client");
         } else if (userData.role === 'freelancer') {
           navigate("/dashboard/freelancer");
+        } else if (userData.role === 'both') {
+          navigate("/dashboard/both");
         } else {
           navigate("/");
         }

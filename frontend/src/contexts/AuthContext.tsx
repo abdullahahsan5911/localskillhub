@@ -53,8 +53,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               localStorage.setItem('user', JSON.stringify(userData));
             }
           } catch (error) {
-            console.error('Failed to fetch user data:', error);
-            // Keep using cached user data if fetch fails
+            // Token is expired or invalid — clear everything so the user is forced to log in again
+            api.clearToken();
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            localStorage.removeItem('isAuthenticated');
+            setIsAuthenticated(false);
+            setUser(null);
           }
         } else {
           setIsAuthenticated(false);
@@ -76,9 +81,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const response = await api.login({ email, password });
       
-      if (response.status === 'success' && response.data) {
-        const userData = (response.data as any).user;
-        const token = (response.data as any).token;
+      if (response.status === 'success') {
+        const userData = (response.data as any)?.user;
+        const token = (response as any).token;
         
         setUser(userData);
         setIsAuthenticated(true);
@@ -97,9 +102,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const response = await api.register({ name, email, password });
       
-      if (response.status === 'success' && response.data) {
-        const userData = (response.data as any).user;
-        const token = (response.data as any).token;
+      if (response.status === 'success') {
+        const userData = (response.data as any)?.user;
+        const token = (response as any).token;
         
         setUser(userData);
         setIsAuthenticated(true);

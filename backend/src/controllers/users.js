@@ -110,3 +110,50 @@ export const deleteUser = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Follow a user
+// @route   POST /api/users/:id/follow
+// @access  Private
+export const followUser = async (req, res, next) => {
+  try {
+    const targetId = req.params.id;
+    const currentId = req.user.id;
+
+    if (targetId === currentId.toString()) {
+      return next(new AppError('You cannot follow yourself', 400));
+    }
+
+    const target = await User.findById(targetId);
+    if (!target) return next(new AppError('User not found', 404));
+
+    // Check already following
+    if (target.followers.map(f => f.toString()).includes(currentId.toString())) {
+      return next(new AppError('Already following this user', 400));
+    }
+
+    await User.findByIdAndUpdate(targetId, { $addToSet: { followers: currentId } });
+    await User.findByIdAndUpdate(currentId, { $addToSet: { following: targetId } });
+
+    res.json({ status: 'success', message: 'Followed successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Unfollow a user
+// @route   DELETE /api/users/:id/follow
+// @access  Private
+export const unfollowUser = async (req, res, next) => {
+  try {
+    const targetId = req.params.id;
+    const currentId = req.user.id;
+
+    await User.findByIdAndUpdate(targetId, { $pull: { followers: currentId } });
+    await User.findByIdAndUpdate(currentId, { $pull: { following: targetId } });
+
+    res.json({ status: 'success', message: 'Unfollowed successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+

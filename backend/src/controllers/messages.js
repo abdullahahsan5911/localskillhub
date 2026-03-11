@@ -12,13 +12,14 @@ export const getConversations = async (req, res, next) => {
           ]
         }
       },
-      {
-        $sort: { createdAt: -1 }
-      },
+      { $sort: { createdAt: -1 } },
       {
         $group: {
           _id: '$conversationId',
-          lastMessage: { $first: '$$ROOT' },
+          lastContent: { $first: '$content' },
+          lastAt: { $first: '$createdAt' },
+          senderId: { $first: '$senderId' },
+          receiverId: { $first: '$receiverId' },
           unreadCount: {
             $sum: {
               $cond: [
@@ -32,7 +33,42 @@ export const getConversations = async (req, res, next) => {
             }
           }
         }
-      }
+      },
+      {
+        $addFields: {
+          otherUserId: {
+            $cond: [
+              { $eq: ['$senderId', req.user._id] },
+              '$receiverId',
+              '$senderId'
+            ]
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'otherUserId',
+          foreignField: '_id',
+          as: 'otherUserArr'
+        }
+      },
+      {
+        $addFields: {
+          otherUser: { $arrayElemAt: ['$otherUserArr', 0] }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          lastMessage: { content: '$lastContent', createdAt: '$lastAt' },
+          unreadCount: 1,
+          'otherUser._id': 1,
+          'otherUser.name': 1,
+          'otherUser.avatar': 1
+        }
+      },
+      { $sort: { 'lastMessage.createdAt': -1 } }
     ]);
 
     res.json({ status: 'success', data: { conversations } });
@@ -51,7 +87,7 @@ export const getMessages = async (req, res, next) => {
       .populate('receiverId', 'name avatar')
       .limit(limit * 1)
       .skip((page - 1) * limit)
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: 1 }); // ascending: oldest first for chat display
 
     res.json({ status: 'success', data: { messages } });
   } catch (error) {

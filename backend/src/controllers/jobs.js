@@ -6,7 +6,7 @@ import { AppError } from '../middleware/errorHandler.js';
 // @access  Public
 export const getJobs = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, status = 'open', category, skills, city } = req.query;
+    const { page = 1, limit = 10, status = 'open', category, skills, city, search } = req.query;
 
     const query = {};
     
@@ -14,6 +14,13 @@ export const getJobs = async (req, res, next) => {
     if (category) query.category = category;
     if (skills) query.skills = { $in: Array.isArray(skills) ? skills : [skills] };
     if (city) query['location.city'] = { $regex: city, $options: 'i' };
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { skills: { $in: [new RegExp(search, 'i')] } },
+      ];
+    }
 
     const jobs = await Job.find(query)
       .populate('clientId', 'name avatar location')
@@ -58,6 +65,38 @@ export const getJob = async (req, res, next) => {
     res.json({
       status: 'success',
       data: { job }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get jobs posted by the current client
+// @route   GET /api/jobs/my
+// @access  Private (Client/Both)
+export const getMyJobs = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20, status } = req.query;
+
+    const query = { clientId: req.user.id };
+    if (status) query.status = status;
+
+    const jobs = await Job.find(query)
+      .populate('clientId', 'name avatar location')
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .sort({ createdAt: -1 });
+
+    const count = await Job.countDocuments(query);
+
+    res.json({
+      status: 'success',
+      data: {
+        jobs,
+        totalPages: Math.ceil(count / limit),
+        currentPage: page,
+        total: count
+      }
     });
   } catch (error) {
     next(error);

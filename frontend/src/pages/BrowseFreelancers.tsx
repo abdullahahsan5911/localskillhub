@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { FiSearch, FiMapPin, FiStar, FiShield, FiFilter, FiGrid, FiList } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
@@ -38,14 +38,16 @@ interface FreelancerProfile {
   };
   portfolio: Array<{
     title: string;
-    imageUrl: string;
+    images: string[];
+    imageUrl?: string; // legacy fallback
   }>;
 }
 
 const BrowseFreelancers = () => {
+  const [urlParams] = useSearchParams();
   const [activeSkill, setActiveSkill] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [locationQuery, setLocationQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(urlParams.get('search') || "");
+  const [locationQuery, setLocationQuery] = useState(urlParams.get('location') || "");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [freelancers, setFreelancers] = useState<FreelancerProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +65,10 @@ const BrowseFreelancers = () => {
         params.skills = skillFilter;
       }
       if (locationQuery) {
-        params.location = locationQuery;
+        params.city = locationQuery;
+      }
+      if (searchQuery) {
+        params.search = searchQuery;
       }
       
       const response = await api.getFreelancers(params);
@@ -217,7 +222,7 @@ const BrowseFreelancers = () => {
               {freelancers.map((freelancer) => (
                 <Link 
                   key={freelancer._id} 
-                  to={`/profile/${freelancer._id}`}
+                  to={`/profile/${freelancer.userId?._id}`}
                   className="group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
                 >
                   {/* Portfolio Preview */}
@@ -226,7 +231,7 @@ const BrowseFreelancers = () => {
                       freelancer.portfolio.slice(0, 3).map((item, idx) => (
                         <div key={idx} className={`${idx === 0 ? 'col-span-2 row-span-2' : ''} overflow-hidden`}>
                           <img
-                            src={item.imageUrl}
+                            src={item.images?.[0] || item.imageUrl || ''}
                             alt={item.title}
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
@@ -296,7 +301,7 @@ const BrowseFreelancers = () => {
               {freelancers.map((freelancer) => (
                 <Link 
                   key={freelancer._id} 
-                  to={`/profile/${freelancer._id}`}
+                  to={`/profile/${freelancer.userId?._id}`}
                   className="group bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 flex gap-6"
                 >
                   <div className="w-20 h-20 rounded-xl bg-blue-600 flex items-center justify-center text-white font-semibold text-2xl shrink-0">
