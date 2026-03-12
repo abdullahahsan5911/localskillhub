@@ -21,6 +21,8 @@ import Contracts from "./pages/Contracts";
 import Community from "./pages/Community";
 import VerificationDashboard from "./pages/VerificationDashboard";
 import MapPage from "./pages/MapPage";
+import FooterContentPage from "./pages/FooterContentPage";
+import { footerPages } from "@/data/footerContent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +52,13 @@ const App = () => (
             <Route path="/community" element={<Community />} />
             <Route path="/verification" element={<VerificationDashboard />} />
             <Route path="/map" element={<MapPage />} />
+            {footerPages.map((page) => (
+              <Route
+                key={page.path}
+                path={page.path}
+                element={<FooterContentPage page={page} />}
+              />
+            ))}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

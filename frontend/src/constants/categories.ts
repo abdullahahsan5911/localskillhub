@@ -12,10 +12,11 @@ export interface Category {
   name: string;
   icon: any;
   image?: string;
-  description?: string;
-  color: string;
+    color: string;
   lightColor: string;
 }
+
+const categoryAsset = (fileName: string) => `/assets/categories/${fileName}.svg`;
 
 export const CATEGORIES: Category[] = [
   // Design & Visual Arts
@@ -23,8 +24,7 @@ export const CATEGORIES: Category[] = [
     id: "graphic-design",
     name: "Graphic Design",
     icon: Palette,
-    image: "/assets/categories/graphic-design.jpg",
-    description: "Visual communication and branding",
+    image: categoryAsset("graphic-design"),
     color: "#8B5CF6",
     lightColor: "#EDE9FE"
   },
@@ -32,8 +32,7 @@ export const CATEGORIES: Category[] = [
     id: "ui-ux-design",
     name: "UI/UX Design",
     icon: LayoutGrid,
-    image: "/assets/categories/ui-ux-design.jpg",
-    description: "User interface and experience design",
+    image: categoryAsset("ui-ux-design"),
     color: "#3B82F6",
     lightColor: "#DBEAFE"
   },
@@ -41,8 +40,7 @@ export const CATEGORIES: Category[] = [
     id: "illustration",
     name: "Illustration",
     icon: Pen,
-    image: "/assets/categories/illustration.jpg",
-    description: "Digital and traditional illustration",
+    image: categoryAsset("illustration"),
     color: "#EC4899",
     lightColor: "#FCE7F3"
   },
@@ -50,8 +48,7 @@ export const CATEGORIES: Category[] = [
     id: "branding-identity",
     name: "Branding & Identity",
     icon: Sparkles,
-    image: "/assets/categories/branding.jpg",
-    description: "Brand strategy and visual identity",
+    image: categoryAsset("branding"),
     color: "#F59E0B",
     lightColor: "#FEF3C7"
   },
@@ -59,8 +56,7 @@ export const CATEGORIES: Category[] = [
     id: "logo-design",
     name: "Logo Design",
     icon: Sparkles,
-    image: "/assets/categories/logo-design.jpg",
-    description: "Professional logo creation",
+    image: categoryAsset("logo-design"),
     color: "#10B981",
     lightColor: "#D1FAE5"
   },
@@ -68,8 +64,7 @@ export const CATEGORIES: Category[] = [
     id: "typography",
     name: "Typography",
     icon: Type,
-    image: "/assets/categories/typography.jpg",
-    description: "Type design and lettering",
+    image: categoryAsset("typography"),
     color: "#6366F1",
     lightColor: "#E0E7FF"
   },
@@ -77,8 +72,7 @@ export const CATEGORIES: Category[] = [
     id: "print-design",
     name: "Print Design",
     icon: Printer,
-    image: "/assets/categories/print-design.jpg",
-    description: "Print materials and layouts",
+    image: categoryAsset("print-design"),
     color: "#8B5CF6",
     lightColor: "#EDE9FE"
   },
@@ -86,8 +80,7 @@ export const CATEGORIES: Category[] = [
     id: "packaging-design",
     name: "Packaging Design",
     icon: Package,
-    image: "/assets/categories/packaging.jpg",
-    description: "Product packaging design",
+    image: categoryAsset("packaging"),
     color: "#14B8A6",
     lightColor: "#CCFBF1"
   },
@@ -97,8 +90,7 @@ export const CATEGORIES: Category[] = [
     id: "video-production",
     name: "Video Production",
     icon: Video,
-    image: "/assets/categories/video-production.jpg",
-    description: "Professional video creation",
+    image: categoryAsset("video-production"),
     color: "#EF4444",
     lightColor: "#FEE2E2"
   },
@@ -106,8 +98,7 @@ export const CATEGORIES: Category[] = [
     id: "animation",
     name: "Animation",
     icon: Film,
-    image: "/assets/categories/animation.jpg",
-    description: "2D and 3D animation",
+    image: categoryAsset("animation"),
     color: "#F59E0B",
     lightColor: "#FEF3C7"
   },
@@ -115,8 +106,7 @@ export const CATEGORIES: Category[] = [
     id: "motion-graphics",
     name: "Motion Graphics",
     icon: Clapperboard,
-    image: "/assets/categories/motion-graphics.jpg",
-    description: "Animated graphics and titles",
+    image: categoryAsset("motion-graphics"),
     color: "#8B5CF6",
     lightColor: "#EDE9FE"
   },
@@ -124,8 +114,7 @@ export const CATEGORIES: Category[] = [
     id: "video-editing",
     name: "Video Editing",
     icon: Scissors,
-    image: "/assets/categories/video-editing.jpg",
-    description: "Professional video editing",
+    image: categoryAsset("video-editing"),
     color: "#3B82F6",
     lightColor: "#DBEAFE"
   },
@@ -133,8 +122,7 @@ export const CATEGORIES: Category[] = [
     id: "3d-animation",
     name: "3D Animation",
     icon: Box,
-    image: "/assets/categories/3d-animation.jpg",
-    description: "3D modeling and animation",
+    image: categoryAsset("3d-animation"),
     color: "#EC4899",
     lightColor: "#FCE7F3"
   },
@@ -144,8 +132,7 @@ export const CATEGORIES: Category[] = [
     id: "photography",
     name: "Photography",
     icon: Camera,
-    image: "/assets/categories/photography.jpg",
-    description: "Professional photography",
+    image: categoryAsset("photography"),
     color: "#06B6D4",
     lightColor: "#CFFAFE"
   },
@@ -153,8 +140,7 @@ export const CATEGORIES: Category[] = [
     id: "portrait-photography",
     name: "Portrait Photography",
     icon: User,
-    image: "/assets/categories/portrait.jpg",
-    description: "Portrait and headshot photography",
+    image: categoryAsset("portrait"),
     color: "#F59E0B",
     lightColor: "#FEF3C7"
   },
@@ -162,8 +148,7 @@ export const CATEGORIES: Category[] = [
     id: "product-photography",
     name: "Product Photography",
     icon: ShoppingBag,
-    image: "/assets/categories/product-photo.jpg",
-    description: "E-commerce and product shots",
+    image: categoryAsset("product-photo"),
     color: "#10B981",
     lightColor: "#D1FAE5"
   },
@@ -171,8 +156,7 @@ export const CATEGORIES: Category[] = [
     id: "event-photography",
     name: "Event Photography",
     icon: Calendar,
-    image: "/assets/categories/event-photo.jpg",
-    description: "Events and occasions",
+    image: categoryAsset("event-photo"),
     color: "#8B5CF6",
     lightColor: "#EDE9FE"
   },
@@ -182,8 +166,7 @@ export const CATEGORIES: Category[] = [
     id: "web-development",
     name: "Web Development",
     icon: Code,
-    image: "/assets/categories/web-dev.jpg",
-    description: "Website development",
+    image: categoryAsset("web-dev"),
     color: "#3B82F6",
     lightColor: "#DBEAFE"
   },
@@ -191,8 +174,7 @@ export const CATEGORIES: Category[] = [
     id: "mobile-app-development",
     name: "Mobile App Development",
     icon: Smartphone,
-    image: "/assets/categories/mobile-dev.jpg",
-    description: "iOS and Android apps",
+    image: categoryAsset("mobile-dev"),
     color: "#10B981",
     lightColor: "#D1FAE5"
   },
@@ -200,8 +182,7 @@ export const CATEGORIES: Category[] = [
     id: "frontend-development",
     name: "Frontend Development",
     icon: Monitor,
-    image: "/assets/categories/frontend.jpg",
-    description: "UI development",
+    image: categoryAsset("frontend"),
     color: "#06B6D4",
     lightColor: "#CFFAFE"
   },
@@ -209,8 +190,7 @@ export const CATEGORIES: Category[] = [
     id: "backend-development",
     name: "Backend Development",
     icon: Server,
-    image: "/assets/categories/backend.jpg",
-    description: "Server-side development",
+    image: categoryAsset("backend"),
     color: "#6366F1",
     lightColor: "#E0E7FF"
   },
@@ -218,8 +198,7 @@ export const CATEGORIES: Category[] = [
     id: "full-stack-development",
     name: "Full Stack Development",
     icon: Database,
-    image: "/assets/categories/fullstack.jpg",
-    description: "End-to-end development",
+    image: categoryAsset("fullstack"),
     color: "#8B5CF6",
     lightColor: "#EDE9FE"
   },
@@ -229,8 +208,7 @@ export const CATEGORIES: Category[] = [
     id: "content-writing",
     name: "Content Writing",
     icon: FileText,
-    image: "/assets/categories/content-writing.jpg",
-    description: "Blog posts and articles",
+    image: categoryAsset("content-writing"),
     color: "#F59E0B",
     lightColor: "#FEF3C7"
   },
@@ -238,8 +216,7 @@ export const CATEGORIES: Category[] = [
     id: "copywriting",
     name: "Copywriting",
     icon: PenTool,
-    image: "/assets/categories/copywriting.jpg",
-    description: "Marketing and ad copy",
+    image: categoryAsset("copywriting"),
     color: "#EC4899",
     lightColor: "#FCE7F3"
   },
@@ -247,8 +224,7 @@ export const CATEGORIES: Category[] = [
     id: "social-media-content",
     name: "Social Media Content",
     icon: TrendingUp,
-    image: "/assets/categories/social-media.jpg",
-    description: "Social media management",
+    image: categoryAsset("social-media"),
     color: "#8B5CF6",
     lightColor: "#EDE9FE"
   },
@@ -256,8 +232,7 @@ export const CATEGORIES: Category[] = [
     id: "digital-marketing",
     name: "Digital Marketing",
     icon: BarChart,
-    image: "/assets/categories/digital-marketing.jpg",
-    description: "Marketing strategy and campaigns",
+    image: categoryAsset("digital-marketing"),
     color: "#10B981",
     lightColor: "#D1FAE5"
   },
@@ -265,8 +240,7 @@ export const CATEGORIES: Category[] = [
     id: "seo",
     name: "SEO",
     icon: Search,
-    image: "/assets/categories/seo.jpg",
-    description: "Search engine optimization",
+    image: categoryAsset("seo"),
     color: "#3B82F6",
     lightColor: "#DBEAFE"
   },
@@ -276,8 +250,7 @@ export const CATEGORIES: Category[] = [
     id: "fashion-design",
     name: "Fashion Design",
     icon: Shirt,
-    image: "/assets/categories/fashion.jpg",
-    description: "Fashion and apparel design",
+    image: categoryAsset("fashion"),
     color: "#EC4899",
     lightColor: "#FCE7F3"
   },
@@ -285,8 +258,7 @@ export const CATEGORIES: Category[] = [
     id: "interior-design",
     name: "Interior Design",
     icon: Home,
-    image: "/assets/categories/interior.jpg",
-    description: "Interior and space design",
+    image: categoryAsset("interior"),
     color: "#14B8A6",
     lightColor: "#CCFBF1"
   },
@@ -294,8 +266,7 @@ export const CATEGORIES: Category[] = [
     id: "architecture",
     name: "Architecture",
     icon: Building,
-    image: "/assets/categories/architecture.jpg",
-    description: "Architectural design",
+    image: categoryAsset("architecture"),
     color: "#6366F1",
     lightColor: "#E0E7FF"
   },
@@ -303,8 +274,7 @@ export const CATEGORIES: Category[] = [
     id: "product-design",
     name: "Product Design",
     icon: Brush,
-    image: "/assets/categories/product-design.jpg",
-    description: "Physical product design",
+    image: categoryAsset("product-design"),
     color: "#F59E0B",
     lightColor: "#FEF3C7"
   },
@@ -312,8 +282,7 @@ export const CATEGORIES: Category[] = [
     id: "industrial-design",
     name: "Industrial Design",
     icon: Wrench,
-    image: "/assets/categories/industrial.jpg",
-    description: "Manufacturing and industrial design",
+    image: categoryAsset("industrial"),
     color: "#64748B",
     lightColor: "#F1F5F9"
   },
@@ -321,8 +290,7 @@ export const CATEGORIES: Category[] = [
     id: "game-design",
     name: "Game Design",
     icon: Gamepad2,
-    image: "/assets/categories/game-design.jpg",
-    description: "Video game design",
+    image: categoryAsset("game-design"),
     color: "#8B5CF6",
     lightColor: "#EDE9FE"
   },
@@ -330,8 +298,7 @@ export const CATEGORIES: Category[] = [
     id: "sound-design",
     name: "Sound Design",
     icon: Music,
-    image: "/assets/categories/sound-design.jpg",
-    description: "Audio and sound effects",
+    image: categoryAsset("sound-design"),
     color: "#06B6D4",
     lightColor: "#CFFAFE"
   },
@@ -339,8 +306,7 @@ export const CATEGORIES: Category[] = [
     id: "music-production",
     name: "Music Production",
     icon: Mic,
-    image: "/assets/categories/music-production.jpg",
-    description: "Music composition and production",
+    image: categoryAsset("music-production"),
     color: "#EC4899",
     lightColor: "#FCE7F3"
   }

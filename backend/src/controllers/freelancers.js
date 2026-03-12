@@ -15,12 +15,17 @@ export const getFreelancers = async (req, res, next) => {
       maxRate,
       city,
       search,
+      availability,
+      verifiedOnly = 'false',
       sort = '-localScore',
       completeOnly = 'true',
     } = req.query;
 
     const query = {};
     const requireCompleteProfile = completeOnly !== 'false';
+    const verifiedOnlyEnabled = verifiedOnly === 'true';
+    const pageNumber = Number(page) || 1;
+    const pageSize = Number(limit) || 12;
 
     if (requireCompleteProfile) {
       query['portfolio.0'] = { $exists: true };
@@ -39,38 +44,53 @@ export const getFreelancers = async (req, res, next) => {
       ];
     }
     
-    if (minRate || maxRate) {
-      query['rates.minRate'] = {};
-      if (minRate) query['rates.minRate'].$gte = Number(minRate);
-      if (maxRate) query['rates.maxRate'].$lte = Number(maxRate);
+    if (minRate) {
+      query['rates.minRate'] = { $gte: Number(minRate) };
     }
 
-    let userQuery = {};
+    if (maxRate) {
+      query['rates.maxRate'] = { $lte: Number(maxRate) };
+    }
+
+    if (availability) {
+      query['availability.status'] = availability;
+    }
+
+    const userQuery = {};
+
     if (city) {
       userQuery['location.city'] = { $regex: city, $options: 'i' };
+    }
+
+    if (verifiedOnlyEnabled) {
+      userQuery.$or = [
+        { isEmailVerified: true },
+        { isPhoneVerified: true },
+      ];
+    }
+
+    if (Object.keys(userQuery).length > 0) {
+      const matchedUsers = await User.find(userQuery).select('_id');
+      query.userId = { $in: matchedUsers.map((user) => user._id) };
     }
 
     const freelancers = await FreelancerProfile.find(query)
       .populate({
         path: 'userId',
-        match: userQuery,
         select: '-passwordHash'
       })
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
+      .limit(pageSize)
+      .skip((pageNumber - 1) * pageSize)
       .sort(sort);
-
-    // Filter out null userId (didn't match location filter)
-    const filteredFreelancers = freelancers.filter(f => f.userId);
 
     const count = await FreelancerProfile.countDocuments(query);
 
     res.json({
       status: 'success',
       data: {
-        freelancers: filteredFreelancers,
-        totalPages: Math.ceil(count / limit),
-        currentPage: page,
+        freelancers,
+        totalPages: Math.ceil(count / pageSize),
+        currentPage: pageNumber,
         total: count
       }
     });

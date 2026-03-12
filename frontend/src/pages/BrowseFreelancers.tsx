@@ -1,11 +1,29 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { FiSearch, FiMapPin, FiStar, FiShield, FiFilter, FiGrid, FiList } from "react-icons/fi";
+import { FiSearch, FiMapPin, FiShield, FiFilter, FiGrid, FiList, FiX } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
+import VisualCategoryGrid from "../components/VisualCategoryGrid";
 import api from "@/lib/api";
+import { CATEGORIES } from "@/constants/categories";
 
-const skills = ["All", "Web Development", "Graphic Design", "Video Production", "Digital Marketing", "Photography", "Content Writing", "Mobile Apps", "UI/UX Design"];
+const skills = ["All", ...CATEGORIES.map((category) => category.name)];
+const availabilityOptions = ["all", "available", "busy", "unavailable"] as const;
+const PAGE_SIZE = 12;
+
+interface BrowseFilters {
+  minRate: string;
+  maxRate: string;
+  availability: string;
+  verifiedOnly: boolean;
+}
+
+const defaultFilters: BrowseFilters = {
+  minRate: "",
+  maxRate: "",
+  availability: "all",
+  verifiedOnly: false,
+};
 
 interface FreelancerProfile {
   _id: string;
@@ -44,58 +62,202 @@ interface FreelancerProfile {
 }
 
 const BrowseFreelancers = () => {
-  const [urlParams] = useSearchParams();
+  const [urlParams, setSearchParams] = useSearchParams();
   const [activeSkill, setActiveSkill] = useState("All");
-  const [searchQuery, setSearchQuery] = useState(urlParams.get('search') || "");
-  const [locationQuery, setLocationQuery] = useState(urlParams.get('location') || "");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [locationQuery, setLocationQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [freelancers, setFreelancers] = useState<FreelancerProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<BrowseFilters>(defaultFilters);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
 
   useEffect(() => {
-    fetchFreelancers(activeSkill, searchQuery, locationQuery);
-  }, []);
+    const nextSkill = urlParams.get("skill") || "All";
+    const nextSearch = urlParams.get("search") || "";
+    const nextLocation = urlParams.get("location") || "";
+    const nextFilters: BrowseFilters = {
+      minRate: urlParams.get("minRate") || "",
+      maxRate: urlParams.get("maxRate") || "",
+      availability: urlParams.get("availability") || "all",
+      verifiedOnly: urlParams.get("verifiedOnly") === "true",
+    };
 
-  const fetchFreelancers = async (skillFilter?: string, searchValue?: string, cityValue?: string) => {
+    setActiveSkill(nextSkill);
+    setSearchQuery(nextSearch);
+    setLocationQuery(nextLocation);
+    setFilters(nextFilters);
+    fetchFreelancers({
+      page: 1,
+      resetResults: true,
+      skill: nextSkill,
+      searchValue: nextSearch,
+      cityValue: nextLocation,
+      nextFilters,
+    });
+  }, [urlParams]);
+
+  const fetchFreelancers = async ({
+    page,
+    resetResults,
+    skill,
+    searchValue,
+    cityValue,
+    nextFilters,
+  }: {
+    page: number;
+    resetResults: boolean;
+    skill: string;
+    searchValue: string;
+    cityValue: string;
+    nextFilters: BrowseFilters;
+  }) => {
     try {
-      setLoading(true);
-      setError("");
-      const params: any = {};
-      if (skillFilter && skillFilter !== "All") {
-        params.skills = skillFilter;
+      if (resetResults) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
       }
+      setError("");
+      const params: Record<string, string | number | boolean> = {
+        page,
+        limit: PAGE_SIZE,
+        completeOnly: false,
+      };
+
+      if (skill && skill !== "All") {
+        params.skills = skill;
+      }
+
       if (cityValue) {
         params.city = cityValue;
       }
+
       if (searchValue) {
         params.search = searchValue;
       }
-      params.limit = 200;
-      params.completeOnly = false;
+
+      if (nextFilters.minRate) {
+        params.minRate = Number(nextFilters.minRate);
+      }
+
+      if (nextFilters.maxRate) {
+        params.maxRate = Number(nextFilters.maxRate);
+      }
+
+      if (nextFilters.availability !== "all") {
+        params.availability = nextFilters.availability;
+      }
+
+      if (nextFilters.verifiedOnly) {
+        params.verifiedOnly = true;
+      }
       
       const response = await api.getFreelancers(params);
-      if (response.data && Array.isArray(response.data)) {
-        setFreelancers(response.data);
-      } else if (response.data && (response.data as any).freelancers) {
-        setFreelancers((response.data as any).freelancers);
+      const payload = response.data as any;
+
+      if (payload && Array.isArray(payload)) {
+        setFreelancers(payload);
+        setCurrentPage(1);
+        setTotalPages(1);
+        setTotalResults(payload.length);
+      } else if (payload && payload.freelancers) {
+        const nextResults = payload.freelancers as FreelancerProfile[];
+        setFreelancers((previous) => (resetResults ? nextResults : [...previous, ...nextResults]));
+        setCurrentPage(payload.currentPage || page);
+        setTotalPages(payload.totalPages || 1);
+        setTotalResults(payload.total || nextResults.length);
       } else {
         setFreelancers([]);
+        setCurrentPage(1);
+        setTotalPages(1);
+        setTotalResults(0);
       }
     } catch (err: any) {
       setError(err.message || "Failed to fetch freelancers");
-      setFreelancers([]);
+      if (resetResults) {
+        setFreelancers([]);
+        setCurrentPage(1);
+        setTotalPages(1);
+        setTotalResults(0);
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+
+  const syncUrl = (overrides: Partial<{ skill: string; search: string; location: string } & BrowseFilters> = {}) => {
+    const nextSkill = overrides.skill ?? activeSkill;
+    const nextSearch = overrides.search ?? searchQuery;
+    const nextLocation = overrides.location ?? locationQuery;
+    const nextFilters: BrowseFilters = {
+      minRate: overrides.minRate ?? filters.minRate,
+      maxRate: overrides.maxRate ?? filters.maxRate,
+      availability: overrides.availability ?? filters.availability,
+      verifiedOnly: overrides.verifiedOnly ?? filters.verifiedOnly,
+    };
+
+    const nextParams = new URLSearchParams();
+    if (nextSkill && nextSkill !== "All") nextParams.set("skill", nextSkill);
+    if (nextSearch.trim()) nextParams.set("search", nextSearch.trim());
+    if (nextLocation.trim()) nextParams.set("location", nextLocation.trim());
+    if (nextFilters.minRate.trim()) nextParams.set("minRate", nextFilters.minRate.trim());
+    if (nextFilters.maxRate.trim()) nextParams.set("maxRate", nextFilters.maxRate.trim());
+    if (nextFilters.availability !== "all") nextParams.set("availability", nextFilters.availability);
+    if (nextFilters.verifiedOnly) nextParams.set("verifiedOnly", "true");
+
+    setSearchParams(nextParams);
   };
 
   const handleSkillFilter = (skill: string) => {
     setActiveSkill(skill);
-    fetchFreelancers(skill, searchQuery, locationQuery);
+    syncUrl({ skill });
+  };
+
+  const handleVisualCategorySelect = (categoryId: string) => {
+    const selectedCategory = CATEGORIES.find((category) => category.id === categoryId);
+    handleSkillFilter(selectedCategory?.name || categoryId);
+  };
+
+  const handleSearch = () => {
+    syncUrl({ search: searchQuery, location: locationQuery });
+  };
+
+  const handleApplyFilters = () => {
+    syncUrl(filters);
+  };
+
+  const handleClearFilters = () => {
+    setFilters(defaultFilters);
+    syncUrl(defaultFilters);
+  };
+
+  const handleLoadMore = () => {
+    if (loadingMore || currentPage >= totalPages) {
+      return;
+    }
+
+    fetchFreelancers({
+      page: currentPage + 1,
+      resetResults: false,
+      skill: activeSkill,
+      searchValue: searchQuery,
+      cityValue: locationQuery,
+      nextFilters: filters,
+    });
   };
 
   const formatRate = (rates: FreelancerProfile['rates']) => {
+    if (!rates || typeof rates.minRate !== "number") {
+      return "Rate on request";
+    }
+
     const amount = new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: rates.currency || 'INR',
@@ -113,7 +275,7 @@ const BrowseFreelancers = () => {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-medium mb-5">
               <FiShield className="h-3.5 w-3.5" />
-              {freelancers.length} verified professionals near you
+              {totalResults} professionals matching your search
             </div>
 
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3 tracking-tight">
@@ -148,7 +310,7 @@ const BrowseFreelancers = () => {
                 />
               </div>
               <Button 
-                onClick={() => fetchFreelancers(activeSkill, searchQuery, locationQuery)}
+                onClick={handleSearch}
                 className="bg-blue-600 text-white font-semibold px-8 h-12 hover:bg-blue-700 transition-all duration-200 rounded-xl"
               >
                 Search
@@ -172,6 +334,13 @@ const BrowseFreelancers = () => {
               </button>
             ))}
           </div>
+
+          <div className="mt-10">
+            <VisualCategoryGrid
+              activeId={activeSkill === "All" ? undefined : CATEGORIES.find((category) => category.name === activeSkill)?.id}
+              onSelect={handleVisualCategorySelect}
+             />
+          </div>
         </div>
       </section>
 
@@ -180,9 +349,16 @@ const BrowseFreelancers = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           {/* Filter Bar */}
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
-            <span className="text-sm text-gray-600">{freelancers.length} freelancers</span>
+            <span className="text-sm text-gray-600">
+              Showing {freelancers.length} of {totalResults} freelancers
+            </span>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="border-gray-300 text-gray-700 gap-2 hover:bg-gray-50">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters((current) => !current)}
+                className="border-gray-300 text-gray-700 gap-2 hover:bg-gray-50"
+              >
                 <FiFilter className="h-4 w-4" /> Filters
               </Button>
               <div className="flex border border-gray-300 rounded-lg overflow-hidden">
@@ -201,6 +377,75 @@ const BrowseFreelancers = () => {
               </div>
             </div>
           </div>
+
+          {showFilters && (
+            <div className="mb-6 rounded-2xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Min rate</label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 500"
+                    value={filters.minRate}
+                    onChange={(e) => setFilters((current) => ({ ...current, minRate: e.target.value }))}
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition-colors focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Max rate</label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 5000"
+                    value={filters.maxRate}
+                    onChange={(e) => setFilters((current) => ({ ...current, maxRate: e.target.value }))}
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition-colors focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Availability</label>
+                  <select
+                    value={filters.availability}
+                    onChange={(e) => setFilters((current) => ({ ...current, availability: e.target.value }))}
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition-colors focus:border-blue-500"
+                  >
+                    {availabilityOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option === "all" ? "Any status" : option.charAt(0).toUpperCase() + option.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-end">
+                  <label className="flex w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-700">
+                    <span>Verified only</span>
+                    <input
+                      type="checkbox"
+                      checked={filters.verifiedOnly}
+                      onChange={(e) => setFilters((current) => ({ ...current, verifiedOnly: e.target.checked }))}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Button onClick={handleApplyFilters} className="rounded-xl bg-blue-600 text-white hover:bg-blue-700">
+                  Apply Filters
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClearFilters}
+                  className="rounded-xl border-gray-300"
+                >
+                  <FiX className="mr-2 h-4 w-4" />
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Loading and Error States */}
           {loading && (
@@ -360,9 +605,18 @@ const BrowseFreelancers = () => {
 
           {/* Load More */}
           <div className="text-center mt-12">
-            <Button variant="outline" className="border-2 border-gray-300 font-semibold px-8 py-6 text-base hover:bg-gray-50 rounded-full">
-              Load More Freelancers
-            </Button>
+            {currentPage < totalPages ? (
+              <Button
+                variant="outline"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="border-2 border-gray-300 font-semibold px-8 py-6 text-base hover:bg-gray-50 rounded-full disabled:opacity-60"
+              >
+                {loadingMore ? "Loading more..." : "Load More Freelancers"}
+              </Button>
+            ) : freelancers.length > 0 ? (
+              <p className="text-sm text-gray-500">You have reached the end of the results.</p>
+            ) : null}
           </div>
         </div>
       </section>

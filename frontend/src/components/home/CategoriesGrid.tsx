@@ -1,31 +1,21 @@
 import { Link } from "react-router-dom";
 import { CATEGORIES } from "@/constants/categories";
 
-// Show top 6 popular categories on homepage
-const topCategories = [
-  "web-development",
-  "graphic-design", 
-  "video-production",
-  "digital-marketing",
-  "photography",
-  "content-writing"
-];
-
 const CategoriesGrid = () => {
-  const displayCategories = CATEGORIES.filter(cat => topCategories.includes(cat.id));
+  const displayCategories = CATEGORIES;
 
   return (
     <section className="bg-foreground">
       <div className="container pb-20">
-        <p className="text-center text-primary-foreground/40 text-sm mb-6">Browse Top Categories</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <p className="text-center text-primary-foreground/40 text-sm mb-6">Browse All Categories</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {displayCategories.map((cat) => {
             const Icon = cat.icon;
             
             return (
               <Link
                 key={cat.id}
-                to={`/browse?category=${cat.id}`}
+                to={`/browse?skill=${encodeURIComponent(cat.name)}`}
                 className="group relative aspect-[4/3] rounded-xl overflow-hidden"
               >
                 {cat.image ? (

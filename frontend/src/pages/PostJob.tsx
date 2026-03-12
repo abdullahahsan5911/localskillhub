@@ -49,32 +49,59 @@ const PostJob = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editJobId = searchParams.get('jobId');
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(() => {
+    // Load saved step from localStorage
+    if (!editJobId) {
+      const saved = localStorage.getItem('postJobStep');
+      return saved ? Number(saved) : 1;
+    }
+    return 1;
+  });
   const [skillInput, setSkillInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [loadingJob, setLoadingJob] = useState(false);
   const [locating, setLocating] = useState(false);
-  const [resolvedLocation, setResolvedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [resolvedLocation, setResolvedLocation] = useState<{ latitude: number; longitude: number } | null>(() => {
+    // Load resolved location from localStorage
+    if (!editJobId) {
+      const saved = localStorage.getItem('postJobResolvedLocation');
+      return saved ? JSON.parse(saved) : null;
+    }
+    return null;
+  });
   const [error, setError] = useState("");
 
-  const [form, setForm] = useState<JobForm>({
-    title: "",
-    description: "",
-    category: "",
-    skills: [],
-    budgetType: "fixed",
-    budgetAmount: 0,
-    budgetMin: 0,
-    budgetMax: 0,
-    currency: "INR",
-    duration: "medium",
-    experienceLevel: "intermediate",
-    city: "",
-    state: "",
-    country: "India",
-    remoteAllowed: false,
-    milestones: [],
-    attachments: [],
+  const [form, setForm] = useState<JobForm>(() => {
+    // Load saved form from localStorage
+    if (!editJobId) {
+      const saved = localStorage.getItem('postJobForm');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to parse saved form data:', e);
+        }
+      }
+    }
+    return {
+      title: "",
+      description: "",
+      category: "",
+      skills: [],
+      budgetType: "fixed",
+      budgetAmount: 0,
+      budgetMin: 0,
+      budgetMax: 0,
+      currency: "INR",
+      duration: "medium",
+      experienceLevel: "intermediate",
+      city: "",
+      state: "",
+      country: "",
+      remoteAllowed: false,
+      milestones: [],
+      attachments: [],
+    };
   });
 
   const update = (key: keyof JobForm, value: any) => setForm(f => ({ ...f, [key]: value }));
@@ -82,6 +109,31 @@ const PostJob = () => {
     setForm(f => ({ ...f, [key]: value }));
     setResolvedLocation(null);
   };
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    if (!editJobId) {
+      localStorage.setItem('postJobForm', JSON.stringify(form));
+    }
+  }, [form, editJobId]);
+
+  // Save step to localStorage whenever it changes
+  useEffect(() => {
+    if (!editJobId) {
+      localStorage.setItem('postJobStep', String(step));
+    }
+  }, [step, editJobId]);
+
+  // Save resolved location to localStorage whenever it changes
+  useEffect(() => {
+    if (!editJobId) {
+      if (resolvedLocation) {
+        localStorage.setItem('postJobResolvedLocation', JSON.stringify(resolvedLocation));
+      } else {
+        localStorage.removeItem('postJobResolvedLocation');
+      }
+    }
+  }, [resolvedLocation, editJobId]);
 
   useEffect(() => {
     const loadExistingJob = async () => {
@@ -156,10 +208,24 @@ const PostJob = () => {
 
   const canProceed = () => {
     if (step === 1) {
-      return form.title.trim().length > 5 && form.description.trim().length > 20 && form.city.trim().length > 0 && form.state.trim().length > 0;
+      const titleValid = form.title.trim().length > 5;
+      const descValid = form.description.trim().length > 20;
+      const cityValid = form.city.trim().length > 0;
+      const stateValid = form.state.trim().length > 0;
+      console.log('Step 1 validation:', { titleValid, descValid, cityValid, stateValid });
+      return titleValid && descValid && cityValid && stateValid;
     }
-    if (step === 2) return form.category && form.skills.length > 0;
-    if (step === 3) return form.budgetType === "fixed" ? form.budgetAmount > 0 : (form.budgetMin > 0 && form.budgetMax >= form.budgetMin);
+    if (step === 2) {
+      const categoryValid = form.category.length > 0;
+      const skillsValid = form.skills.length > 0;
+      console.log('Step 2 validation:', { categoryValid, skillsValid, category: form.category, skills: form.skills });
+      return categoryValid && skillsValid;
+    }
+    if (step === 3) {
+      const valid = form.budgetType === "fixed" ? form.budgetAmount > 0 : (form.budgetMin > 0 && form.budgetMax >= form.budgetMin);
+      console.log('Step 3 validation:', { budgetType: form.budgetType, budgetAmount: form.budgetAmount, budgetMin: form.budgetMin, budgetMax: form.budgetMax, valid });
+      return valid;
+    }
     return true;
   };
 
@@ -232,6 +298,14 @@ const PostJob = () => {
       } else {
         await api.createJob(payload);
       }
+      
+      // Clear localStorage after successful submission
+      if (!editJobId) {
+        localStorage.removeItem('postJobForm');
+        localStorage.removeItem('postJobStep');
+        localStorage.removeItem('postJobResolvedLocation');
+      }
+      
       navigate("/dashboard/client");
     } catch (e: any) {
       setError(e.message || "Failed to post job");
@@ -250,6 +324,9 @@ const PostJob = () => {
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900">{editJobId ? 'Edit Job' : 'Post a Job'}</h1>
             <p className="text-gray-500 mt-1">{editJobId ? 'Update this job so it appears correctly on maps' : 'Find the perfect freelancer for your project'}</p>
+            {!editJobId && (
+              <p className="text-xs text-green-600 mt-2">✓ Your progress is automatically saved</p>
+            )}
           </div>
 
           {loadingJob && (
@@ -722,6 +799,7 @@ const PostJob = () => {
             <div className={`flex gap-3 mt-8 ${step > 1 ? "justify-between" : "justify-end"}`}>
               {step > 1 && (
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setStep(s => s - 1)}
                   className="rounded-xl gap-2"
@@ -730,15 +808,29 @@ const PostJob = () => {
                 </Button>
               )}
               {step < 4 ? (
-                <Button
-                  onClick={() => setStep(s => s + 1)}
-                  disabled={!canProceed()}
-                  className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl gap-2 disabled:opacity-50"
-                >
-                  Continue <ChevronRight className="w-4 h-4" />
-                </Button>
+                <div className="flex flex-col items-end gap-2">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      console.log('Continue button clicked', { step, canProceed: canProceed() });
+                      setStep(s => s + 1);
+                    }}
+                    disabled={!canProceed()}
+                    className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Continue <ChevronRight className="w-4 h-4" />
+                  </Button>
+                  {!canProceed() && (
+                    <p className="text-xs text-red-500">
+                      {step === 1 && "Please fill in title (6+ chars), description (20+ chars), city, and state"}
+                      {step === 2 && "Please select a category and add at least one skill"}
+                      {step === 3 && "Please enter a valid budget amount"}
+                    </p>
+                  )}
+                </div>
               ) : (
                 <Button
+                  type="button"
                   onClick={handleSubmit}
                   disabled={submitting}
                   className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl gap-2 px-8"

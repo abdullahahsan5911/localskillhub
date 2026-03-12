@@ -163,6 +163,11 @@ class ApiService {
     page?: number;
     limit?: number;
     completeOnly?: boolean;
+    minRate?: number;
+    maxRate?: number;
+    availability?: string;
+    verifiedOnly?: boolean;
+    sort?: string;
   }) {
     const queryString = params ? '?' + new URLSearchParams(params as any).toString() : '';
     return this.request(`/freelancers${queryString}`, {

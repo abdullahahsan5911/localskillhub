@@ -26,8 +26,15 @@ export const uploadMiddleware = multer({
 export const uploadFile = async (req, res) => {
   try {
     if (!req.file) {
+      console.error('Upload error: No file provided');
       return res.status(400).json({ status: 'error', message: 'No file provided' });
     }
+
+    console.log('Upload request received:', {
+      originalName: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    });
 
     const folder = (req.body && req.body.folder) ? req.body.folder : 'localskillhub';
 
@@ -35,6 +42,7 @@ export const uploadFile = async (req, res) => {
     const b64 = Buffer.from(req.file.buffer).toString('base64');
     const dataURI = `data:${req.file.mimetype};base64,${b64}`;
 
+    console.log('Uploading to Cloudinary...');
     const result = await cloudinary.uploader.upload(dataURI, {
       folder,
       resource_type: 'image',
@@ -43,6 +51,11 @@ export const uploadFile = async (req, res) => {
         { quality: 'auto:good' },
         { fetch_format: 'auto' },
       ],
+    });
+
+    console.log('Upload successful:', {
+      url: result.secure_url,
+      publicId: result.public_id,
     });
 
     return res.status(200).json({
@@ -56,6 +69,15 @@ export const uploadFile = async (req, res) => {
     });
   } catch (err) {
     console.error('Upload controller error:', err);
-    return res.status(500).json({ status: 'error', message: err.message || 'Upload failed' });
+    console.error('Error details:', {
+      message: err.message,
+      stack: err.stack,
+      response: err.http_code,
+    });
+    return res.status(500).json({ 
+      status: 'error', 
+      message: err.message || 'Upload failed',
+      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 };
