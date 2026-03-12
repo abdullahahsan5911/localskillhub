@@ -42,22 +42,25 @@ const Jobs = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("All"); // Store category ID
   const [showCategories, setShowCategories] = useState(true);
 
-  const categories = ["All", ...CATEGORIES.slice(0, 15).map(cat => cat.name)];
+  const categoryOptions = [
+    { id: "All", name: "All" },
+    ...CATEGORIES.slice(0, 15).map(cat => ({ id: cat.id, name: cat.name }))
+  ];
 
   // Initial load
   useEffect(() => {
-    fetchJobs(searchQuery, selectedCategory !== "All" ? selectedCategory : undefined);
+    fetchJobs(searchQuery, selectedCategoryId !== "All" ? selectedCategoryId : undefined);
   }, []);
 
   // Reload when category changes
   useEffect(() => {
-    if (selectedCategory) {
-      fetchJobs(searchQuery, selectedCategory !== "All" ? selectedCategory : undefined);
+    if (selectedCategoryId) {
+      fetchJobs(searchQuery, selectedCategoryId !== "All" ? selectedCategoryId : undefined);
     }
-  }, [selectedCategory]);
+  }, [selectedCategoryId]);
 
   const fetchJobs = async (search?: string, category?: string) => {
     try {
@@ -86,11 +89,11 @@ const Jobs = () => {
   };
 
   const handleSearch = () => {
-    fetchJobs(searchQuery, selectedCategory !== "All" ? selectedCategory : undefined);
+    fetchJobs(searchQuery, selectedCategoryId !== "All" ? selectedCategoryId : undefined);
   };
 
-  const handleCategorySelect = (category: string) => {
-    setSelectedCategory(category);
+  const handleCategorySelect = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
   };
 
   const formatBudget = (job: Job) => {
@@ -151,17 +154,17 @@ const Jobs = () => {
                 
                 {showCategories && (
                   <div className="space-y-1">
-                    {categories.map((category) => (
+                    {categoryOptions.map((category) => (
                       <button
-                        key={category}
-                        onClick={() => handleCategorySelect(category)}
+                        key={category.id}
+                        onClick={() => handleCategorySelect(category.id)}
                         className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors ${
-                          selectedCategory === category
+                          selectedCategoryId === category.id
                             ? "bg-blue-50 text-blue-700 font-semibold"
                             : "text-gray-700 hover:bg-gray-100"
                         }`}
                       >
-                        {category}
+                        {category.name}
                       </button>
                     ))}
                   </div>
@@ -174,13 +177,13 @@ const Jobs = () => {
               {/* Mobile Category Filter - Shows only on small screens */}
               <div className="lg:hidden mb-4">
                 <select
-                  value={selectedCategory}
+                  value={selectedCategoryId}
                   onChange={(e) => handleCategorySelect(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
+                  {categoryOptions.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
                     </option>
                   ))}
                 </select>
@@ -214,7 +217,7 @@ const Jobs = () => {
                 <p className="text-sm text-gray-600">
                   {loading ? "Loading..." : `${jobs.length} ${jobs.length === 1 ? 'job' : 'jobs'} found`}
                 </p>
-                {selectedCategory !== "All" && (
+                {selectedCategoryId !== "All" && (
                   <button
                     onClick={() => handleCategorySelect("All")}
                     className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
