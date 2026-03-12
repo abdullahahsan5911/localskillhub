@@ -5,6 +5,12 @@ import User from '../models/User.js';
 import FreelancerProfile from '../models/FreelancerProfile.js';
 import { AppError } from '../middleware/errorHandler.js';
 import GeoLocationService from '../services/geolocation.service.js';
+import { firebaseAuth } from '../config/firebaseAdmin.js';
+import { sendOtpEmail } from '../services/email.service.js';
+
+// Generate a 6-digit OTP
+const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -51,6 +57,19 @@ export const register = async (req, res, next) => {
     // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      // If already registered but not verified, resend OTP
+      if (!existingUser.isEmailVerified) {
+        const otp = generateOtp();
+        existingUser.emailOtp = otp;
+        existingUser.emailOtpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+        await existingUser.save({ validateBeforeSave: false });
+        await sendOtpEmail(email, existingUser.name, otp);
+        return res.status(200).json({
+          status: 'success',
+          message: 'Account exists but email not verified. A new OTP has been sent.',
+          data: { emailVerificationRequired: true, email }
+        });
+      }
       return next(new AppError('Email already registered', 400));
     }
 
@@ -58,7 +77,8 @@ export const register = async (req, res, next) => {
       ? await GeoLocationService.normalizeLocation(location)
       : undefined;
 
-    // Create user
+    // Create user (unverified)
+    const otp = generateOtp();
     const user = await User.create({
       name,
       email,
@@ -66,26 +86,35 @@ export const register = async (req, res, next) => {
       role: role || 'client',
       location: normalizedLocation,
       interests,
-      onboardingCompleted: Boolean(role && normalizedLocation)
+      onboardingCompleted: Boolean(role && normalizedLocation),
+      isEmailVerified: false,
+      emailOtp: otp,
+      emailOtpExpiry: new Date(Date.now() + 10 * 60 * 1000), // 10 min
     });
 
-    // Create freelancer profile if role is freelancer or both
+    // Create freelancer profile if needed
     if ((role === 'freelancer' || role === 'both') && (user.role === 'freelancer' || user.role === 'both')) {
       await FreelancerProfile.create({
         userId: user._id,
         title: `${name} - Professional Freelancer`,
         bio: '',
-        rates: {
-          minRate: 0,
-          maxRate: 0
-        }
+        rates: { minRate: 0, maxRate: 0 }
       });
     }
 
-    // TODO: Send verification email
-    // await sendVerificationEmail(user);
+    // Send OTP email
+    try {
+      await sendOtpEmail(email, name, otp);
+    } catch (emailErr) {
+      console.error('Failed to send OTP email:', emailErr);
+      // Don't fail registration if email fails — user can request resend
+    }
 
-    sendTokenResponse(user, 201, res);
+    res.status(201).json({
+      status: 'success',
+      message: 'Account created. Please verify your email with the OTP sent to your inbox.',
+      data: { emailVerificationRequired: true, email }
+    });
   } catch (error) {
     next(error);
   }
@@ -105,23 +134,114 @@ export const login = async (req, res, next) => {
 
     // Get user with password
     const user = await User.findOne({ email }).select('+passwordHash');
-    
+
     if (!user) {
       return next(new AppError('Invalid credentials', 401));
     }
 
+    // Block unverified email/password accounts (OAuth users are always verified)
+    if (!user.isEmailVerified && user.provider === 'local') {
+      return res.status(403).json({
+        status: 'error',
+        code: 'EMAIL_NOT_VERIFIED',
+        message: 'Please verify your email before signing in. Check your inbox for the OTP.',
+        data: { email }
+      });
+    }
+
     // Check password
     const isPasswordMatch = await user.comparePassword(password);
-    
     if (!isPasswordMatch) {
       return next(new AppError('Invalid credentials', 401));
     }
 
-    // Update last active
     user.lastActive = Date.now();
     await user.save();
 
     sendTokenResponse(user, 200, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Verify email OTP
+// @route   POST /api/auth/verify-otp
+// @access  Public
+export const verifyOtp = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return next(new AppError('Email and OTP are required', 400));
+    }
+
+    const user = await User.findOne({ email }).select('+emailOtp +emailOtpExpiry');
+
+    if (!user) {
+      return next(new AppError('No account found with this email', 404));
+    }
+
+    if (user.isEmailVerified) {
+      return next(new AppError('Email already verified. Please sign in.', 400));
+    }
+
+    if (!user.emailOtp || !user.emailOtpExpiry) {
+      return next(new AppError('No OTP found. Please request a new one.', 400));
+    }
+
+    if (new Date() > user.emailOtpExpiry) {
+      return next(new AppError('OTP has expired. Please request a new one.', 400));
+    }
+
+    if (user.emailOtp !== otp.trim()) {
+      return next(new AppError('Invalid OTP. Please try again.', 400));
+    }
+
+    // Mark verified and clear OTP
+    user.isEmailVerified = true;
+    user.emailOtp = undefined;
+    user.emailOtpExpiry = undefined;
+    user.lastActive = Date.now();
+    await user.save({ validateBeforeSave: false });
+
+    sendTokenResponse(user, 200, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Resend email OTP
+// @route   POST /api/auth/resend-otp
+// @access  Public
+export const resendOtp = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return next(new AppError('Email is required', 400));
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return next(new AppError('No account found with this email', 404));
+    }
+
+    if (user.isEmailVerified) {
+      return next(new AppError('Email already verified. Please sign in.', 400));
+    }
+
+    const otp = generateOtp();
+    user.emailOtp = otp;
+    user.emailOtpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save({ validateBeforeSave: false });
+
+    await sendOtpEmail(email, user.name, otp);
+
+    res.json({
+      status: 'success',
+      message: 'A new OTP has been sent to your email.'
+    });
   } catch (error) {
     next(error);
   }
@@ -309,6 +429,84 @@ export const resendVerificationEmail = async (req, res, next) => {
       status: 'success',
       message: 'Verification email sent'
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    OAuth login/register via Firebase (Google or GitHub)
+// @route   POST /api/auth/oauth
+// @access  Public
+export const oauthLogin = async (req, res, next) => {
+  try {
+    const { idToken, provider } = req.body;
+
+    if (!idToken || !provider) {
+      return next(new AppError('idToken and provider are required', 400));
+    }
+
+    if (!['google', 'github', 'email'].includes(provider)) {
+      return next(new AppError('Provider must be google, github, or email', 400));
+    }
+
+    // Verify the Firebase ID token
+    let decodedToken;
+    try {
+      decodedToken = await firebaseAuth.verifyIdToken(idToken);
+    } catch (err) {
+      return next(new AppError('Invalid or expired Firebase token', 401));
+    }
+
+    const { uid, email, name, picture, email_verified } = decodedToken;
+
+    // Google requires verified email
+    if (provider === 'google' && !email_verified) {
+      return next(new AppError('Please verify your Google email before signing in', 403));
+    }
+
+    if (!email) {
+      return next(new AppError('No email associated with this account', 400));
+    }
+
+    // Upsert user: find by firebaseUid first, then by email
+    let user = await User.findOne({ firebaseUid: uid });
+
+    if (!user) {
+      // Check if there's an existing email/password user with this email
+      user = await User.findOne({ email: email.toLowerCase() });
+
+      if (user) {
+        // Link Firebase UID to existing account
+        user.firebaseUid = uid;
+        user.provider = provider;
+        if (picture && !user.avatar.startsWith('https://ui-avatars.com')) {
+          user.avatar = picture;
+        }
+        user.isEmailVerified = true;
+        user.lastActive = Date.now();
+        await user.save();
+      } else {
+        // Create brand-new OAuth user
+        user = await User.create({
+          name: name || email.split('@')[0],
+          email: email.toLowerCase(),
+          firebaseUid: uid,
+          provider,
+          avatar: picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}`,
+          isEmailVerified: true,
+          role: 'client',
+          onboardingCompleted: false,
+        });
+      }
+    } else {
+      // Existing OAuth user — refresh info
+      if (name) user.name = name;
+      if (picture) user.avatar = picture;
+      user.lastActive = Date.now();
+      await user.save();
+    }
+
+    sendTokenResponse(user, 200, res);
   } catch (error) {
     next(error);
   }

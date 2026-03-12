@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { signInWithPopup, signOut } from 'firebase/auth';
+import { auth, googleProvider, githubProvider } from '@/lib/firebase';
 import api from '@/lib/api';
 
 interface User {
@@ -11,6 +13,7 @@ interface User {
   isEmailVerified?: boolean;
   location?: any;
   onboardingCompleted?: boolean;
+  provider?: 'local' | 'google' | 'github';
 }
 
 interface AuthContextType {
@@ -18,7 +21,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<{ emailVerificationRequired: boolean; email: string }>;
+  verifyOtp: (email: string, otp: string) => Promise<void>;
+  resendOtp: (email: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  loginWithGithub: () => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
   refreshUser: () => Promise<void>;
@@ -26,26 +33,28 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const saveSession = (userData: User, token: string) => {
+  localStorage.setItem('user', JSON.stringify(userData));
+  localStorage.setItem('token', token);
+  localStorage.setItem('isAuthenticated', 'true');
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize auth state from localStorage
   useEffect(() => {
     const initAuth = async () => {
       try {
         const token = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
         const isAuth = localStorage.getItem('isAuthenticated') === 'true';
-
         if (token && isAuth) {
           if (storedUser) {
             setUser(JSON.parse(storedUser));
             setIsAuthenticated(true);
           }
-          
-          // Optionally fetch fresh user data from API
           try {
             const response = await api.getMe();
             if (response.status === 'success' && response.data) {
@@ -53,8 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               setUser(userData);
               localStorage.setItem('user', JSON.stringify(userData));
             }
-          } catch (error) {
-            // Token is expired or invalid — clear everything so the user is forced to log in again
+          } catch {
             api.clearToken();
             localStorage.removeItem('user');
             localStorage.removeItem('token');
@@ -74,70 +82,103 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
       }
     };
-
     initAuth();
   }, []);
 
+  const applySession = (userData: User, token: string) => {
+    if (token) api.setToken(token);
+    setUser(userData);
+    setIsAuthenticated(true);
+    saveSession(userData, token);
+  };
+
+  // ── Email + Password Login ──────────────────────────────────
   const login = async (email: string, password: string) => {
     try {
       const response = await api.login({ email, password });
-      
       if (response.status === 'success') {
         const userData = (response.data as any)?.user;
         const token = (response as any).token;
-
-        if (token) {
-          api.setToken(token);
-        }
-        
-        setUser(userData);
-        setIsAuthenticated(true);
-        
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('token', token);
-        localStorage.setItem('isAuthenticated', 'true');
+        applySession(userData, token);
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+    } catch (err: any) {
+      // Pass through structured errors (e.g. EMAIL_NOT_VERIFIED)
+      throw err;
     }
   };
 
+  // ── Email + Password Register ───────────────────────────────
   const register = async (name: string, email: string, password: string) => {
+    const response = await api.register({ name, email, password });
+    // Backend returns { data: { emailVerificationRequired: true, email } }
+    const data = (response.data as any) || (response as any).data || {};
+    return {
+      emailVerificationRequired: true,
+      email: data.email || email,
+    };
+  };
+
+  // ── OTP Verification ────────────────────────────────────────
+  const verifyOtp = async (email: string, otp: string) => {
+    const response = await api.verifyOtp({ email, otp });
+    if (response.status === 'success') {
+      const userData = (response.data as any)?.user;
+      const token = (response as any).token;
+      applySession(userData, token);
+    }
+  };
+
+  // ── Resend OTP ──────────────────────────────────────────────
+  const resendOtp = async (email: string) => {
+    await api.resendOtp(email);
+  };
+
+  // ── Google OAuth ────────────────────────────────────────────
+  const loginWithGoogle = async () => {
     try {
-      const response = await api.register({ name, email, password });
-      
+      const result = await signInWithPopup(auth, googleProvider);
+      const firebaseUser = result.user;
+      const idToken = await firebaseUser.getIdToken();
+      const response = await api.oauthLogin({ idToken, provider: 'google' });
       if (response.status === 'success') {
         const userData = (response.data as any)?.user;
         const token = (response as any).token;
-
-        if (token) {
-          api.setToken(token);
-        }
-        
-        setUser(userData);
-        setIsAuthenticated(true);
-        
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('token', token);
-        localStorage.setItem('isAuthenticated', 'true');
+        applySession(userData, token);
       }
-    } catch (error) {
-      console.error('Register error:', error);
+    } catch (error: any) {
+      await signOut(auth).catch(() => {});
       throw error;
     }
   };
 
+  // ── GitHub OAuth ────────────────────────────────────────────
+  const loginWithGithub = async () => {
+    try {
+      const result = await signInWithPopup(auth, githubProvider);
+      const firebaseUser = result.user;
+      const idToken = await firebaseUser.getIdToken();
+      const response = await api.oauthLogin({ idToken, provider: 'github' });
+      if (response.status === 'success') {
+        const userData = (response.data as any)?.user;
+        const token = (response as any).token;
+        applySession(userData, token);
+      }
+    } catch (error: any) {
+      await signOut(auth).catch(() => {});
+      throw error;
+    }
+  };
+
+  // ── Logout ──────────────────────────────────────────────────
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
-    
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('onboarding');
-    
     api.clearToken();
+    signOut(auth).catch(() => {});
   };
 
   const updateUser = (userData: Partial<User>) => {
@@ -165,14 +206,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider
       value={{
-        user,
-        isAuthenticated,
-        isLoading,
-        login,
-        register,
-        logout,
-        updateUser,
-        refreshUser,
+        user, isAuthenticated, isLoading,
+        login, register, verifyOtp, resendOtp,
+        loginWithGoogle, loginWithGithub,
+        logout, updateUser, refreshUser,
       }}
     >
       {children}
@@ -182,8 +219,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };

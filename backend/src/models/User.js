@@ -38,9 +38,19 @@ const userSchema = new mongoose.Schema({
   },
   passwordHash: {
     type: String,
-    required: [true, 'Password is required'],
+    required: false,   // OAuth users don't have a password
     minlength: 6,
     select: false
+  },
+  provider: {
+    type: String,
+    enum: ['local', 'google', 'github'],
+    default: 'local'
+  },
+  firebaseUid: {
+    type: String,
+    sparse: true,
+    unique: true
   },
   role: {
     type: String,
@@ -83,6 +93,14 @@ const userSchema = new mongoose.Schema({
   isEmailVerified: {
     type: Boolean,
     default: false
+  },
+  emailOtp: {
+    type: String,
+    select: false
+  },
+  emailOtpExpiry: {
+    type: Date,
+    select: false
   },
   isPhoneVerified: {
     type: Boolean,
@@ -127,8 +145,9 @@ userSchema.pre('validate', function(next) {
   next();
 });
 
-// Hash password before saving
+// Hash password before saving (skip for OAuth users without a password)
 userSchema.pre('save', async function(next) {
+  if (!this.passwordHash) return next();
   if (!this.isModified('passwordHash')) return next();
   
   const salt = await bcrypt.genSalt(10);

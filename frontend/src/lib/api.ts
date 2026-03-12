@@ -43,7 +43,10 @@ class ApiService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'API request failed');
+        const err: any = new Error(data.message || 'API request failed');
+        err.code = data.code;
+        err.response = { data };
+        throw err;
       }
 
       return data;
@@ -78,6 +81,35 @@ class ApiService {
     }
     
     return response;
+  }
+
+  async oauthLogin(data: { idToken: string; provider: 'google' | 'github' | 'email' }) {
+    const response = await this.request('/auth/oauth', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    if ((response as any).token) {
+      this.setToken((response as any).token);
+    }
+    return response;
+  }
+
+  async verifyOtp(data: { email: string; otp: string }) {
+    const response = await this.request('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    if ((response as any).token) {
+      this.setToken((response as any).token);
+    }
+    return response;
+  }
+
+  async resendOtp(email: string) {
+    return this.request('/auth/resend-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
   }
 
   async logout() {

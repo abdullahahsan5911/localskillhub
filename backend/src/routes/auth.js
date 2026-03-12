@@ -11,7 +11,10 @@ import {
   forgotPassword,
   resetPassword,
   verifyEmail,
-  resendVerificationEmail
+  resendVerificationEmail,
+  oauthLogin,
+  verifyOtp,
+  resendOtp
 } from '../controllers/auth.js';
 import { protect } from '../middleware/auth.js';
 
@@ -40,6 +43,13 @@ router.post(
 );
 
 router.post('/logout', logout);
+
+// OAuth (Google / GitHub via Firebase)
+router.post('/oauth', authLimiter, oauthLogin);
+
+// OTP email verification
+router.post('/verify-otp', authLimiter, verifyOtp);
+router.post('/resend-otp', authLimiter, resendOtp);
 
 router.post('/forgot-password', authLimiter, forgotPassword);
 router.post('/reset-password/:token', authLimiter, resetPassword);
