@@ -289,7 +289,7 @@ const Jobs = () => {
                       {/* Footer - Budget and Time */}
                       <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                         <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-900">
-                          <FiDollarSign className="h-4 w-4" />
+                          {/* <FiDollarSign className="h-4 w-4" /> */}
                           {formatBudget(job)}
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-gray-500">
