@@ -38,28 +38,33 @@ interface Job {
 const Jobs = () => {
   const [urlParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(urlParams.get('search') || "");
-  const [locationQuery, setLocationQuery] = useState(urlParams.get('location') || "");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [showCategories, setShowCategories] = useState(true);
-  const [showLocationFilter, setShowLocationFilter] = useState(false);
 
   const categories = ["All", ...CATEGORIES.slice(0, 15).map(cat => cat.name)];
 
+  // Initial load
   useEffect(() => {
-    fetchJobs(searchQuery, locationQuery, selectedCategory !== "All" ? selectedCategory : undefined);
+    fetchJobs(searchQuery, selectedCategory !== "All" ? selectedCategory : undefined);
+  }, []);
+
+  // Reload when category changes
+  useEffect(() => {
+    if (selectedCategory) {
+      fetchJobs(searchQuery, selectedCategory !== "All" ? selectedCategory : undefined);
+    }
   }, [selectedCategory]);
 
-  const fetchJobs = async (search?: string, city?: string, category?: string) => {
+  const fetchJobs = async (search?: string, category?: string) => {
     try {
       setLoading(true);
       setError("");
       const params: any = {};
-      if (search) params.search = search;
-      if (city) params.city = city;
+      if (search && search.trim()) params.search = search.trim();
       if (category && category !== "All") params.category = category;
       params.limit = 200;
       params.status = 'open';
@@ -81,7 +86,11 @@ const Jobs = () => {
   };
 
   const handleSearch = () => {
-    fetchJobs(searchQuery, locationQuery, selectedCategory !== "All" ? selectedCategory : undefined);
+    fetchJobs(searchQuery, selectedCategory !== "All" ? selectedCategory : undefined);
+  };
+
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
   };
 
   const formatBudget = (job: Job) => {
@@ -145,7 +154,7 @@ const Jobs = () => {
                     {categories.map((category) => (
                       <button
                         key={category}
-                        onClick={() => setSelectedCategory(category)}
+                        onClick={() => handleCategorySelect(category)}
                         className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors ${
                           selectedCategory === category
                             ? "bg-blue-50 text-blue-700 font-semibold"
@@ -157,36 +166,26 @@ const Jobs = () => {
                     ))}
                   </div>
                 )}
-
-                <hr className="my-5 border-gray-200" />
-
-                <button
-                  onClick={() => setShowLocationFilter(!showLocationFilter)}
-                  className="flex items-center justify-between w-full mb-4 text-lg font-semibold text-gray-900"
-                >
-                  <span>Location</span>
-                  {showLocationFilter ? <FiChevronUp /> : <FiChevronDown />}
-                </button>
-
-                {showLocationFilter && (
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <FiMapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="City..."
-                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        value={locationQuery}
-                        onChange={(e) => setLocationQuery(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
             </aside>
 
             {/* Main Content Area */}
             <div className="flex-1 min-w-0">
+              {/* Mobile Category Filter - Shows only on small screens */}
+              <div className="lg:hidden mb-4">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => handleCategorySelect(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Search Bar and Filters */}
               <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-6">
                 <div className="flex gap-3">
@@ -210,11 +209,20 @@ const Jobs = () => {
                 </div>
               </div>
 
-              {/* Jobs count */}
-              <div className="mb-4">
+              {/* Jobs count and active filters */}
+              <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm text-gray-600">
                   {loading ? "Loading..." : `${jobs.length} ${jobs.length === 1 ? 'job' : 'jobs'} found`}
                 </p>
+                {selectedCategory !== "All" && (
+                  <button
+                    onClick={() => handleCategorySelect("All")}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                  >
+                    <FiX className="h-4 w-4" />
+                    Clear category filter
+                  </button>
+                )}
               </div>
 
               {/* Loading State */}
