@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Navbar from "@/components/layout/Navbar";
 import {
-  Bell, Menu, LogOut, ChevronRight
+  Bell, LogOut, ChevronRight
 } from "lucide-react";
 
 export interface NavItem {
@@ -131,9 +132,11 @@ const DashboardLayout = ({
   );
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-56 xl:w-60 flex-col border-r border-gray-200 flex-shrink-0">
+    <div>
+      <Navbar />
+      <div className="flex h-[calc(100vh-4rem)] bg-gray-50 overflow-hidden pt-0">
+      {/* Sidebar (always visible) */}
+      <aside className="flex w-56 xl:w-60 flex-col border-r border-gray-200 flex-shrink-0">
         <SidebarContent />
       </aside>
 
@@ -155,12 +158,7 @@ const DashboardLayout = ({
         {/* Top bar */}
         <header className="bg-white border-b border-gray-200 h-14 px-4 lg:px-6 flex items-center justify-between flex-shrink-0 z-10">
           <div className="flex items-center gap-3">
-            <button
-              className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu className="w-5 h-5 text-gray-600" />
-            </button>
+            <button className="hidden" />
             <p className="font-semibold text-gray-900 text-sm hidden sm:block">
               {navItems.find((n) => n.id === activeTab)?.label || "Dashboard"}
             </p>
@@ -183,6 +181,7 @@ const DashboardLayout = ({
         {/* Content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
       </div>
+    </div>
     </div>
   );
 };

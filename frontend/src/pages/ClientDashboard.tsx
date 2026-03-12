@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
+// import { Link } from "react-router-dom";
 import api from "@/lib/api";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import DashboardLayout, { NavItem } from "@/components/dashboard/DashboardLayout";
@@ -57,6 +58,8 @@ interface Analytics {
   hireRate: number;
   avgJobValue: number;
 }
+
+// ...existing code removed; main `ClientDashboard` component defined later in file
 
 const statusColors: Record<string, string> = {
   open: "bg-green-100 text-green-700",
@@ -524,6 +527,14 @@ const SettingsTab = ({ user }: any) => {
 
 const ClientDashboard = () => {
   const { user } = useAuth();
+  const [showVerify, setShowVerify] = useState(false);
+  useEffect(() => {
+    if (user && (!user.isEmailVerified || (user as any).verificationLevel === 'unverified' || (user as any).verificationLevel === 'basic')) {
+      setShowVerify(true);
+    } else {
+      setShowVerify(false);
+    }
+  }, [user]);
   const [activeTab, setActiveTab] = useState("overview");
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -598,20 +609,36 @@ const ClientDashboard = () => {
   };
 
   return (
-    <DashboardLayout
-      navItems={navItems}
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-      headerActions={
-        <Link to="/post-job">
-          <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl gap-1.5 hidden sm:flex">
-            <Plus className="w-4 h-4" /> Post Job
-          </Button>
-        </Link>
-      }
-    >
-      {tabContent[activeTab] || tabContent["overview"]}
-    </DashboardLayout>
+    <>
+      {showVerify && (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-100 border border-blue-200 rounded-2xl p-4 mb-6 flex items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-600 text-2xl font-bold">✔</span>
+            <div>
+              <div className="font-semibold text-blue-900">Verify your account to unlock all features</div>
+              <div className="text-xs text-blue-700">Complete identity and profile verification for more trust and visibility.</div>
+            </div>
+          </div>
+          <Link to="/verification">
+            <Button className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl px-6 py-2 text-base font-semibold">Verify Account</Button>
+          </Link>
+        </div>
+      )}
+      <DashboardLayout
+        navItems={navItems}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        headerActions={
+          <Link to="/post-job">
+            <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl gap-1.5 hidden sm:flex">
+              <Plus className="w-4 h-4" /> Post Job
+            </Button>
+          </Link>
+        }
+      >
+        {tabContent[activeTab] || tabContent["overview"]}
+      </DashboardLayout>
+    </>
   );
 };
 

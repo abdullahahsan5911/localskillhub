@@ -1,10 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { Briefcase, User } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import FreelancerDashboard from "./FreelancerDashboard";
 import ClientDashboard from "./ClientDashboard";
 
 const CombinedDashboard = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate("/login", { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
   const [activeRole, setActiveRole] = useState<"freelancer" | "client">("freelancer");
 
   return (

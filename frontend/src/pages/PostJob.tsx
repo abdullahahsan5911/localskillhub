@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +47,19 @@ interface JobForm {
 const STEP_TITLES = ["Job Basics", "Requirements", "Budget & Timeline", "Review & Post"];
 
 const PostJob = () => {
+  const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        navigate("/login", { replace: true });
+      } else if (user && user.role !== "client" && user.role !== "both") {
+        navigate("/dashboard/freelancer", { replace: true });
+      }
+    }
+  }, [isAuthenticated, isLoading, user, navigate]);
+  // ...existing code...
   const [searchParams] = useSearchParams();
   const editJobId = searchParams.get('jobId');
   const [step, setStep] = useState(() => {

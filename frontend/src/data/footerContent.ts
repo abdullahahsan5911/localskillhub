@@ -230,8 +230,8 @@ export const footerPages: FooterPageContent[] = [
     title: "Help Center",
     eyebrow: "Support for common issues",
     description: "Find guidance for account setup, job posting, proposals, profile management, contracts, and platform navigation.",
-    ctaLabel: "Go to Dashboard",
-    ctaHref: "/dashboard/freelancer",
+    ctaLabel: "",
+    ctaHref: "",
     sections: [
       {
         title: "Popular topics",
@@ -253,8 +253,8 @@ export const footerPages: FooterPageContent[] = [
     title: "Trust & Safety",
     eyebrow: "Safety is a product feature",
     description: "LocalSkillHub is designed around verified identity, transparent reputation, and better signals for safe local collaboration.",
-    ctaLabel: "View Verification",
-    ctaHref: "/verification",
+    ctaLabel: "",
+    ctaHref: "",
     sections: [
       {
         title: "Protection layers",

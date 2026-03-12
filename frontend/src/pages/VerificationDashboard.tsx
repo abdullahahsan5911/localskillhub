@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiMail, FiPhone, FiShield, FiCamera, FiLinkedin, FiGithub, FiCheckCircle, FiClock, FiAlertCircle } from 'react-icons/fi';
+import { FiMail, FiPhone, FiShield, FiCamera, FiLinkedin, FiGithub, FiCheckCircle, FiClock } from 'react-icons/fi';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -158,81 +158,65 @@ const VerificationDashboard = () => {
   const progressPercentage = verificationStatus.verificationScore;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4 py-10">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Identity Verification</h1>
-        <p className="text-gray-600">Complete verifications to build trust and unlock features</p>
+      <div className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-extrabold text-gray-900 mb-1 tracking-tight">Verification Center</h1>
+          <p className="text-lg text-gray-600">Build trust and unlock premium features by verifying your identity and skills.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Badge className={getVerificationLevelColor(verificationStatus.verificationLevel) + ' text-base px-4 py-2 font-semibold'}>
+            {verificationStatus.verificationLevel.toUpperCase()}
+          </Badge>
+          <span className="text-2xl font-bold text-blue-600">{progressPercentage}%</span>
+        </div>
       </div>
 
-      {/* Progress Overview */}
-      <Card className="p-6 mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Verification Progress</h2>
-            <p className="text-sm text-gray-600">Level: <Badge className={getVerificationLevelColor(verificationStatus.verificationLevel)}>{verificationStatus.verificationLevel.toUpperCase()}</Badge></p>
-          </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold text-blue-600">{progressPercentage}%</div>
-            <div className="text-sm text-gray-600">Complete</div>
-          </div>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
-          <div 
-            className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-500"
-            style={{ width: `${progressPercentage}%` }}
-          />
-        </div>
-      </Card>
+      {/* Progress Bar */}
+      <div className="w-full bg-gray-200 rounded-full h-4 mb-10">
+        <div
+          className="bg-gradient-to-r from-blue-500 to-purple-600 h-4 rounded-full transition-all duration-500 shadow-md"
+          style={{ width: `${progressPercentage}%` }}
+        />
+      </div>
 
-      {/* Verification Steps */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Email Verification */}
-        <Card className="p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <FiMail className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Email Verification</h3>
-                <p className="text-sm text-gray-600">+10 points</p>
-              </div>
-            </div>
-            {getVerificationIcon(verifications.email)}
+      {/* Steps Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        {/* Email */}
+        <Card className="p-7 flex flex-col items-center text-center shadow-xl border-2 border-blue-100 bg-white hover:shadow-2xl transition-shadow">
+          <div className="mb-4 flex items-center justify-center w-16 h-16 rounded-full bg-blue-50">
+            <FiMail className="h-8 w-8 text-blue-600" />
           </div>
+          <h3 className="font-bold text-lg text-gray-900 mb-1">Email Verification</h3>
+          <p className="text-sm text-gray-500 mb-2">+10 points</p>
+          {getVerificationIcon(verifications.email)}
           {!verifications.email && (
             <Button 
               onClick={handleSendEmailVerification}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full mt-4 bg-blue-600 hover:bg-blue-700 font-semibold"
               disabled={activeStep === 'email'}
             >
               Send Verification Email
             </Button>
           )}
           {verifications.email && (
-            <div className="text-center text-sm text-green-600 font-medium">
+            <div className="text-center text-sm text-green-600 font-medium mt-2">
               ✓ Email Verified
             </div>
           )}
         </Card>
 
-        {/* Phone Verification */}
-        <Card className="p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-green-50 rounded-lg">
-                <FiPhone className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Phone Verification</h3>
-                <p className="text-sm text-gray-600">+10 points</p>
-              </div>
-            </div>
-            {getVerificationIcon(verifications.phone)}
+        {/* Phone */}
+        <Card className="p-7 flex flex-col items-center text-center shadow-xl border-2 border-green-100 bg-white hover:shadow-2xl transition-shadow">
+          <div className="mb-4 flex items-center justify-center w-16 h-16 rounded-full bg-green-50">
+            <FiPhone className="h-8 w-8 text-green-600" />
           </div>
+          <h3 className="font-bold text-lg text-gray-900 mb-1">Phone Verification</h3>
+          <p className="text-sm text-gray-500 mb-2">+10 points</p>
+          {getVerificationIcon(verifications.phone)}
           {!verifications.phone && (
-            <div className="space-y-3">
+            <div className="space-y-3 w-full">
               {!otpSent ? (
                 <>
                   <input
@@ -244,7 +228,7 @@ const VerificationDashboard = () => {
                   />
                   <Button 
                     onClick={handleSendPhoneOTP}
-                    className="w-full bg-green-600 hover:bg-green-700"
+                    className="w-full bg-green-600 hover:bg-green-700 font-semibold"
                   >
                     Send OTP
                   </Button>
@@ -260,7 +244,7 @@ const VerificationDashboard = () => {
                   />
                   <Button 
                     onClick={handleVerifyPhoneOTP}
-                    className="w-full bg-green-600 hover:bg-green-700"
+                    className="w-full bg-green-600 hover:bg-green-700 font-semibold"
                   >
                     Verify OTP
                   </Button>
@@ -269,27 +253,21 @@ const VerificationDashboard = () => {
             </div>
           )}
           {verifications.phone && (
-            <div className="text-center text-sm text-green-600 font-medium">
+            <div className="text-center text-sm text-green-600 font-medium mt-2">
               ✓ Phone Verified
             </div>
           )}
         </Card>
 
         {/* ID Verification */}
-        <Card className="p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <FiShield className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">ID Verification</h3>
-                <p className="text-sm text-gray-600">+25 points</p>
-              </div>
-            </div>
-            {getVerificationIcon(verifications.identity)}
+        <Card className="p-7 flex flex-col items-center text-center shadow-xl border-2 border-purple-100 bg-white hover:shadow-2xl transition-shadow">
+          <div className="mb-4 flex items-center justify-center w-16 h-16 rounded-full bg-purple-50">
+            <FiShield className="h-8 w-8 text-purple-600" />
           </div>
-          <Button className="w-full bg-purple-600 hover:bg-purple-700">
+          <h3 className="font-bold text-lg text-gray-900 mb-1">ID Verification</h3>
+          <p className="text-sm text-gray-500 mb-2">+25 points</p>
+          {getVerificationIcon(verifications.identity)}
+          <Button className="w-full mt-4 bg-purple-600 hover:bg-purple-700 font-semibold">
             Upload ID Document
           </Button>
           <p className="text-xs text-gray-500 mt-2 text-center">
@@ -298,20 +276,14 @@ const VerificationDashboard = () => {
         </Card>
 
         {/* Selfie Verification */}
-        <Card className="p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-pink-50 rounded-lg">
-                <FiCamera className="h-6 w-6 text-pink-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Selfie Verification</h3>
-                <p className="text-sm text-gray-600">+15 points</p>
-              </div>
-            </div>
-            {getVerificationIcon(verifications.biometric)}
+        <Card className="p-7 flex flex-col items-center text-center shadow-xl border-2 border-pink-100 bg-white hover:shadow-2xl transition-shadow">
+          <div className="mb-4 flex items-center justify-center w-16 h-16 rounded-full bg-pink-50">
+            <FiCamera className="h-8 w-8 text-pink-600" />
           </div>
-          <Button className="w-full bg-pink-600 hover:bg-pink-700">
+          <h3 className="font-bold text-lg text-gray-900 mb-1">Selfie Verification</h3>
+          <p className="text-sm text-gray-500 mb-2">+15 points</p>
+          {getVerificationIcon(verifications.biometric)}
+          <Button className="w-full mt-4 bg-pink-600 hover:bg-pink-700 font-semibold">
             Take Selfie
           </Button>
           <p className="text-xs text-gray-500 mt-2 text-center">
@@ -319,46 +291,34 @@ const VerificationDashboard = () => {
           </p>
         </Card>
 
-        {/* LinkedIn Connection */}
-        <Card className="p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <FiLinkedin className="h-6 w-6 text-blue-700" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">LinkedIn Profile</h3>
-                <p className="text-sm text-gray-600">+7 points</p>
-              </div>
-            </div>
-            {getVerificationIcon(verifications.linkedin)}
+        {/* LinkedIn */}
+        <Card className="p-7 flex flex-col items-center text-center shadow-xl border-2 border-blue-200 bg-white hover:shadow-2xl transition-shadow">
+          <div className="mb-4 flex items-center justify-center w-16 h-16 rounded-full bg-blue-50">
+            <FiLinkedin className="h-8 w-8 text-blue-700" />
           </div>
+          <h3 className="font-bold text-lg text-gray-900 mb-1">LinkedIn Profile</h3>
+          <p className="text-sm text-gray-500 mb-2">+7 points</p>
+          {getVerificationIcon(verifications.linkedin)}
           <Button 
             onClick={handleConnectLinkedIn}
-            className="w-full bg-blue-700 hover:bg-blue-800"
+            className="w-full mt-4 bg-blue-700 hover:bg-blue-800 font-semibold"
             disabled={verifications.linkedin}
           >
             {verifications.linkedin ? '✓ Connected' : 'Connect LinkedIn'}
           </Button>
         </Card>
 
-        {/* GitHub Connection */}
-        <Card className="p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <FiGithub className="h-6 w-6 text-gray-900" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">GitHub Profile</h3>
-                <p className="text-sm text-gray-600">+7 points</p>
-              </div>
-            </div>
-            {getVerificationIcon(verifications.github)}
+        {/* GitHub */}
+        <Card className="p-7 flex flex-col items-center text-center shadow-xl border-2 border-gray-200 bg-white hover:shadow-2xl transition-shadow">
+          <div className="mb-4 flex items-center justify-center w-16 h-16 rounded-full bg-gray-50">
+            <FiGithub className="h-8 w-8 text-gray-900" />
           </div>
+          <h3 className="font-bold text-lg text-gray-900 mb-1">GitHub Profile</h3>
+          <p className="text-sm text-gray-500 mb-2">+7 points</p>
+          {getVerificationIcon(verifications.github)}
           <Button 
             onClick={handleConnectGitHub}
-            className="w-full bg-gray-900 hover:bg-gray-800"
+            className="w-full mt-4 bg-gray-900 hover:bg-gray-800 font-semibold"
             disabled={verifications.github}
           >
             {verifications.github ? '✓ Connected' : 'Connect GitHub'}
@@ -368,11 +328,11 @@ const VerificationDashboard = () => {
 
       {/* Trust Badges */}
       {verificationStatus?.trustBadges && verificationStatus.trustBadges.length > 0 && (
-        <Card className="p-6 mt-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Earned Badges</h2>
+        <Card className="p-7 mt-12 shadow-xl border-2 border-blue-100 bg-white">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Earned Badges</h2>
           <div className="flex flex-wrap gap-3">
             {verificationStatus.trustBadges.map((badge, index) => (
-              <Badge key={index} className="bg-blue-100 text-blue-700 px-4 py-2 text-sm">
+              <Badge key={index} className="bg-blue-100 text-blue-700 px-4 py-2 text-base font-semibold">
                 {badge.type.replace(/_/g, ' ').toUpperCase()}
               </Badge>
             ))}
