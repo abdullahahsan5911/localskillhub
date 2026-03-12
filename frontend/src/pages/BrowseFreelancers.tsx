@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { FiSearch, FiMapPin, FiShield, FiFilter, FiGrid, FiList, FiX } from "react-icons/fi";
+import { FiMapPin, FiShield, FiFilter, FiGrid, FiList, FiX } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
-import VisualCategoryGrid from "../components/VisualCategoryGrid";
+import SearchFilterSection from "../components/SearchFilterSection";
 import api from "@/lib/api";
 import { CATEGORIES } from "@/constants/categories";
 
@@ -222,7 +222,14 @@ const BrowseFreelancers = () => {
 
   const handleVisualCategorySelect = (categoryId: string) => {
     const selectedCategory = CATEGORIES.find((category) => category.id === categoryId);
-    handleSkillFilter(selectedCategory?.name || categoryId);
+    const categoryName = selectedCategory?.name || categoryId;
+    
+    // Toggle category - if clicking the same category, go back to "All"
+    if (activeSkill === categoryName) {
+      handleSkillFilter("All");
+    } else {
+      handleSkillFilter(categoryName);
+    }
   };
 
   const handleSearch = () => {
@@ -285,64 +292,21 @@ const BrowseFreelancers = () => {
               Discover trust-verified freelancers in your region
             </p>
           </div>
-
-          {/* Search Bar */}
-          <div className="bg-white border border-gray-300 rounded-2xl p-2 mt-8 max-w-3xl shadow-sm">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 transition-colors focus-within:bg-gray-100">
-                <FiSearch className="h-5 w-5 text-gray-400 shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Search by skill, name, or keyword..."
-                  className="bg-transparent w-full text-gray-900 placeholder:text-gray-500 outline-none text-sm"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 transition-colors focus-within:bg-gray-100">
-                <FiMapPin className="h-5 w-5 text-gray-400 shrink-0" />
-                <input
-                  type="text"
-                  placeholder="City or region..."
-                  className="bg-transparent w-full text-gray-900 placeholder:text-gray-500 outline-none text-sm"
-                  value={locationQuery}
-                  onChange={(e) => setLocationQuery(e.target.value)}
-                />
-              </div>
-              <Button 
-                onClick={handleSearch}
-                className="bg-blue-600 text-white font-semibold px-8 h-12 hover:bg-blue-700 transition-all duration-200 rounded-xl"
-              >
-                Search
-              </Button>
-            </div>
-          </div>
-
-          {/* Skill Pills */}
-          <div className="flex gap-2 mt-6 overflow-x-auto pb-2 scrollbar-hide">
-            {skills.map((skill) => (
-              <button
-                key={skill}
-                onClick={() => handleSkillFilter(skill)}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                  activeSkill === skill
-                    ? "bg-gray-900 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
-                }`}
-              >
-                {skill}
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-10">
-            <VisualCategoryGrid
-              activeId={activeSkill === "All" ? undefined : CATEGORIES.find((category) => category.name === activeSkill)?.id}
-              onSelect={handleVisualCategorySelect}
-             />
-          </div>
         </div>
       </section>
+
+      {/* Search and Filter Section - Sticky */}
+      <SearchFilterSection
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        onSearchSubmit={handleSearch}
+        selectedCategoryId={activeSkill !== "All" ? CATEGORIES.find(cat => cat.name === activeSkill)?.id : undefined}
+        onCategorySelect={handleVisualCategorySelect}
+        showDiscoveryTabs={false}
+        locationValue={locationQuery}
+        onLocationChange={setLocationQuery}
+        showLocationSearch={true}
+      />
 
       {/* Results Section */}
       <section className="bg-white py-8">
