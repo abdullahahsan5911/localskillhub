@@ -89,11 +89,12 @@ const Navbar = () => {
             
             {isAuthenticated && user ? (
               <>
-                <Link to="/messages">
-                  <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
-                    <FiMessageSquare className="h-5 w-5 text-gray-600" />
-                  </button>
-                </Link>
+                <button
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
+                  onClick={() => navigate(`${getDashboardLink()}?tab=messages`)}
+                >
+                  <FiMessageSquare className="h-5 w-5 text-gray-600" />
+                </button>
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -118,7 +119,7 @@ const Navbar = () => {
                       <FiUser className="mr-2 h-4 w-4" />
                       <span>Dashboard</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/messages")}>
+                    <DropdownMenuItem onClick={() => navigate(`${getDashboardLink()}?tab=messages`)}>
                       <FiMessageSquare className="mr-2 h-4 w-4" />
                       <span>Messages</span>
                     </DropdownMenuItem>
