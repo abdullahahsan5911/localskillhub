@@ -171,14 +171,15 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
   const [filters, setFilters] = useState<{
     city: string;
     state: string;
-    search: string;
+    keyword: string;
+    skill: string;
     category?: string;
     minRating?: number;
     minBudget?: number;
     maxBudget?: number;
     available?: boolean;
     remote?: boolean;
-  }>({ city: '', state: '', search: '' });
+  }>({ city: '', state: '', keyword: '', skill: '' });
 
   useEffect(() => {
     if (!mapDivRef.current || mapInstanceRef.current) return;
@@ -576,6 +577,8 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
   const normalizeAndSort = (items: any[], itemType: 'freelancer' | 'job') => {
     const cityFilter = filters.city.trim().toLowerCase();
     const stateFilter = filters.state.trim().toLowerCase();
+    const keywordFilter = filters.keyword.trim().toLowerCase();
+    const skillFilter = filters.skill.trim().toLowerCase();
 
     const normalized = items
       .map((item): MarkerData | null => {
@@ -595,10 +598,35 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
         if (cityFilter && !itemCity.includes(cityFilter)) return null;
         if (stateFilter && !itemState.includes(stateFilter)) return null;
 
+        if (keywordFilter) {
+          const haystack =
+            itemType === 'freelancer'
+              ? [item.title, item.bio, item.userId?.name]
+                  .filter(Boolean)
+                  .join(' ')
+                  .toLowerCase()
+              : [item.title, item.description, item.category]
+                  .filter(Boolean)
+                  .join(' ')
+                  .toLowerCase();
+          if (!haystack.includes(keywordFilter)) return null;
+        }
+
         const distanceKm = haversineDistanceKm(center.lat, center.lng, position.lat, position.lng);
         if (radius !== null && distanceKm > radius) return null;
 
         if (itemType === 'freelancer') {
+          if (skillFilter) {
+            const skillText = (item.skills || [])
+              .map((skill: any) =>
+                typeof skill === 'string' ? skill : skill?.name || ''
+              )
+              .join(' ')
+              .toLowerCase();
+
+            if (!skillText.includes(skillFilter)) return null;
+          }
+
           const ratingScore = toNumber(item.ratings?.average, 0);
           const rateOrBudget = toNumber(item.rates?.minRate, 0);
 
@@ -653,7 +681,8 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
       if (type === 'freelancers') {
         const response = await api.getFreelancers({
           city: filters.city || undefined,
-          search: filters.search || undefined,
+          search: filters.keyword || filters.skill || undefined,
+          skills: filters.skill || undefined,
           limit: 200,
           completeOnly: false,
         });
@@ -668,7 +697,7 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
         const response = await api.getJobs({
           city: filters.city || undefined,
           category: filters.category,
-          search: filters.search || undefined,
+          search: filters.keyword || undefined,
           limit: 200,
           status: 'open',
         });
@@ -807,8 +836,8 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
               <label className="text-sm font-medium text-gray-700 mb-2 block">Keyword</label>
               <Input
                 placeholder="skill, role, job"
-                value={filters.search}
-                onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+                value={filters.keyword}
+                onChange={(e) => setFilters((prev) => ({ ...prev, keyword: e.target.value }))}
               />
             </div>
 
@@ -817,11 +846,11 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">Skill</label>
                   <Select
-                    value={filters.search || 'all'}
+                    value={filters.skill || 'all'}
                     onValueChange={(v) =>
                       setFilters((prev) => ({
                         ...prev,
-                        search: v === 'all' ? '' : v,
+                        skill: v === 'all' ? '' : v,
                       }))
                     }
                   >

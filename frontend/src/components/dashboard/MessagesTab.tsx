@@ -49,6 +49,9 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const buildConversationId = (userA: string, userB: string) =>
+    [userA, userB].sort().join("_");
+
   const fetchConversations = useCallback(async () => {
     try {
       setLoadingConvs(true);
@@ -60,10 +63,36 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
         onUnreadCount?.(total);
 
         // Auto-select if initialTargetUserId provided
-        if (initialTargetUserId) {
+        if (initialTargetUserId && currentUserId) {
           const existing = convs.find(c => c.otherUser?._id === initialTargetUserId);
           if (existing) {
             setSelectedConv(existing);
+          } else if (initialTargetUserId !== currentUserId) {
+            const starterConv: Conversation = {
+              _id: buildConversationId(currentUserId, initialTargetUserId),
+              unreadCount: 0,
+              otherUser: {
+                _id: initialTargetUserId,
+                name: "New conversation",
+              },
+            };
+
+            try {
+              const profileRes = await api.getFreelancer(initialTargetUserId);
+              const profileUser = (profileRes.data as any)?.freelancer?.userId;
+              if (profileUser) {
+                starterConv.otherUser = {
+                  _id: profileUser._id,
+                  name: profileUser.name,
+                  avatar: profileUser.avatar,
+                };
+              }
+            } catch {
+              // Keep fallback name if profile fetch fails.
+            }
+
+            setConversations((prev) => [starterConv, ...prev]);
+            setSelectedConv(starterConv);
           }
         } else if (convs.length > 0 && !selectedConv) {
           setSelectedConv(convs[0]);
@@ -74,7 +103,7 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
     } finally {
       setLoadingConvs(false);
     }
-  }, [initialTargetUserId, onUnreadCount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [initialTargetUserId, onUnreadCount, currentUserId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchMessages = useCallback(async (conv: Conversation) => {
     try {
@@ -108,23 +137,85 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
   const handleSend = async () => {
     if (!messageText.trim() || !selectedConv) return;
     const content = messageText.trim();
+    const activeConv = selectedConv;
+    const optimisticId = `temp-${Date.now()}`;
+
+    const optimisticMessage: Message = {
+      _id: optimisticId,
+      senderId: currentUserId || "",
+      receiverId: activeConv.otherUser._id,
+      content,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Instant local append for smooth WhatsApp-like UX.
+    setMessages((prev) => [...prev, optimisticMessage]);
+
+    // Keep recent conversation preview in sync immediately.
+    setConversations((prev) => {
+      const next = prev.map((c) =>
+        c._id === activeConv._id
+          ? {
+              ...c,
+              lastMessage: {
+                content,
+                createdAt: optimisticMessage.createdAt,
+              },
+            }
+          : c
+      );
+
+      const idx = next.findIndex((c) => c._id === activeConv._id);
+      if (idx <= 0) return next;
+      const [moved] = next.splice(idx, 1);
+      next.unshift(moved);
+      return next;
+    });
+
     setMessageText("");
+    setTimeout(scrollToBottom, 0);
     setSending(true);
+
     try {
-      await api.sendMessage({
-        receiverId: selectedConv.otherUser._id,
-        conversationId: selectedConv._id,
+      const res = await api.sendMessage({
+        receiverId: activeConv.otherUser._id,
+        conversationId: activeConv._id,
         content,
       });
-      await fetchMessages(selectedConv);
+
+      const savedMessage = (res?.data as any)?.message;
+      if (savedMessage?._id) {
+        setMessages((prev) =>
+          prev.map((m) => (m._id === optimisticId ? savedMessage : m))
+        );
+
+        setConversations((prev) =>
+          prev.map((c) =>
+            c._id === activeConv._id
+              ? {
+                  ...c,
+                  lastMessage: {
+                    content: savedMessage.content,
+                    createdAt: savedMessage.createdAt,
+                  },
+                }
+              : c
+          )
+        );
+      }
     } catch {
-      setMessageText(content); // restore if failed
+      // Roll back optimistic update if API fails.
+      setMessages((prev) => prev.filter((m) => m._id !== optimisticId));
+      setMessageText(content);
     } finally {
       setSending(false);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Avoid accidental submit/send while using IME composition.
+    if ((e.nativeEvent as any).isComposing) return;
+
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -193,6 +284,7 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
               const isActive = selectedConv?._id === conv._id;
               return (
                 <button
+                  type="button"
                   key={conv._id}
                   onClick={() => handleSelectConv(conv)}
                   className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors border-b border-gray-50 text-left ${
@@ -337,6 +429,7 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
                   />
                 </div>
                 <button
+                  type="button"
                   onClick={handleSend}
                   disabled={!messageText.trim() || sending}
                   className="w-11 h-11 flex-shrink-0 flex items-center justify-center bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 disabled:cursor-not-allowed text-white rounded-xl transition"

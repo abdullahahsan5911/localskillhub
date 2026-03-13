@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FiMail, FiLock, FiUser, FiEye, FiEyeOff, FiGithub, FiRefreshCw } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { HiOutlineLocationMarker, HiOutlineLightningBolt, HiOutlineMail } from "react-icons/hi";
@@ -12,8 +12,15 @@ const STATS = [
   { value: "4.9★", label: "Avg. rating" },
 ];
 
+const requiresOnboarding = (u: any) => {
+  const hasLocation = Boolean(u?.location?.city && u?.location?.state && u?.location?.country);
+  const hasInterests = Array.isArray(u?.interests) && u.interests.length > 0;
+  return !u?.onboardingCompleted && !(hasLocation && hasInterests);
+};
+
 const SignUp = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { register, verifyOtp, resendOtp, loginWithGoogle, loginWithGithub } = useAuth();
 
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
@@ -23,7 +30,13 @@ const SignUp = () => {
   const [socialLoading, setSocialLoading] = useState<"google" | "github" | null>(null);
 
   // OTP state
-  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const queryEmail = searchParams.get("email");
+  const queryVerify = searchParams.get("verify");
+  const storedPendingEmail = localStorage.getItem("pendingVerificationEmail");
+  const shouldUseQueryEmail = queryVerify === "1" && !!queryEmail;
+  const [pendingEmail, setPendingEmail] = useState<string | null>(
+    shouldUseQueryEmail ? queryEmail : storedPendingEmail
+  );
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [otpError, setOtpError] = useState("");
   const [otpLoading, setOtpLoading] = useState(false);
@@ -32,7 +45,7 @@ const SignUp = () => {
 
   const redirectAfterAuth = () => {
     const u = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!u.onboardingCompleted) return navigate("/onboarding");
+    if (requiresOnboarding(u)) return navigate("/onboarding");
     if (u.role === "client") return navigate("/dashboard/client");
     if (u.role === "freelancer") return navigate("/dashboard/freelancer");
     navigate("/");
@@ -73,6 +86,7 @@ const SignUp = () => {
     setOtpLoading(true);
     try {
       await verifyOtp(pendingEmail!, code);
+      localStorage.removeItem("pendingVerificationEmail");
       redirectAfterAuth();
     } catch (err: any) {
       setOtpError(err.message || "Invalid OTP. Please try again.");
@@ -96,6 +110,13 @@ const SignUp = () => {
     }
   };
 
+  const handleUseDifferentEmail = () => {
+    localStorage.removeItem("pendingVerificationEmail");
+    setPendingEmail(null);
+    setOtp(["", "", "", "", "", ""]);
+    setOtpError("");
+  };
+
   // ── Main register ────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,6 +126,7 @@ const SignUp = () => {
       const result = await register(formData.name, formData.email, formData.password);
       if (result.emailVerificationRequired) {
         setPendingEmail(result.email);
+        localStorage.setItem("pendingVerificationEmail", result.email);
       }
     } catch (err: any) {
       setError(err.message || "Registration failed. Please try again.");
@@ -192,7 +214,7 @@ const SignUp = () => {
               </button>
             </div>
 
-            <button type="button" onClick={() => setPendingEmail(null)}
+            <button type="button" onClick={handleUseDifferentEmail}
               className="w-full text-center text-xs text-slate-500 hover:text-slate-300 transition-colors">
               ← Use a different email
             </button>

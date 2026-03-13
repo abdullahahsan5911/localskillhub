@@ -94,7 +94,7 @@ const FreelancerProfile = () => {
 
   const handleContact = () => {
     if (!user) { navigate("/login"); return; }
-    navigate("/messages");
+    navigate(`/messages?userId=${freelancer?.userId._id}`);
   };
 
   const formatRate = () => {

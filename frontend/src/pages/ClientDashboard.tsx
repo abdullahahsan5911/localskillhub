@@ -34,16 +34,29 @@ interface Proposal {
   jobId: { _id: string; title: string };
   freelancerId: { _id: string; name: string; avatar?: string };
   coverLetter: string;
-  bidAmount: number;
+  proposedRate?: { amount?: number; type?: string; currency?: string };
+  estimatedDuration?: { value?: number; unit?: string };
   status: string;
   createdAt: string;
 }
 
 interface Contract {
   _id: string;
-  jobId: { title: string };
-  freelancerId: { name: string; avatar?: string };
-  amount: number;
+  jobId: { _id: string; title: string };
+  freelancerId: { _id: string; name: string; avatar?: string };
+  clientId?: { _id: string; name: string; avatar?: string };
+  amount: { total: number; type: string; currency: string };
+  milestones?: Array<{
+    _id: string;
+    title: string;
+    amount: number;
+    status: string;
+    feedback?: string;
+  }>;
+  signatures?: {
+    client?: { signed?: boolean };
+    freelancer?: { signed?: boolean };
+  };
   status: string;
   startDate: string;
 }
@@ -69,9 +82,16 @@ const statusColors: Record<string, string> = {
   draft: "bg-yellow-100 text-yellow-700",
   closed: "bg-gray-100 text-gray-600",
   accepted: "bg-green-100 text-green-700",
+  sent: "bg-yellow-100 text-yellow-700",
+  viewed: "bg-blue-100 text-blue-700",
+  shortlisted: "bg-purple-100 text-purple-700",
   pending: "bg-yellow-100 text-yellow-700",
   rejected: "bg-red-100 text-red-700",
   active: "bg-blue-100 text-blue-700",
+  submitted: "bg-indigo-100 text-indigo-700",
+  "revision-requested": "bg-amber-100 text-amber-700",
+  approved: "bg-green-100 text-green-700",
+  paid: "bg-emerald-100 text-emerald-700",
 };
 
 const OverviewTab = ({ analytics, jobs, proposals, loading }: any) => {
@@ -151,7 +171,7 @@ const OverviewTab = ({ analytics, jobs, proposals, loading }: any) => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{p.freelancerId?.name}</p>
                     <p className="text-xs text-gray-500 truncate">
-                      {p.jobId?.title} · ₹{p.bidAmount?.toLocaleString()}
+                      {p.jobId?.title} · ₹{(p.proposedRate?.amount ?? 0).toLocaleString()}
                     </p>
                   </div>
                   <span className={`text-xs font-medium px-2 py-1 rounded-full flex-shrink-0 ${statusColors[p.status] || "bg-gray-100 text-gray-600"}`}>
@@ -304,7 +324,7 @@ const ProposalsTab = ({ proposals, loading, onAction }: any) => {
   return (
     <div className="space-y-4">
       <div className="flex gap-2 flex-wrap">
-        {["all", "pending", "accepted", "rejected"].map(s => (
+        {["all", "sent", "viewed", "shortlisted", "accepted", "rejected"].map(s => (
           <button
             key={s}
             onClick={() => setFilter(s)}
@@ -344,19 +364,19 @@ const ProposalsTab = ({ proposals, loading, onAction }: any) => {
                       <p className="text-sm text-gray-500">For: {p.jobId?.title}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-gray-900">₹{p.bidAmount?.toLocaleString()}</span>
+                        <span className="text-sm font-bold text-gray-900">₹{(p.proposedRate?.amount ?? 0).toLocaleString()}</span>
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[p.status] || "bg-gray-100 text-gray-600"}`}>
                         {p.status}
                       </span>
                     </div>
                   </div>
                   <p className="text-sm text-gray-600 mt-2 line-clamp-2">{p.coverLetter}</p>
-                  {p.status === "pending" && (
+                    {["sent", "viewed", "shortlisted"].includes(p.status) && (
                     <div className="flex gap-2 mt-3">
                       <Button
                         size="sm"
                         className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl gap-1"
-                        onClick={() => onAction(p._id, "accepted")}
+                          onClick={() => onAction(p, "accepted")}
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" /> Accept
                       </Button>
@@ -364,7 +384,7 @@ const ProposalsTab = ({ proposals, loading, onAction }: any) => {
                         size="sm"
                         variant="outline"
                         className="rounded-xl gap-1 text-red-600 border-red-200 hover:bg-red-50"
-                        onClick={() => onAction(p._id, "rejected")}
+                          onClick={() => onAction(p, "rejected")}
                       >
                         <XCircle className="w-3.5 h-3.5" /> Decline
                       </Button>
@@ -385,45 +405,130 @@ const ProposalsTab = ({ proposals, loading, onAction }: any) => {
   );
 };
 
-const ContractsTab = ({ contracts, loading }: any) => (
-  <div className="space-y-3">
-    {loading ? (
-      <div className="space-y-3">
-        {[1, 2].map(i => <div key={i} className="bg-white rounded-2xl border h-24 animate-pulse" />)}
-      </div>
-    ) : contracts.length === 0 ? (
-      <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-        <FileCheck className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-        <p className="text-gray-500">No contracts yet</p>
-      </div>
-    ) : (
-      contracts.map((c: Contract) => (
-        <div key={c._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={c.freelancerId?.avatar} />
-                <AvatarFallback className="bg-blue-100 text-blue-600 text-sm font-semibold">
-                  {c.freelancerId?.name?.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-semibold text-gray-900">{c.jobId?.title}</p>
-                <p className="text-sm text-gray-500">with {c.freelancerId?.name}</p>
+const ContractsTab = ({ contracts, loading, onRefresh }: any) => {
+  const [acting, setActing] = useState<string | null>(null);
+
+  const act = async (key: string, fn: () => Promise<any>) => {
+    try {
+      setActing(key);
+      await fn();
+      onRefresh();
+    } catch {
+      alert("Action failed. Please try again.");
+    } finally {
+      setActing(null);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {loading ? (
+        <div className="space-y-3">
+          {[1, 2].map(i => <div key={i} className="bg-white rounded-2xl border h-24 animate-pulse" />)}
+        </div>
+      ) : contracts.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+          <FileCheck className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+          <p className="text-gray-500">No contracts yet</p>
+        </div>
+      ) : (
+        contracts.map((c: Contract) => (
+          <div key={c._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Avatar className="w-10 h-10">
+                  <AvatarImage src={c.freelancerId?.avatar} />
+                  <AvatarFallback className="bg-blue-100 text-blue-600 text-sm font-semibold">
+                    {c.freelancerId?.name?.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold text-gray-900">{c.jobId?.title}</p>
+                  <p className="text-sm text-gray-500">with {c.freelancerId?.name}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-gray-900">₹{(c.amount?.total ?? 0).toLocaleString()}</p>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[c.status] || "bg-gray-100 text-gray-600"}`}>
+                  {c.status}
+                </span>
               </div>
             </div>
-            <div className="text-right">
-              <p className="font-bold text-gray-900">₹{c.amount?.toLocaleString()}</p>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[c.status] || "bg-gray-100 text-gray-600"}`}>
-                {c.status}
-              </span>
-            </div>
+
+            {!c.signatures?.client?.signed && (
+              <div>
+                <Button
+                  size="sm"
+                  className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl"
+                  disabled={acting === `sign-${c._id}`}
+                  onClick={() => act(`sign-${c._id}`, () => api.signContract(c._id))}
+                >
+                  {acting === `sign-${c._id}` ? "Signing..." : "Sign Contract"}
+                </Button>
+              </div>
+            )}
+
+            {(c.milestones || []).length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-gray-800">Milestones</p>
+                {c.milestones!.map((m) => (
+                  <div key={m._id} className="rounded-xl border border-gray-100 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{m.title}</p>
+                        <p className="text-xs text-gray-500">₹{m.amount.toLocaleString()}</p>
+                      </div>
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${statusColors[m.status] || "bg-gray-100 text-gray-600"}`}>
+                        {m.status}
+                      </span>
+                    </div>
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      {m.status === "submitted" && (
+                        <>
+                          <Button
+                            size="sm"
+                            className="bg-green-600 text-white hover:bg-green-700 rounded-xl"
+                            disabled={acting === `approve-${c._id}-${m._id}`}
+                            onClick={() => act(`approve-${c._id}-${m._id}`, () => api.approveMilestone(c._id, m._id))}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-xl"
+                            disabled={acting === `rev-${c._id}-${m._id}`}
+                            onClick={() => {
+                              const feedback = prompt("Revision feedback for freelancer:") || "Please revise and resubmit.";
+                              act(`rev-${c._id}-${m._id}`, () => api.requestMilestoneRevision(c._id, m._id, feedback));
+                            }}
+                          >
+                            Request Revision
+                          </Button>
+                        </>
+                      )}
+                      {m.status === "approved" && (
+                        <Button
+                          size="sm"
+                          className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl"
+                          disabled={acting === `pay-${c._id}-${m._id}`}
+                          onClick={() => act(`pay-${c._id}-${m._id}`, () => api.releaseMilestonePayment(c._id, m._id))}
+                        >
+                          Release Payment
+                        </Button>
+                      )}
+                      {m.feedback && <p className="text-xs text-amber-700">Feedback: {m.feedback}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      ))
-    )}
-  </div>
-);
+        ))
+      )}
+    </div>
+  );
+};
 
 const SettingsTab = ({ user }: any) => {
   const [name, setName] = useState(user?.name || "");
@@ -583,9 +688,40 @@ const ClientDashboard = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleProposalAction = async (proposalId: string, status: string) => {
+  const handleProposalAction = async (proposal: Proposal, status: string) => {
     try {
-      await api.updateProposal(proposalId, { status });
+      if (status === "accepted") {
+        await api.acceptProposal(proposal._id);
+
+        const alreadyHasContract = contracts.some((c: Contract) => c.jobId?._id === proposal.jobId?._id && c.freelancerId?._id === proposal.freelancerId?._id);
+        if (!alreadyHasContract) {
+          const totalAmount = proposal.proposedRate?.amount ?? 0;
+          await api.createContract({
+            jobId: proposal.jobId?._id,
+            proposalId: proposal._id,
+            clientId: (user as any)?._id,
+            freelancerId: proposal.freelancerId?._id,
+            title: `Contract for ${proposal.jobId?.title}`,
+            description: proposal.coverLetter,
+            amount: {
+              total: totalAmount,
+              type: proposal.proposedRate?.type || "fixed",
+              currency: proposal.proposedRate?.currency || "INR",
+            },
+            milestones: [
+              {
+                title: "Project Delivery",
+                amount: totalAmount,
+                status: "pending",
+              },
+            ],
+            paymentStatus: "escrow",
+            status: "active",
+          });
+        }
+      } else if (status === "rejected") {
+        await api.rejectProposal(proposal._id);
+      }
       fetchData();
     } catch { /* ignore */ }
   };
@@ -593,7 +729,7 @@ const ClientDashboard = () => {
   const navItems: NavItem[] = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "my-jobs", label: "My Jobs", icon: Briefcase, badge: jobs.filter(j => j.status === "open").length },
-    { id: "proposals", label: "Proposals", icon: FileText, badge: proposals.filter(p => p.status === "pending").length },
+    { id: "proposals", label: "Proposals", icon: FileText, badge: proposals.filter(p => ["sent", "viewed", "shortlisted"].includes(p.status)).length },
     { id: "contracts", label: "Contracts", icon: FileCheck, badge: contracts.filter(c => c.status === "active").length },
     { id: "messages", label: "Messages", icon: MessageSquare, badge: unreadMessages || undefined },
     { id: "settings", label: "Settings", icon: Settings },
@@ -603,7 +739,7 @@ const ClientDashboard = () => {
     overview: <OverviewTab analytics={analytics} jobs={jobs} proposals={proposals} loading={loading} />,
     "my-jobs": <MyJobsTab jobs={jobs} loading={loading} onRefresh={fetchData} />,
     proposals: <ProposalsTab proposals={proposals} loading={loading} onAction={handleProposalAction} />,
-    contracts: <ContractsTab contracts={contracts} loading={loading} />,
+    contracts: <ContractsTab contracts={contracts} loading={loading} onRefresh={fetchData} />,
     messages: <MessagesTab onUnreadCount={setUnreadMessages} />,
     settings: <SettingsTab user={user} />,
   };

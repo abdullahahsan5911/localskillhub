@@ -74,6 +74,7 @@ const seedData = async () => {
         avatar: avatar(11, 'men'),
         location: { city: 'Bangalore', state: 'Karnataka', country: 'India', coordinates: { type: 'Point', coordinates: [77.5946, 12.9716] } },
         isEmailVerified: true, isPhoneVerified: true,
+        onboardingCompleted: true,
         verifiedBadges: [{ type: 'email', verifiedAt: new Date() }, { type: 'phone', verifiedAt: new Date() }],
       },
       {
@@ -84,6 +85,7 @@ const seedData = async () => {
         avatar: avatar(22, 'women'),
         location: { city: 'Hyderabad', state: 'Telangana', country: 'India', coordinates: { type: 'Point', coordinates: [78.4867, 17.3850] } },
         isEmailVerified: true,
+        onboardingCompleted: true,
         verifiedBadges: [{ type: 'email', verifiedAt: new Date() }],
       },
       {
@@ -94,6 +96,7 @@ const seedData = async () => {
         avatar: avatar(33, 'men'),
         location: { city: 'Mumbai', state: 'Maharashtra', country: 'India', coordinates: { type: 'Point', coordinates: [72.8777, 19.0760] } },
         isEmailVerified: true, isPhoneVerified: true,
+        onboardingCompleted: true,
         verifiedBadges: [{ type: 'email', verifiedAt: new Date() }, { type: 'phone', verifiedAt: new Date() }],
       },
       {
@@ -104,6 +107,7 @@ const seedData = async () => {
         avatar: avatar(44, 'women'),
         location: { city: 'Chennai', state: 'Tamil Nadu', country: 'India', coordinates: { type: 'Point', coordinates: [80.2707, 13.0827] } },
         isEmailVerified: true,
+        onboardingCompleted: true,
         verifiedBadges: [{ type: 'email', verifiedAt: new Date() }],
       },
       {
@@ -114,6 +118,7 @@ const seedData = async () => {
         avatar: avatar(55, 'men'),
         location: { city: 'Kochi', state: 'Kerala', country: 'India', coordinates: { type: 'Point', coordinates: [76.2673, 9.9312] } },
         isEmailVerified: true,
+        onboardingCompleted: true,
         verifiedBadges: [{ type: 'email', verifiedAt: new Date() }],
       },
     ]);
@@ -129,6 +134,7 @@ const seedData = async () => {
         avatar: avatar(1, 'women'),
         location: { city: 'Mumbai', state: 'Maharashtra', country: 'India', coordinates: { type: 'Point', coordinates: [72.8777, 19.0760] } },
         isEmailVerified: true, isPhoneVerified: true,
+        onboardingCompleted: true,
         verifiedBadges: [{ type: 'email', verifiedAt: new Date() }, { type: 'phone', verifiedAt: new Date() }],
         interests: ['Web Development', 'UI/UX Design'],
         socialLinks: { github: 'https://github.com/priya', linkedin: 'https://linkedin.com/in/priya' },
@@ -141,6 +147,7 @@ const seedData = async () => {
         avatar: avatar(2, 'men'),
         location: { city: 'Ahmedabad', state: 'Gujarat', country: 'India', coordinates: { type: 'Point', coordinates: [72.5714, 23.0225] } },
         isEmailVerified: true, isPhoneVerified: true,
+        onboardingCompleted: true,
         verifiedBadges: [{ type: 'email', verifiedAt: new Date() }, { type: 'phone', verifiedAt: new Date() }],
         interests: ['Mobile Apps', 'React Native'],
         socialLinks: { github: 'https://github.com/arjun' },
@@ -153,6 +160,7 @@ const seedData = async () => {
         avatar: avatar(3, 'women'),
         location: { city: 'Kochi', state: 'Kerala', country: 'India', coordinates: { type: 'Point', coordinates: [76.2673, 9.9312] } },
         isEmailVerified: true,
+        onboardingCompleted: true,
         verifiedBadges: [{ type: 'email', verifiedAt: new Date() }],
         interests: ['Graphic Design', 'Branding'],
         socialLinks: { portfolio: 'https://meera.design' },
@@ -165,6 +173,7 @@ const seedData = async () => {
         avatar: avatar(4, 'men'),
         location: { city: 'Pune', state: 'Maharashtra', country: 'India', coordinates: { type: 'Point', coordinates: [73.8567, 18.5204] } },
         isEmailVerified: true, isPhoneVerified: true,
+        onboardingCompleted: true,
         verifiedBadges: [{ type: 'email', verifiedAt: new Date() }, { type: 'phone', verifiedAt: new Date() }],
         interests: ['Digital Marketing', 'SEO'],
         socialLinks: { linkedin: 'https://linkedin.com/in/rohan' },
@@ -177,6 +186,7 @@ const seedData = async () => {
         avatar: avatar(5, 'men'),
         location: { city: 'Delhi', state: 'Delhi', country: 'India', coordinates: { type: 'Point', coordinates: [77.1025, 28.7041] } },
         isEmailVerified: true,
+        onboardingCompleted: true,
         verifiedBadges: [{ type: 'email', verifiedAt: new Date() }],
         interests: ['Photography', 'Videography'],
         socialLinks: { instagram: 'https://instagram.com/sanjay' },
@@ -189,6 +199,7 @@ const seedData = async () => {
         avatar: avatar(6, 'women'),
         location: { city: 'Bangalore', state: 'Karnataka', country: 'India', coordinates: { type: 'Point', coordinates: [77.5946, 12.9716] } },
         isEmailVerified: true, isPhoneVerified: true,
+        onboardingCompleted: true,
         verifiedBadges: [{ type: 'email', verifiedAt: new Date() }, { type: 'phone', verifiedAt: new Date() }],
         interests: ['Content Writing', 'Copywriting'],
       },
@@ -200,6 +211,7 @@ const seedData = async () => {
         avatar: avatar(7, 'men'),
         location: { city: 'Hyderabad', state: 'Telangana', country: 'India', coordinates: { type: 'Point', coordinates: [78.4867, 17.3850] } },
         isEmailVerified: true,
+        onboardingCompleted: true,
         verifiedBadges: [{ type: 'email', verifiedAt: new Date() }],
         interests: ['Video Editing', 'Motion Graphics'],
       },
@@ -211,6 +223,7 @@ const seedData = async () => {
         avatar: avatar(8, 'women'),
         location: { city: 'Jaipur', state: 'Rajasthan', country: 'India', coordinates: { type: 'Point', coordinates: [75.7873, 26.9124] } },
         isEmailVerified: true, isPhoneVerified: true,
+        onboardingCompleted: true,
         verifiedBadges: [{ type: 'email', verifiedAt: new Date() }, { type: 'phone', verifiedAt: new Date() }],
         interests: ['UI/UX Design', 'Figma'],
       },
@@ -863,6 +876,9 @@ const seedData = async () => {
     const conv3Id = [vikram._id.toString(), arjun._id.toString()].sort().join('_');
     const conv4Id = [ananya._id.toString(), rohan._id.toString()].sort().join('_');
     const conv5Id = [suresh._id.toString(), sanjay._id.toString()].sort().join('_');
+    const conv6Id = [rajesh._id.toString(), neha._id.toString()].sort().join('_');
+    const conv7Id = [kavya._id.toString(), divya._id.toString()].sort().join('_');
+    const conv8Id = [vikram._id.toString(), kiran._id.toString()].sort().join('_');
 
     const now = Date.now();
     const mins = (n) => new Date(now - n * 60000);
@@ -906,8 +922,21 @@ const seedData = async () => {
       { conversationId: conv5Id, senderId: suresh._id, receiverId: sanjay._id, content: "Thursday works well. I'll arrange airport pickup. Can you send a checklist of what you'll need at the studio? Lighting, backdrops, props, etc.", createdAt: mins(1440), isRead: true },
       { conversationId: conv5Id, senderId: sanjay._id, receiverId: suresh._id, content: "Will do! Sending a full technical rider by tonight. Main requirements: 3m x 3m white seamless backdrop, 2 power outlets, and a large table. I'll bring all lighting (3-point LED setup + reflectors).", createdAt: mins(1380), isRead: true },
       { conversationId: conv5Id, senderId: suresh._id, receiverId: sanjay._id, content: "All arranged. Looking forward to Thursday! Our export packaging designer will also be present to ensure the shots align with EU labelling requirements.", createdAt: mins(120), isRead: false },
+
+      // Conv 6 – Rajesh ↔ Neha
+      { conversationId: conv6Id, senderId: rajesh._id, receiverId: neha._id, content: "Hi Neha, your UI kit portfolio looks clean and modern. Can you help redesign our analytics dashboard for mobile and desktop?", createdAt: mins(540), isRead: true },
+      { conversationId: conv6Id, senderId: neha._id, receiverId: rajesh._id, content: "Hi Rajesh! Absolutely, I can help with both responsive layouts and component-level consistency. Share current screens and I'll suggest a phased redesign plan.", createdAt: mins(510), isRead: true },
+      { conversationId: conv6Id, senderId: rajesh._id, receiverId: neha._id, content: "Perfect. I'll send the current Figma today. We need this done before next investor demo in 3 weeks.", createdAt: mins(480), isRead: false },
+
+      // Conv 7 – Kavya ↔ Divya
+      { conversationId: conv7Id, senderId: kavya._id, receiverId: divya._id, content: "Hi Divya, we need SEO-friendly landing pages plus email sequences for our new cohort launch. Are you open for a quick discovery call?", createdAt: mins(420), isRead: true },
+      { conversationId: conv7Id, senderId: divya._id, receiverId: kavya._id, content: "Yes, happy to! I can deliver keyword-focused landing copy and a 5-email onboarding sequence. Tomorrow 11 AM works for me.", createdAt: mins(390), isRead: false },
+
+      // Conv 8 – Vikram ↔ Kiran
+      { conversationId: conv8Id, senderId: vikram._id, receiverId: kiran._id, content: "Hey Kiran, we're producing short reels for restaurant promotions. Need fast turnaround edits with motion titles. Interested?", createdAt: mins(300), isRead: true },
+      { conversationId: conv8Id, senderId: kiran._id, receiverId: vikram._id, content: "Interested! I can deliver 6 vertical reels per week with subtitles, transitions, and brand-safe templates. Send sample footage and style references.", createdAt: mins(270), isRead: false },
     ]);
-    console.log('Created 30 messages across 5 conversations');
+    console.log('Created 37 messages across 8 conversations');
 
     console.log('\nSeed complete! Summary:');
     console.log('  Users:              13 (5 clients + 8 freelancers)');
@@ -916,7 +945,7 @@ const seedData = async () => {
     console.log('  Proposals:          6');
     console.log('  Contracts:          3 (2 active, 1 completed)');
     console.log('  Reviews:            4');
-    console.log('  Messages:           30 across 5 conversations');
+    console.log('  Messages:           37 across 8 conversations');
     console.log('\nTest logins (password: password123):');
     console.log('  CLIENT:     rajesh@example.com');
     console.log('  CLIENT:     kavya@example.com');

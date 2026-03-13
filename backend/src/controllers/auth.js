@@ -11,6 +11,12 @@ import { sendOtpEmail } from '../services/email.service.js';
 // Generate a 6-digit OTP
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
+const hasCompletedOnboardingData = (user) => {
+  const hasLocation = Boolean(user?.location?.city && user?.location?.state && user?.location?.country);
+  const hasInterests = Array.isArray(user?.interests) && user.interests.length > 0;
+  return hasLocation && hasInterests;
+};
+
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -156,6 +162,12 @@ export const login = async (req, res, next) => {
     }
 
     user.lastActive = Date.now();
+
+    // Heal legacy records where onboarding data exists but the flag remained false.
+    if (!user.onboardingCompleted && hasCompletedOnboardingData(user)) {
+      user.onboardingCompleted = true;
+    }
+
     await user.save();
 
     sendTokenResponse(user, 200, res);
@@ -268,6 +280,12 @@ export const logout = async (req, res) => {
 export const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
+
+    // Keep old accounts from being trapped in onboarding due to stale flags.
+    if (!user.onboardingCompleted && hasCompletedOnboardingData(user)) {
+      user.onboardingCompleted = true;
+      await user.save({ validateBeforeSave: false });
+    }
 
     res.json({
       status: 'success',

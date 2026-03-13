@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { FiMapPin, FiDollarSign, FiClock, FiUsers, FiCalendar, FiCheckCircle } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
 import api from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface JobData {
   _id: string;
@@ -37,13 +38,45 @@ interface JobData {
 
 const JobDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [job, setJob] = useState<JobData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [proposalOpen, setProposalOpen] = useState(false);
+  const [proposalLoading, setProposalLoading] = useState(false);
+  const [proposalError, setProposalError] = useState("");
+  const [proposalSuccess, setProposalSuccess] = useState("");
+  const [alreadyApplied, setAlreadyApplied] = useState(false);
+  const [proposalForm, setProposalForm] = useState({
+    coverLetter: "",
+    amount: "",
+    type: "fixed",
+    durationValue: "",
+    durationUnit: "weeks",
+  });
 
   useEffect(() => {
     fetchJobDetail();
   }, [id]);
+
+  useEffect(() => {
+    const checkExistingProposal = async () => {
+      if (!id || !isAuthenticated || !user || (user.role !== "freelancer" && user.role !== "both")) {
+        return;
+      }
+
+      try {
+        const response = await api.getProposals(id);
+        const proposals = ((response.data as any)?.proposals || []) as Array<{ _id: string }>;
+        setAlreadyApplied(proposals.length > 0);
+      } catch {
+        // Silently skip; page should still be usable.
+      }
+    };
+
+    checkExistingProposal();
+  }, [id, isAuthenticated, user]);
 
   const fetchJobDetail = async () => {
     try {
@@ -89,6 +122,93 @@ const JobDetail = () => {
     if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
     if (seconds < 2592000) return `${Math.floor(seconds / 86400)} days ago`;
     return new Date(date).toLocaleDateString();
+  };
+
+  const handleProposalChange = (field: string, value: string) => {
+    setProposalForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleStartProposal = () => {
+    setProposalError("");
+    setProposalSuccess("");
+
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    if (!user || (user.role !== "freelancer" && user.role !== "both")) {
+      setProposalError("Only freelancers can submit proposals.");
+      return;
+    }
+
+    if (job?.status !== "open") {
+      setProposalError("This job is no longer accepting proposals.");
+      return;
+    }
+
+    if (alreadyApplied) {
+      setProposalError("You have already submitted a proposal for this job.");
+      return;
+    }
+
+    setProposalForm((prev) => ({
+      ...prev,
+      type: job?.budget?.type === "hourly" ? "hourly" : "fixed",
+      amount: prev.amount || String(job?.budget?.amount || ""),
+    }));
+    setProposalOpen(true);
+  };
+
+  const handleSubmitProposal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!job?._id) return;
+
+    setProposalError("");
+    setProposalSuccess("");
+
+    const amount = Number(proposalForm.amount);
+    const durationValue = Number(proposalForm.durationValue);
+
+    if (!proposalForm.coverLetter.trim() || proposalForm.coverLetter.trim().length < 30) {
+      setProposalError("Cover letter must be at least 30 characters.");
+      return;
+    }
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setProposalError("Please enter a valid proposed amount.");
+      return;
+    }
+
+    if (!Number.isFinite(durationValue) || durationValue <= 0) {
+      setProposalError("Please enter a valid estimated duration.");
+      return;
+    }
+
+    try {
+      setProposalLoading(true);
+      await api.createProposal({
+        jobId: job._id,
+        coverLetter: proposalForm.coverLetter.trim(),
+        proposedRate: {
+          amount,
+          type: proposalForm.type,
+          currency: job.budget?.currency || "INR",
+        },
+        estimatedDuration: {
+          value: durationValue,
+          unit: proposalForm.durationUnit,
+        },
+      });
+
+      setAlreadyApplied(true);
+      setProposalOpen(false);
+      setProposalSuccess("Proposal submitted successfully.");
+    } catch (err: any) {
+      setProposalError(err?.message || "Failed to submit proposal. Please try again.");
+    } finally {
+      setProposalLoading(false);
+    }
   };
 
   if (loading) {
@@ -200,13 +320,119 @@ const JobDetail = () => {
             </div>
 
             <div className="flex gap-3">
-              <Button className="flex-1 bg-blue-600 text-white hover:bg-blue-700 rounded-full py-6 text-base font-semibold">
-                Submit Proposal
+              <Button
+                type="button"
+                onClick={handleStartProposal}
+                disabled={alreadyApplied || job.status !== "open"}
+                className="flex-1 bg-blue-600 text-white hover:bg-blue-700 rounded-full py-6 text-base font-semibold disabled:bg-gray-300 disabled:text-gray-600"
+              >
+                {alreadyApplied ? "Proposal Submitted" : "Submit Proposal"}
               </Button>
               <Button variant="outline" className="border-2 border-gray-300 rounded-full px-8">
                 Save Job
               </Button>
             </div>
+
+            {proposalSuccess && (
+              <div className="mt-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-700 text-sm">
+                <FiCheckCircle className="h-4 w-4" />
+                <span>{proposalSuccess}</span>
+              </div>
+            )}
+
+            {proposalError && !proposalOpen && (
+              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm">
+                {proposalError}
+              </div>
+            )}
+
+            {proposalOpen && (
+              <form onSubmit={handleSubmitProposal} className="mt-6 rounded-xl border border-gray-200 p-5 space-y-4 bg-gray-50">
+                <h3 className="text-lg font-semibold text-gray-900">Submit Your Proposal</h3>
+
+                {proposalError && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm">
+                    {proposalError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Cover Letter</label>
+                  <textarea
+                    value={proposalForm.coverLetter}
+                    onChange={(e) => handleProposalChange("coverLetter", e.target.value)}
+                    rows={6}
+                    placeholder="Describe why you're the right fit for this job..."
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Rate Type</label>
+                    <select
+                      value={proposalForm.type}
+                      onChange={(e) => handleProposalChange("type", e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white"
+                    >
+                      <option value="fixed">Fixed</option>
+                      <option value="hourly">Hourly</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Amount ({job.budget.currency || "INR"})</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={proposalForm.amount}
+                      onChange={(e) => handleProposalChange("amount", e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Duration Value</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={proposalForm.durationValue}
+                      onChange={(e) => handleProposalChange("durationValue", e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Duration Unit</label>
+                  <select
+                    value={proposalForm.durationUnit}
+                    onChange={(e) => handleProposalChange("durationUnit", e.target.value)}
+                    className="w-full md:w-48 rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white"
+                  >
+                    <option value="days">Days</option>
+                    <option value="weeks">Weeks</option>
+                    <option value="months">Months</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button type="submit" disabled={proposalLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    {proposalLoading ? "Submitting..." : "Send Proposal"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setProposalOpen(false);
+                      setProposalError("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </section>

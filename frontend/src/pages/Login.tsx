@@ -12,6 +12,12 @@ const FEATURES = [
   { icon: "⭐", text: "Verified professionals only" },
 ];
 
+const requiresOnboarding = (u: any) => {
+  const hasLocation = Boolean(u?.location?.city && u?.location?.state && u?.location?.country);
+  const hasInterests = Array.isArray(u?.interests) && u.interests.length > 0;
+  return !u?.onboardingCompleted && !(hasLocation && hasInterests);
+};
+
 const Login = () => {
   const navigate = useNavigate();
   const { login, resendOtp, loginWithGoogle, loginWithGithub } = useAuth();
@@ -29,7 +35,7 @@ const Login = () => {
 
   const redirectAfterLogin = () => {
     const u = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!u.onboardingCompleted) return navigate("/onboarding");
+    if (requiresOnboarding(u)) return navigate("/onboarding");
     if (u.role === "client") return navigate("/dashboard/client");
     if (u.role === "freelancer") return navigate("/dashboard/freelancer");
     if (u.role === "both") return navigate("/dashboard/both");
@@ -181,7 +187,10 @@ const Login = () => {
                     {resending ? "Sending…" : "Resend OTP"}
                   </button>
                   <span className="text-red-400 text-xs">or</span>
-                  <Link to="/signup" className="text-red-700 font-semibold underline hover:text-red-800 text-sm">
+                  <Link
+                    to={`/signup?verify=1&email=${encodeURIComponent(unverifiedEmail)}`}
+                    className="text-red-700 font-semibold underline hover:text-red-800 text-sm"
+                  >
                     Enter OTP →
                   </Link>
                 </div>

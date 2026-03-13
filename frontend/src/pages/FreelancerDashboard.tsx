@@ -59,7 +59,7 @@ interface Analytics {
 interface Proposal {
   _id: string;
   jobId: { _id: string; title: string; budget: { amount: number } };
-  bidAmount: number;
+  proposedRate?: { amount?: number; type?: string; currency?: string };
   status: string;
   createdAt: string;
   coverLetter: string;
@@ -67,9 +67,20 @@ interface Proposal {
 
 interface Contract {
   _id: string;
-  jobId: { title: string };
+  jobId: { _id: string; title: string };
   clientId: { name: string; avatar?: string };
-  amount: number;
+  amount: { total: number; type: string; currency: string };
+  milestones?: Array<{
+    _id: string;
+    title: string;
+    amount: number;
+    status: string;
+    feedback?: string;
+  }>;
+  signatures?: {
+    client?: { signed?: boolean };
+    freelancer?: { signed?: boolean };
+  };
   status: string;
   startDate: string;
 }
@@ -82,10 +93,16 @@ const statusColors: Record<string, string> = {
   completed: "bg-gray-100 text-gray-700",
   cancelled: "bg-red-100 text-red-700",
   accepted: "bg-green-100 text-green-700",
+  sent: "bg-yellow-100 text-yellow-700",
+  viewed: "bg-blue-100 text-blue-700",
   pending: "bg-yellow-100 text-yellow-700",
   rejected: "bg-red-100 text-red-700",
   active: "bg-blue-100 text-blue-700",
   shortlisted: "bg-purple-100 text-purple-700",
+  submitted: "bg-indigo-100 text-indigo-700",
+  "revision-requested": "bg-amber-100 text-amber-700",
+  approved: "bg-green-100 text-green-700",
+  paid: "bg-emerald-100 text-emerald-700",
 };
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
@@ -505,7 +522,7 @@ const MyProposalsTab = ({ proposals, loading }: any) => {
   return (
     <div className="space-y-4">
       <div className="flex gap-2 flex-wrap">
-        {["all", "pending", "shortlisted", "accepted", "rejected"].map(s => (
+        {["all", "sent", "viewed", "shortlisted", "accepted", "rejected", "withdrawn"].map(s => (
           <button
             key={s}
             onClick={() => setFilter(s)}
@@ -537,7 +554,7 @@ const MyProposalsTab = ({ proposals, loading }: any) => {
                   <p className="font-semibold text-gray-900 truncate">{p.jobId?.title}</p>
                   <p className="text-sm text-gray-500 mt-1 line-clamp-1">{p.coverLetter}</p>
                   <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                    <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" />Bid: ₹{p.bidAmount?.toLocaleString()}</span>
+                    <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" />Bid: ₹{(p.proposedRate?.amount ?? 0).toLocaleString()}</span>
                     <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{new Date(p.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
@@ -561,45 +578,108 @@ const MyProposalsTab = ({ proposals, loading }: any) => {
 };
 
 // ─── Contracts Tab ─────────────────────────────────────────────────────────────
-const MyContractsTab = ({ contracts, loading }: any) => (
-  <div className="space-y-3">
-    {loading ? (
-      <div className="space-y-3">
-        {[1, 2].map(i => <div key={i} className="bg-white rounded-2xl border h-24 animate-pulse" />)}
-      </div>
-    ) : contracts.length === 0 ? (
-      <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-        <FileCheck className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-        <p className="text-gray-500">No active contracts yet</p>
-      </div>
-    ) : (
-      contracts.map((c: Contract) => (
-        <div key={c._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={c.clientId?.avatar} />
-                <AvatarFallback className="bg-blue-100 text-blue-600 text-sm font-semibold">
-                  {c.clientId?.name?.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-semibold text-gray-900">{c.jobId?.title}</p>
-                <p className="text-sm text-gray-500">Client: {c.clientId?.name}</p>
+const MyContractsTab = ({ contracts, loading, onRefresh }: any) => {
+  const [acting, setActing] = useState<string | null>(null);
+
+  const act = async (key: string, fn: () => Promise<any>) => {
+    try {
+      setActing(key);
+      await fn();
+      onRefresh();
+    } catch {
+      alert("Action failed. Please try again.");
+    } finally {
+      setActing(null);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {loading ? (
+        <div className="space-y-3">
+          {[1, 2].map(i => <div key={i} className="bg-white rounded-2xl border h-24 animate-pulse" />)}
+        </div>
+      ) : contracts.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+          <FileCheck className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+          <p className="text-gray-500">No active contracts yet</p>
+        </div>
+      ) : (
+        contracts.map((c: Contract) => (
+          <div key={c._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Avatar className="w-10 h-10">
+                  <AvatarImage src={c.clientId?.avatar} />
+                  <AvatarFallback className="bg-blue-100 text-blue-600 text-sm font-semibold">
+                    {c.clientId?.name?.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold text-gray-900">{c.jobId?.title}</p>
+                  <p className="text-sm text-gray-500">Client: {c.clientId?.name}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-gray-900">₹{(c.amount?.total ?? 0).toLocaleString()}</p>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[c.status] || "bg-gray-100 text-gray-600"}`}>
+                  {c.status}
+                </span>
               </div>
             </div>
-            <div className="text-right">
-              <p className="font-bold text-gray-900">₹{c.amount?.toLocaleString()}</p>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[c.status] || "bg-gray-100 text-gray-600"}`}>
-                {c.status}
-              </span>
-            </div>
+
+            {!c.signatures?.freelancer?.signed && (
+              <Button
+                size="sm"
+                className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl"
+                disabled={acting === `sign-${c._id}`}
+                onClick={() => act(`sign-${c._id}`, () => api.signContract(c._id))}
+              >
+                {acting === `sign-${c._id}` ? "Signing..." : "Sign Contract"}
+              </Button>
+            )}
+
+            {(c.milestones || []).length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-gray-800">Milestones</p>
+                {c.milestones!.map((m) => (
+                  <div key={m._id} className="rounded-xl border border-gray-100 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{m.title}</p>
+                        <p className="text-xs text-gray-500">₹{m.amount.toLocaleString()}</p>
+                      </div>
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${statusColors[m.status] || "bg-gray-100 text-gray-600"}`}>
+                        {m.status}
+                      </span>
+                    </div>
+                    <div className="flex gap-2 mt-2 flex-wrap items-center">
+                      {["pending", "in-progress", "revision-requested"].includes(m.status) && (
+                        <Button
+                          size="sm"
+                          className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl"
+                          disabled={acting === `submit-${c._id}-${m._id}`}
+                          onClick={() => {
+                            const url = prompt("Deliverable URL:");
+                            if (!url) return;
+                            act(`submit-${c._id}-${m._id}`, () => api.submitMilestone(c._id, m._id, [{ filename: "deliverable", url }]));
+                          }}
+                        >
+                          Submit Milestone
+                        </Button>
+                      )}
+                      {m.feedback && <p className="text-xs text-amber-700">Feedback: {m.feedback}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      ))
-    )}
-  </div>
-);
+        ))
+      )}
+    </div>
+  );
+};
 
 // ─── Find Jobs Tab ─────────────────────────────────────────────────────────────
 const FindJobsTab = () => {
@@ -951,7 +1031,7 @@ const FreelancerDashboard = () => {
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "portfolio", label: "Portfolio", icon: Grid3X3, badge: profile?.portfolio?.length },
     { id: "find-jobs", label: "Find Jobs", icon: Search },
-    { id: "proposals", label: "My Proposals", icon: FileText, badge: proposals.filter(p => p.status === "pending").length },
+    { id: "proposals", label: "My Proposals", icon: FileText, badge: proposals.filter(p => ["sent", "viewed", "shortlisted"].includes(p.status)).length },
     { id: "contracts", label: "Contracts", icon: FileCheck, badge: contracts.filter(c => c.status === "active").length },
     { id: "messages", label: "Messages", icon: MessageSquare, badge: unreadMessages || undefined },
     { id: "settings", label: "Settings", icon: Settings },
@@ -962,7 +1042,7 @@ const FreelancerDashboard = () => {
     portfolio: <PortfolioTab profile={profile} onRefresh={fetchData} />,
     "find-jobs": <FindJobsTab />,
     proposals: <MyProposalsTab proposals={proposals} loading={loading} />,
-    contracts: <MyContractsTab contracts={contracts} loading={loading} />,
+    contracts: <MyContractsTab contracts={contracts} loading={loading} onRefresh={fetchData} />,
     messages: <MessagesTab onUnreadCount={setUnreadMessages} />,
     settings: <SettingsTab user={user} profile={profile} onRefresh={fetchData} />,
   };

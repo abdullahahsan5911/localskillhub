@@ -91,7 +91,7 @@ const Index = () => {
     const fetchFreelancers = async () => {
       try {
         setLoading(true);
-        const response = await api.getFreelancers();
+        const response = await api.getFreelancers({ completeOnly: false });
         if (response.data) {
           const freelancersList = (response.data as any).freelancers || [];
           setAllFreelancers(freelancersList);

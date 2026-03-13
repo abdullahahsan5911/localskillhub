@@ -13,6 +13,20 @@ class ApiService {
   private baseURL: string;
   private token: string | null;
 
+  private toQueryString(params?: Record<string, unknown>): string {
+    if (!params) return '';
+
+    const entries = Object.entries(params).filter(([, value]) => {
+      if (value === undefined || value === null) return false;
+      if (typeof value === 'string' && value.trim() === '') return false;
+      return true;
+    });
+
+    if (entries.length === 0) return '';
+
+    return `?${new URLSearchParams(entries as [string, string][]).toString()}`;
+  }
+
   constructor(baseURL: string) {
     this.baseURL = baseURL;
     this.token = localStorage.getItem('token');
@@ -142,7 +156,7 @@ class ApiService {
     limit?: number;
     status?: string;
   }) {
-    const queryString = params ? '?' + new URLSearchParams(params as any).toString() : '';
+    const queryString = this.toQueryString(params as Record<string, unknown>);
     return this.request(`/jobs${queryString}`, {
       method: 'GET',
     });
@@ -175,7 +189,7 @@ class ApiService {
   }
 
   async getMyJobs(params?: { status?: string; page?: number }) {
-    const queryString = params ? '?' + new URLSearchParams(params as any).toString() : '';
+    const queryString = this.toQueryString(params as Record<string, unknown>);
     return this.request(`/jobs/my${queryString}`, {
       method: 'GET',
     });
@@ -201,7 +215,7 @@ class ApiService {
     verifiedOnly?: boolean;
     sort?: string;
   }) {
-    const queryString = params ? '?' + new URLSearchParams(params as any).toString() : '';
+    const queryString = this.toQueryString(params as Record<string, unknown>);
     return this.request(`/freelancers${queryString}`, {
       method: 'GET',
     });
@@ -275,6 +289,24 @@ class ApiService {
     });
   }
 
+  async acceptProposal(id: string) {
+    return this.request(`/proposals/${id}/accept`, {
+      method: 'POST',
+    });
+  }
+
+  async rejectProposal(id: string) {
+    return this.request(`/proposals/${id}/reject`, {
+      method: 'POST',
+    });
+  }
+
+  async withdrawProposal(id: string) {
+    return this.request(`/proposals/${id}/withdraw`, {
+      method: 'POST',
+    });
+  }
+
   // Contract endpoints
   async getContracts() {
     return this.request('/contracts', {
@@ -292,6 +324,38 @@ class ApiService {
     return this.request('/contracts', {
       method: 'POST',
       body: JSON.stringify(contractData),
+    });
+  }
+
+  async signContract(id: string) {
+    return this.request(`/contracts/${id}/sign`, {
+      method: 'POST',
+    });
+  }
+
+  async submitMilestone(contractId: string, milestoneId: string, deliverables: Array<{ filename: string; url: string }>) {
+    return this.request(`/contracts/${contractId}/milestones/${milestoneId}/submit`, {
+      method: 'POST',
+      body: JSON.stringify({ deliverables }),
+    });
+  }
+
+  async approveMilestone(contractId: string, milestoneId: string) {
+    return this.request(`/contracts/${contractId}/milestones/${milestoneId}/approve`, {
+      method: 'POST',
+    });
+  }
+
+  async requestMilestoneRevision(contractId: string, milestoneId: string, feedback: string) {
+    return this.request(`/contracts/${contractId}/milestones/${milestoneId}/revision`, {
+      method: 'POST',
+      body: JSON.stringify({ feedback }),
+    });
+  }
+
+  async releaseMilestonePayment(contractId: string, milestoneId: string) {
+    return this.request(`/contracts/${contractId}/milestones/${milestoneId}/release-payment`, {
+      method: 'POST',
     });
   }
 
