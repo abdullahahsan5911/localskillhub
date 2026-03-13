@@ -101,9 +101,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
           )}
           <div className="flex-1">
             <h3 className="font-semibold text-gray-900 mb-1">{category.name}</h3>
-            {category.description && (
-              <p className="text-sm text-gray-600">{category.description}</p>
-            )}
+           
           </div>
           {isSelected && (
             <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: category.color }}>

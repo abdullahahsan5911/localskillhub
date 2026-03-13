@@ -6,8 +6,7 @@ import Layout from "@/components/layout/Layout";
 import SearchFilterSection from "../components/SearchFilterSection";
 import { api } from "@/lib/api";
 import { CATEGORIES } from "@/constants/categories";
-
-const discoveryTabs = ["Projects", "People", "Assets", "Images"] as const;
+import { DISCOVERY_TAB_PATHS, DiscoveryTab } from "@/constants/discoveryTabs";
 
 interface Freelancer {
   _id: string;
@@ -39,7 +38,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
 
   const [homeSearch, setHomeSearch] = useState("");
-  const [activeDiscoveryTab, setActiveDiscoveryTab] = useState<(typeof discoveryTabs)[number]>("Projects");
+  const [activeDiscoveryTab, setActiveDiscoveryTab] = useState<DiscoveryTab>("Projects");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined);
 
   const handleHomeSearch = () => {
@@ -50,6 +49,14 @@ const Index = () => {
       if (selectedCategory) params.set("skill", selectedCategory.name);
     }
     navigate(`/browse?${params.toString()}`);
+  };
+
+  const handleDiscoveryTabChange = (tab: DiscoveryTab) => {
+    setActiveDiscoveryTab(tab);
+    const path = DISCOVERY_TAB_PATHS[tab];
+    if (path) {
+      navigate(path);
+    }
   };
 
   const handleVisualCategorySelect = (categoryId: string) => {
@@ -139,7 +146,7 @@ const Index = () => {
         onSearchChange={setHomeSearch}
         onSearchSubmit={handleHomeSearch}
         activeDiscoveryTab={activeDiscoveryTab}
-        onDiscoveryTabChange={setActiveDiscoveryTab}
+        onDiscoveryTabChange={handleDiscoveryTabChange}
         selectedCategoryId={selectedCategoryId}
         onCategorySelect={handleVisualCategorySelect}
         showDiscoveryTabs={true}

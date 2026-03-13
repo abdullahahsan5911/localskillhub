@@ -1,34 +1,30 @@
-import { FiSearch, FiSliders, FiImage, FiLayers, FiChevronDown, FiMapPin } from "react-icons/fi";
+import { FiSearch, FiSliders, FiImage, FiLayers, FiChevronDown } from "react-icons/fi";
 import VisualCategoryGrid from "./VisualCategoryGrid";
-
-const discoveryTabs = ["Projects", "People", "Assets", "Images"] as const;
+import { DISCOVERY_TABS, DiscoveryTab } from "@/constants/discoveryTabs";
 
 interface SearchFilterSectionProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
   onSearchSubmit: () => void;
-  activeDiscoveryTab?: (typeof discoveryTabs)[number];
-  onDiscoveryTabChange?: (tab: (typeof discoveryTabs)[number]) => void;
+  activeDiscoveryTab?: DiscoveryTab;
+  onDiscoveryTabChange?: (tab: DiscoveryTab) => void;
   selectedCategoryId?: string;
   onCategorySelect: (categoryId: string) => void;
   showDiscoveryTabs?: boolean;
-  locationValue?: string;
-  onLocationChange?: (value: string) => void;
-  showLocationSearch?: boolean;
-}
+  showCategoryGrid?: boolean;
+  }
 
 const SearchFilterSection = ({
   searchValue,
   onSearchChange,
   onSearchSubmit,
-  activeDiscoveryTab = "Projects",
+  activeDiscoveryTab,
   onDiscoveryTabChange,
   selectedCategoryId,
   onCategorySelect,
   showDiscoveryTabs = true,
-  locationValue = "",
-  onLocationChange,
-  showLocationSearch = false,
+  showCategoryGrid = true,
+ 
 }: SearchFilterSectionProps) => {
   return (
     <section className="sticky top-16 z-40 border-y border-gray-200 bg-white/95 backdrop-blur-md">
@@ -53,23 +49,9 @@ const SearchFilterSection = ({
                 />
               </div>
 
-              {showLocationSearch && (
-                <div className="flex min-w-0 flex-1 items-center gap-3 border-t border-gray-200 pt-3 lg:border-t-0 lg:border-l lg:pl-4 lg:pt-0">
-                  <FiMapPin className="h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="City or region..."
-                    className="w-full bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-500"
-                    value={locationValue}
-                    onChange={(e) => onLocationChange?.(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
-                  />
-                </div>
-              )}
-
               {showDiscoveryTabs && (
                 <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide border-t border-gray-200 pt-2 lg:border-t-0 lg:border-l lg:pl-4 lg:pt-0">
-                  {discoveryTabs.map((tab) => (
+                  {DISCOVERY_TABS.map((tab) => (
                     <button
                       key={tab}
                       type="button"
@@ -103,12 +85,14 @@ const SearchFilterSection = ({
           </button>
         </div>
 
-        <div>
-          <VisualCategoryGrid 
-            activeId={selectedCategoryId} 
-            onSelect={onCategorySelect} 
-          />
-        </div>
+        {showCategoryGrid && (
+          <div>
+            <VisualCategoryGrid 
+              activeId={selectedCategoryId} 
+              onSelect={onCategorySelect} 
+            />
+          </div>
+        )}
       </div>
     </section>
   );

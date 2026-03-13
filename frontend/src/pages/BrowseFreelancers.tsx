@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FiMapPin, FiShield, FiFilter, FiGrid, FiList, FiX } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
 import SearchFilterSection from "../components/SearchFilterSection";
 import api from "@/lib/api";
 import { CATEGORIES } from "@/constants/categories";
-
+import { DISCOVERY_TAB_PATHS, DiscoveryTab } from "@/constants/discoveryTabs";
 const skills = ["All", ...CATEGORIES.map((category) => category.name)];
 const availabilityOptions = ["all", "available", "busy", "unavailable"] as const;
 const PAGE_SIZE = 12;
@@ -62,7 +62,9 @@ interface FreelancerProfile {
 }
 
 const BrowseFreelancers = () => {
+  const navigate = useNavigate();
   const [urlParams, setSearchParams] = useSearchParams();
+  const [activeDiscoveryTab, setActiveDiscoveryTab] = useState<DiscoveryTab>("Projects");
   const [activeSkill, setActiveSkill] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
@@ -81,6 +83,7 @@ const BrowseFreelancers = () => {
     const nextSkill = urlParams.get("skill") || "All";
     const nextSearch = urlParams.get("search") || "";
     const nextLocation = urlParams.get("location") || "";
+    const nextTab = (urlParams.get("tab") as DiscoveryTab) || "Projects";
     const nextFilters: BrowseFilters = {
       minRate: urlParams.get("minRate") || "",
       maxRate: urlParams.get("maxRate") || "",
@@ -91,6 +94,7 @@ const BrowseFreelancers = () => {
     setActiveSkill(nextSkill);
     setSearchQuery(nextSearch);
     setLocationQuery(nextLocation);
+    setActiveDiscoveryTab(nextTab);
     setFilters(nextFilters);
     fetchFreelancers({
       page: 1,
@@ -232,6 +236,14 @@ const BrowseFreelancers = () => {
     }
   };
 
+  const handleDiscoveryTabChange = (tab: DiscoveryTab) => {
+    setActiveDiscoveryTab(tab);
+    const path = DISCOVERY_TAB_PATHS[tab];
+    if (path) {
+      navigate(path);
+    }
+  };
+
   const handleSearch = () => {
     syncUrl({ search: searchQuery, location: locationQuery });
   };
@@ -300,13 +312,13 @@ const BrowseFreelancers = () => {
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         onSearchSubmit={handleSearch}
+        activeDiscoveryTab={activeDiscoveryTab}
+        onDiscoveryTabChange={handleDiscoveryTabChange}
         selectedCategoryId={activeSkill !== "All" ? CATEGORIES.find(cat => cat.name === activeSkill)?.id : undefined}
         onCategorySelect={handleVisualCategorySelect}
-        showDiscoveryTabs={false}
-        locationValue={locationQuery}
-        onLocationChange={setLocationQuery}
-        showLocationSearch={true}
+        showDiscoveryTabs={true}
       />
+      
 
       {/* Results Section */}
       <section className="bg-white py-8">

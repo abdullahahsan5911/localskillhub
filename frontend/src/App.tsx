@@ -24,6 +24,10 @@ import MapPage from "./pages/MapPage";
 import FooterContentPage from "./pages/FooterContentPage";
 import { footerPages } from "@/data/footerContent";
 import NotFound from "./pages/NotFound";
+import people from "./pages/People";
+import Assets from "./pages/Assets";
+import Images from "./pages/Images";
+import People from "./pages/People";
 
 const queryClient = new QueryClient();
 
@@ -110,6 +114,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/browse" element={<BrowseFreelancers />} />
             <Route path="/profile/:id" element={<FreelancerProfile />} />
+            <Route path="/people" element={<People />} />
+            <Route path="/assets" element={<Assets />} />
+            <Route path="/images" element={<Images />} />
             <Route
               path="/post-job"
               element={
