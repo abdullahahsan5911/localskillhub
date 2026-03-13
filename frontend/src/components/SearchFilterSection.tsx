@@ -9,7 +9,7 @@ interface SearchFilterSectionProps {
   activeDiscoveryTab?: DiscoveryTab;
   onDiscoveryTabChange?: (tab: DiscoveryTab) => void;
   selectedCategoryId?: string;
-  onCategorySelect: (categoryId: string) => void;
+  onCategorySelect?: (categoryId: string) => void;
   showDiscoveryTabs?: boolean;
   showCategoryGrid?: boolean;
   }
