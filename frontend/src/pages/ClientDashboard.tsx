@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   LayoutDashboard, Briefcase, FileText, FileCheck,
   MessageSquare, Settings, Plus, Eye,
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
-// import { Link } from "react-router-dom";
 import api from "@/lib/api";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import DashboardLayout, { NavItem } from "@/components/dashboard/DashboardLayout";
@@ -632,6 +631,7 @@ const SettingsTab = ({ user }: any) => {
 
 const ClientDashboard = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [showVerify, setShowVerify] = useState(false);
   useEffect(() => {
     if (user && (!user.isEmailVerified || (user as any).verificationLevel === 'unverified' || (user as any).verificationLevel === 'basic')) {
@@ -688,6 +688,13 @@ const ClientDashboard = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
   const handleProposalAction = async (proposal: Proposal, status: string) => {
     try {
       if (status === "accepted") {
@@ -740,7 +747,12 @@ const ClientDashboard = () => {
     "my-jobs": <MyJobsTab jobs={jobs} loading={loading} onRefresh={fetchData} />,
     proposals: <ProposalsTab proposals={proposals} loading={loading} onAction={handleProposalAction} />,
     contracts: <ContractsTab contracts={contracts} loading={loading} onRefresh={fetchData} />,
-    messages: <MessagesTab onUnreadCount={setUnreadMessages} />,
+    messages: (
+      <MessagesTab
+        onUnreadCount={setUnreadMessages}
+        initialTargetUserId={searchParams.get("userId") || undefined}
+      />
+    ),
     settings: <SettingsTab user={user} />,
   };
 

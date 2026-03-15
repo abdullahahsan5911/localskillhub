@@ -1,12 +1,14 @@
 import { validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import https from 'https';
 import User from '../models/User.js';
 import FreelancerProfile from '../models/FreelancerProfile.js';
 import { AppError } from '../middleware/errorHandler.js';
 import GeoLocationService from '../services/geolocation.service.js';
 import { firebaseAuth } from '../config/firebaseAdmin.js';
 import { sendOtpEmail } from '../services/email.service.js';
+import { uploadImage } from '../config/cloudinary.js';
 
 // Generate a 6-digit OTP
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -15,6 +17,59 @@ const hasCompletedOnboardingData = (user) => {
   const hasLocation = Boolean(user?.location?.city && user?.location?.state && user?.location?.country);
   const hasInterests = Array.isArray(user?.interests) && user.interests.length > 0;
   return hasLocation && hasInterests;
+};
+
+// Download a remote image (e.g. Google avatar) and return as data URI
+const downloadImageAsDataUri = (url) => {
+  return new Promise((resolve, reject) => {
+    https
+      .get(url, (res) => {
+        const statusCode = res.statusCode ?? 0;
+        if (statusCode >= 400) {
+          return reject(new Error(`Failed to download image. Status code: ${statusCode}`));
+        }
+
+        const chunks = [];
+        res.on('data', (chunk) => chunks.push(chunk));
+        res.on('end', () => {
+          try {
+            const buffer = Buffer.concat(chunks);
+            const header = res.headers['content-type'];
+            const contentType = Array.isArray(header) ? header[0] : header || 'image/jpeg';
+            const base64 = buffer.toString('base64');
+            const dataUri = `data:${contentType};base64,${base64}`;
+            resolve(dataUri);
+          } catch (err) {
+            reject(err);
+          }
+        });
+      })
+      .on('error', (err) => reject(err));
+  });
+};
+
+// Ensure OAuth avatar is mirrored to Cloudinary (for long-term stability)
+const ensureCloudinaryAvatar = async (pictureUrl) => {
+  try {
+    if (!pictureUrl) return pictureUrl;
+
+    // Already a Cloudinary URL
+    if (pictureUrl.includes('res.cloudinary.com')) {
+      return pictureUrl;
+    }
+
+    // Only mirror Google-hosted avatars to avoid unnecessary uploads
+    if (!pictureUrl.includes('googleusercontent.com')) {
+      return pictureUrl;
+    }
+
+    const dataUri = await downloadImageAsDataUri(pictureUrl);
+    const result = await uploadImage(dataUri, 'avatars');
+    return result.url || pictureUrl;
+  } catch (err) {
+    console.error('Failed to mirror OAuth avatar to Cloudinary:', err.message || err);
+    return pictureUrl;
+  }
 };
 
 
@@ -486,6 +541,9 @@ export const oauthLogin = async (req, res, next) => {
       return next(new AppError('No email associated with this account', 400));
     }
 
+    // Prepare avatar URL (mirror Google avatar to Cloudinary when possible)
+    const mirroredAvatarUrl = await ensureCloudinaryAvatar(picture);
+
     // Upsert user: find by firebaseUid first, then by email
     let user = await User.findOne({ firebaseUid: uid });
 
@@ -497,8 +555,8 @@ export const oauthLogin = async (req, res, next) => {
         // Link Firebase UID to existing account
         user.firebaseUid = uid;
         user.provider = provider;
-        if (picture && !user.avatar.startsWith('https://ui-avatars.com')) {
-          user.avatar = picture;
+        if (mirroredAvatarUrl && !user.avatar?.startsWith('https://ui-avatars.com')) {
+          user.avatar = mirroredAvatarUrl;
         }
         user.isEmailVerified = true;
         user.lastActive = Date.now();
@@ -510,7 +568,7 @@ export const oauthLogin = async (req, res, next) => {
           email: email.toLowerCase(),
           firebaseUid: uid,
           provider,
-          avatar: picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}`,
+          avatar: mirroredAvatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}`,
           isEmailVerified: true,
           role: 'client',
           onboardingCompleted: false,
@@ -519,7 +577,7 @@ export const oauthLogin = async (req, res, next) => {
     } else {
       // Existing OAuth user — refresh info
       if (name) user.name = name;
-      if (picture) user.avatar = picture;
+      if (mirroredAvatarUrl) user.avatar = mirroredAvatarUrl;
       user.lastActive = Date.now();
       await user.save();
     }

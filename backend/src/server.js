@@ -27,6 +27,7 @@ import analyticsRoutes from './routes/analytics.js';
 import verificationNewRoutes from './routes/verificationRoutes.js';
 import geolocationRoutes from './routes/geolocationRoutes.js';
 import uploadRoutes from './routes/upload.js';
+import assetRoutes from './routes/assets.js';
 
 // Load environment variables
 dotenv.config();
@@ -87,7 +88,8 @@ app.get('/', (req, res) => {
       verificationV2: '/api/verify',
       geolocation: '/api/geo',
       community: '/api/community',
-      analytics: '/api/analytics'
+      analytics: '/api/analytics',
+      assets: '/api/assets'
     }
   });
 });
@@ -117,6 +119,7 @@ app.use('/api/geo', geolocationRoutes); // Geo-location features
 app.use('/api/community', communityRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/assets', assetRoutes);
 
 // 404 Handler
 app.use((req, res) => {

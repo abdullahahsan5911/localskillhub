@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Send, Loader2, MessageSquare } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,6 +23,7 @@ interface Message {
   receiverId: { _id: string; name: string; avatar?: string } | string;
   content: string;
   createdAt: string;
+  isRead?: boolean;
 }
 
 interface MessagesTabProps {
@@ -34,6 +36,7 @@ interface MessagesTabProps {
 const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) => {
   const { user } = useAuth();
   const currentUserId = (user as any)?._id;
+  const navigate = useNavigate();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -110,15 +113,34 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
       setLoadingMsgs(true);
       const res = await api.getMessages(conv._id);
       if (res?.data) {
-        setMessages((res.data as any).messages || []);
+        const msgs: Message[] = (res.data as any).messages || [];
+        setMessages(msgs);
         setTimeout(scrollToBottom, 100);
+
+        // Mark unread messages in this conversation as read for current user
+        if (currentUserId) {
+          const toMark = msgs.filter(
+            (m) => !m.isRead && getReceiverId(m) === currentUserId
+          );
+          if (toMark.length > 0) {
+            try {
+              await Promise.allSettled(
+                toMark.map((m) => api.markMessageRead(m._id))
+              );
+              // Let other UI (like navbar) know to refresh conversations
+              window.dispatchEvent(new Event("conversationsUpdated"));
+            } catch {
+              // ignore mark-as-read errors in UI
+            }
+          }
+        }
       }
     } catch {
       setMessages([]);
     } finally {
       setLoadingMsgs(false);
     }
-  }, []);
+  }, [currentUserId]);
 
   useEffect(() => { fetchConversations(); }, [fetchConversations]);
 
@@ -156,12 +178,12 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
       const next = prev.map((c) =>
         c._id === activeConv._id
           ? {
-              ...c,
-              lastMessage: {
-                content,
-                createdAt: optimisticMessage.createdAt,
-              },
-            }
+            ...c,
+            lastMessage: {
+              content,
+              createdAt: optimisticMessage.createdAt,
+            },
+          }
           : c
       );
 
@@ -193,12 +215,12 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
           prev.map((c) =>
             c._id === activeConv._id
               ? {
-                  ...c,
-                  lastMessage: {
-                    content: savedMessage.content,
-                    createdAt: savedMessage.createdAt,
-                  },
-                }
+                ...c,
+                lastMessage: {
+                  content: savedMessage.content,
+                  createdAt: savedMessage.createdAt,
+                },
+              }
               : c
           )
         );
@@ -225,6 +247,11 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
   const getSenderId = (msg: Message): string => {
     if (typeof msg.senderId === "object") return msg.senderId._id;
     return msg.senderId;
+  };
+
+  const getReceiverId = (msg: Message): string => {
+    if (typeof msg.receiverId === "object") return msg.receiverId._id;
+    return msg.receiverId;
   };
 
   const formatTime = (ts: string) => {
@@ -255,7 +282,7 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
       {/* Sidebar – Conversation list */}
       <div className="w-80 flex-shrink-0 border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900 mb-3">Messages</h2>
+          {/* <h2 className="font-semibold text-gray-900 mb-3">Messages</h2> */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -287,9 +314,8 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
                   type="button"
                   key={conv._id}
                   onClick={() => handleSelectConv(conv)}
-                  className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors border-b border-gray-50 text-left ${
-                    isActive ? "bg-blue-50 border-l-2 border-l-blue-500" : ""
-                  }`}
+                  className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors border-b border-gray-50 text-left ${isActive ? "bg-blue-50 border-l-2 border-l-blue-500" : ""
+                    }`}
                 >
                   <div className="relative flex-shrink-0">
                     {conv.otherUser?.avatar ? (
@@ -357,11 +383,22 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
                   {getInitial(selectedConv.otherUser?.name)}
                 </div>
               )}
-              <div>
+              <div className="flex flex-col">
                 <h3 className="font-semibold text-gray-900 text-sm">
                   {selectedConv.otherUser?.name || "User"}
                 </h3>
-                <p className="text-xs text-green-500 font-medium">Online</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-green-500 font-medium">Online</p>
+                  {selectedConv.otherUser?._id && (
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/profile/${selectedConv.otherUser!._id}`)}
+                      className="text-xs text-blue-600 hover:underline font-medium"
+                    >
+                      View profile
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -390,11 +427,10 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
                           </div>
                         )}
                         <div>
-                          <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                            isMe
+                          <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isMe
                               ? "bg-blue-600 text-white rounded-br-sm"
                               : "bg-gray-100 text-gray-900 rounded-bl-sm"
-                          }`}>
+                            }`}>
                             {msg.content}
                           </div>
                           <p className={`text-xs text-gray-400 mt-1 ${isMe ? "text-right" : "text-left"}`}>
@@ -441,7 +477,7 @@ const MessagesTab = ({ initialTargetUserId, onUnreadCount }: MessagesTabProps) =
                   )}
                 </button>
               </div>
-              <p className="text-xs text-gray-400 mt-1.5 px-1">Enter to send · Shift+Enter for new line</p>
+              {/* <p className="text-xs text-gray-400 mt-1.5 px-1">Enter to send · Shift+Enter for new line</p> */}
             </div>
           </>
         )}

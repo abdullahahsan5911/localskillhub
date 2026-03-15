@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FiMapPin, FiShield, FiFilter, FiGrid, FiList, FiX } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
+import { UserHoverCard, UserHoverCardData } from "@/components/UserHoverCard";
 import Layout from "@/components/layout/Layout";
 import SearchFilterSection from "../components/SearchFilterSection";
 import api from "@/lib/api";
@@ -36,6 +37,7 @@ interface FreelancerProfile {
     };
     isPhoneVerified: boolean;
     isEmailVerified: boolean;
+    followers?: string[];
   };
   title: string;
   bio: string;
@@ -59,6 +61,12 @@ interface FreelancerProfile {
     images: string[];
     imageUrl?: string; // legacy fallback
   }>;
+  ratings?: {
+    average?: number;
+    count?: number;
+  };
+  completedJobs?: number;
+  profileViews?: number;
 }
 
 const BrowseFreelancers = () => {
@@ -161,7 +169,7 @@ const BrowseFreelancers = () => {
       if (nextFilters.verifiedOnly) {
         params.verifiedOnly = true;
       }
-      
+
       const response = await api.getFreelancers(params);
       const payload = response.data as any;
 
@@ -227,7 +235,7 @@ const BrowseFreelancers = () => {
   const handleVisualCategorySelect = (categoryId: string) => {
     const selectedCategory = CATEGORIES.find((category) => category.id === categoryId);
     const categoryName = selectedCategory?.name || categoryId;
-    
+
     // Toggle category - if clicking the same category, go back to "All"
     if (activeSkill === categoryName) {
       handleSkillFilter("All");
@@ -282,7 +290,7 @@ const BrowseFreelancers = () => {
       currency: rates.currency || 'INR',
       maximumFractionDigits: 0,
     }).format(rates.minRate);
-    
+
     return rates.rateType === 'hourly' ? `${amount}/hr` : amount;
   };
 
@@ -318,7 +326,7 @@ const BrowseFreelancers = () => {
         onCategorySelect={handleVisualCategorySelect}
         showDiscoveryTabs={true}
       />
-      
+
 
       {/* Results Section */}
       <section className="bg-white py-8">
@@ -442,18 +450,39 @@ const BrowseFreelancers = () => {
               <p className="text-gray-600 text-lg">No freelancers found. Try adjusting your filters.</p>
             </div>
           )}
-          
+
           {/* Grid View */}
           {!loading && viewMode === "grid" && freelancers.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {freelancers.map((freelancer) => (
-                <Link 
-                  key={freelancer._id} 
-                  to={`/profile/${freelancer.userId?._id}`}
-                  className="group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-                >
-                  {/* Portfolio Preview */}
-                  <div className="grid grid-cols-3 gap-1 bg-gray-100 aspect-[3/2]">
+              {freelancers.map((freelancer) => {
+                const ratingValue = freelancer.ratings?.average;
+                const ratingCount = freelancer.ratings?.count;
+                const followersCount = freelancer.userId?.followers?.length || 0;
+
+                const hoverUser: UserHoverCardData = {
+                  id: freelancer.userId?._id,
+                  name: freelancer.userId?.name || "Unknown",
+                  city: freelancer.userId?.location?.city,
+                  state: freelancer.userId?.location?.state,
+                  completedJobs: freelancer.completedJobs,
+                  followers: followersCount,
+                  profileViews: freelancer.profileViews,
+                  rating: ratingValue,
+                  ratingCount,
+                  projectImages:
+                    (freelancer.portfolio || [])
+                      .map((item: any) => item.images?.[0] || item.imageUrl || "")
+                      .filter((url: string) => Boolean(url)),
+                };
+
+                return (
+                  <Link
+                    to={`/profile/${freelancer.userId?._id}`}
+                    className="group bg-white border border-gray-200 rounded-2xl hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                  >
+                    {/* Portfolio Preview */}
+                    {/* Portfolio Preview */}
+                    <div className="grid grid-cols-3 gap-1 bg-gray-100 aspect-[3/2] overflow-hidden rounded-t-2xl">        
                     {freelancer.portfolio && freelancer.portfolio.length > 0 ? (
                       freelancer.portfolio.slice(0, 3).map((item, idx) => (
                         <div key={idx} className={`${idx === 0 ? 'col-span-2 row-span-2' : ''} overflow-hidden`}>
@@ -469,56 +498,62 @@ const BrowseFreelancers = () => {
                         <span className="text-gray-400 text-sm">No portfolio yet</span>
                       </div>
                     )}
-                  </div>
+                    </div>
 
-                  {/* Info */}
-                  <div className="p-5">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-lg">
-                        {freelancer.userId?.name?.charAt(0) || '?'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <h3 className="font-semibold text-gray-900 truncate">{freelancer.userId?.name || 'Unknown'}</h3>
-                          {(freelancer.userId?.isPhoneVerified || freelancer.userId?.isEmailVerified) && (
-                            <FiShield className="h-4 w-4 text-blue-600 shrink-0" />
-                          )}
+                    {/* Info */}
+                    <div className="p-5">
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-lg">
+                          {freelancer.userId?.name?.charAt(0) || '?'}
                         </div>
-                        <p className="text-sm text-gray-600 truncate">{freelancer.title}</p>
-                      </div>
-                    </div>
+                        <UserHoverCard key={freelancer._id} user={hoverUser}>
 
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-                      <div className="flex items-center gap-1">
-                        <FiMapPin className="h-4 w-4" />
-                        <span>{freelancer.userId?.location?.city || 'N/A'}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
-                        <span>Score: {freelancer.localScore || 0}</span>
-                      </div>
-                    </div>
+                          <div className=" min-w-0 relative z-10">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <h3 className="font-semibold text-gray-900 truncate">{freelancer.userId?.name || 'Unknown'}</h3>
+                              {(freelancer.userId?.isPhoneVerified || freelancer.userId?.isEmailVerified) && (
+                                <FiShield className="h-4 w-4 text-blue-600 shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 truncate">{freelancer.title}</p>
+                          </div>
+                        </UserHoverCard>
 
-                    <div className="flex flex-wrap gap-1.5 mb-4">
-                      {freelancer.skills?.slice(0, 3).map((skill, idx) => (
-                        <span key={idx} className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-md">
-                          {skill.name}
+                      </div>
+
+
+
+                      <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                        <div className="flex items-center gap-1">
+                          <FiMapPin className="h-4 w-4" />
+                          <span>{freelancer.userId?.location?.city || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
+                          <span>Score: {freelancer.localScore || 0}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {freelancer.skills?.slice(0, 3).map((skill, idx) => (
+                          <span key={idx} className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-md">
+                            {skill.name}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <span className="text-sm font-semibold text-gray-900">{formatRate(freelancer.rates)}</span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${freelancer.availability?.status === "available"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-orange-100 text-orange-700"
+                          }`}>
+                          {freelancer.availability?.status === "available" ? "Available Now" : "Busy"}
                         </span>
-                      ))}
+                      </div>
                     </div>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                      <span className="text-sm font-semibold text-gray-900">{formatRate(freelancer.rates)}</span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        freelancer.availability?.status === "available"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-orange-100 text-orange-700"
-                      }`}>
-                        {freelancer.availability?.status === "available" ? "Available Now" : "Busy"}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )}
 
@@ -526,8 +561,8 @@ const BrowseFreelancers = () => {
           {!loading && viewMode === "list" && freelancers.length > 0 && (
             <div className="space-y-4">
               {freelancers.map((freelancer) => (
-                <Link 
-                  key={freelancer._id} 
+                <Link
+                  key={freelancer._id}
                   to={`/profile/${freelancer.userId?._id}`}
                   className="group bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 flex gap-6"
                 >
@@ -563,11 +598,10 @@ const BrowseFreelancers = () => {
                     </div>
                   </div>
                   <div className="flex flex-col justify-between items-end shrink-0">
-                    <span className={`text-xs px-3 py-1.5 rounded-full ${
-                      freelancer.availability?.status === "available"
+                    <span className={`text-xs px-3 py-1.5 rounded-full ${freelancer.availability?.status === "available"
                         ? "bg-green-100 text-green-700"
                         : "bg-orange-100 text-orange-700"
-                    }`}>
+                      }`}>
                       {freelancer.availability?.status === "available" ? "Available Now" : "Busy"}
                     </span>
                     <Button className="bg-blue-600 text-white hover:bg-blue-700 rounded-full px-6">
@@ -601,3 +635,23 @@ const BrowseFreelancers = () => {
 };
 
 export default BrowseFreelancers;
+
+
+
+{/* <UserHoverCard
+                            user={{
+                              id: freelancer.userId?._id,
+                              name: freelancer.userId?.name || "Unknown",
+                              city: freelancer.userId?.location?.city,
+                              state: freelancer.userId?.location?.state,
+                              completedJobs: freelancer.completedJobs,
+                              followers: followersCount,
+                              profileViews: freelancer.profileViews,
+                              rating: ratingValue,
+                              ratingCount,
+                            } as UserHoverCardData}
+                          >
+                            <h3 className="text-lg font-semibold flex justify-center items-center  text-gray-900 truncate" title={freelancer.userId?.name}>
+                              {freelancer.userId?.name || "Unknown"}
+                            </h3>
+                          </UserHoverCard> */}

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FiSearch, FiBriefcase, FiUsers, FiMessageSquare, FiFileText, FiMenu, FiX, FiUser, FiSettings, FiLogOut } from "react-icons/fi";
 import { HiOutlineLocationMarker } from "react-icons/hi";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,41 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loadingConvs, setLoadingConvs] = useState(false);
+
+  const fetchConversations = useCallback(async () => {
+    if (!isAuthenticated || !user) return;
+    try {
+      setLoadingConvs(true);
+      const res = await api.getConversations();
+      const convs: any[] = (res.data as any)?.conversations || [];
+      setConversations(convs);
+      setUnreadCount(convs.reduce((sum, c) => sum + (c.unreadCount || 0), 0));
+    } catch {
+      // ignore errors in navbar badge
+    } finally {
+      setLoadingConvs(false);
+    }
+  }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+    fetchConversations();
+    const interval = setInterval(fetchConversations, 15000);
+    const handler = () => fetchConversations();
+    window.addEventListener("conversationsUpdated", handler);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("conversationsUpdated", handler);
+    };
+  }, [isAuthenticated, user, fetchConversations]);
+
+  const visibleNavLinks = isAuthenticated && user?.role === "freelancer"
+    ? navLinks.filter((link) => link.href !== "/post-job")
+    : navLinks;
 
   const handleLogout = () => {
     logout();
@@ -66,7 +102,7 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
+            {visibleNavLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
@@ -83,19 +119,86 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-              <FiSearch className="h-5 w-5 text-gray-600" />
-            </button>
-            
+            {!isAuthenticated || !user ? (
+              <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                <FiSearch className="h-5 w-5 text-gray-600" />
+              </button>
+            ) : null}
+
             {isAuthenticated && user ? (
               <>
-                <button
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
-                  onClick={() => navigate(`${getDashboardLink()}?tab=messages`)}
-                >
-                  <FiMessageSquare className="h-5 w-5 text-gray-600" />
-                </button>
-                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
+                      type="button"
+                    >
+                      <FiMessageSquare className="h-5 w-5 text-gray-600" />
+                      {unreadCount > 0 && (
+                        <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white" />
+                      )}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-80 p-0">
+                    <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
+                      <span className="text-sm font-semibold text-gray-900">Messages</span>
+                      {unreadCount > 0 && (
+                        <span className="text-[11px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                          {unreadCount > 9 ? "9+ new" : `${unreadCount} new`}
+                        </span>
+                      )}
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {loadingConvs ? (
+                        <div className="px-3 py-4 text-xs text-gray-500">Loading conversations…</div>
+                      ) : conversations.length === 0 ? (
+                        <div className="px-3 py-4 text-xs text-gray-500">No messages yet</div>
+                      ) : (
+                        conversations.slice(0, 5).map((conv) => (
+                          <button
+                            type="button"
+                            key={conv._id}
+                            onClick={() => navigate(`${getDashboardLink()}?tab=messages`)}
+                            className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-gray-50 text-left text-sm"
+                          >
+                            {conv.otherUser?.avatar ? (
+                              <img
+                                src={conv.otherUser.avatar}
+                                alt={conv.otherUser.name}
+                                className="w-8 h-8 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-semibold">
+                                {(conv.otherUser?.name || "?").charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-medium text-gray-900 truncate">{conv.otherUser?.name || "User"}</span>
+                                {conv.unreadCount > 0 && (
+                                  <span className="ml-2 text-[11px] text-blue-600 font-semibold">
+                                    {conv.unreadCount > 9 ? "9+" : conv.unreadCount}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-500 truncate">
+                                {conv.lastMessage?.content || "Start a conversation"}
+                              </p>
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`${getDashboardLink()}?tab=messages`)}
+                      className="w-full text-xs text-blue-600 hover:text-blue-700 px-3 py-2.5 border-t border-gray-100 text-left font-medium"
+                    >
+                      View all messages
+                    </button>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors">
@@ -118,10 +221,6 @@ const Navbar = () => {
                     <DropdownMenuItem onClick={() => navigate(getDashboardLink())}>
                       <FiUser className="mr-2 h-4 w-4" />
                       <span>Dashboard</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate(`${getDashboardLink()}?tab=messages`)}>
-                      <FiMessageSquare className="mr-2 h-4 w-4" />
-                      <span>Messages</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/contracts")}>
                       <FiFileText className="mr-2 h-4 w-4" />
@@ -165,7 +264,7 @@ const Navbar = () => {
       {mobileOpen && (
         <div className="md:hidden border-t border-gray-200 bg-white">
           <div className="px-4 py-4 space-y-1">
-            {navLinks.map((link) => (
+            {visibleNavLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}

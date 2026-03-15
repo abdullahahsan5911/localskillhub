@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import BrowseFreelancers from "./pages/BrowseFreelancers";
 import FreelancerProfile from "./pages/FreelancerProfile";
+import ClientProfile from "./pages/ClientProfile";
 import PostJob from "./pages/PostJob";
 import Jobs from "./pages/Jobs";
 import JobDetail from "./pages/JobDetail";
@@ -16,7 +17,6 @@ import Onboarding from "./pages/Onboarding";
 import FreelancerDashboard from "./pages/FreelancerDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
 import CombinedDashboard from "./pages/CombinedDashboard";
-import Messages from "./pages/Messages";
 import Contracts from "./pages/Contracts";
 import Community from "./pages/Community";
 import VerificationDashboard from "./pages/VerificationDashboard";
@@ -114,6 +114,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/browse" element={<BrowseFreelancers />} />
             <Route path="/profile/:id" element={<FreelancerProfile />} />
+            <Route path="/client/:id" element={<ClientProfile />} />
             <Route path="/people" element={<People />} />
             <Route path="/assets" element={<Assets />} />
             <Route path="/images" element={<Images />} />
@@ -173,14 +174,6 @@ const App = () => (
                 <RoleRoute allowedRoles={["both"]}>
                   <CombinedDashboard />
                 </RoleRoute>
-              }
-            />
-            <Route
-              path="/messages"
-              element={
-                <ProtectedRoute>
-                  <Messages />
-                </ProtectedRoute>
               }
             />
             <Route

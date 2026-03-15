@@ -5,7 +5,7 @@ import {
   MessageSquare, Settings, Plus, Eye, DollarSign,
   Star, TrendingUp, Clock, CheckCircle2, ExternalLink,
   Grid3X3, Search, X, Image as ImageIcon, Trophy, Target,
-  Upload, Camera, Loader
+  Upload, Camera, Loader, Layers
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -83,6 +83,20 @@ interface Contract {
   };
   status: string;
   startDate: string;
+}
+
+interface AssetItem {
+  _id?: string;
+  title: string;
+  description?: string;
+  category?: string;
+  tags?: string[];
+  price?: number;
+  currency?: string;
+  fileUrl?: string;
+  previewImages?: string[];
+  downloads?: number;
+  ratings?: { average: number; count: number };
 }
 
 // ...existing dashboard content removed; main component defined later in file
@@ -510,6 +524,454 @@ const PortfolioTab = ({ profile, onRefresh }: any) => {
           })}
         </div>
       )}
+    </div>
+  );
+};
+
+// ─── Assets Tab ───────────────────────────────────────────────────────────────
+const AssetsTab = ({ assets, onRefresh }: { assets: AssetItem[]; onRefresh: () => void }) => {
+  const [showForm, setShowForm] = useState(false);
+  const [editItem, setEditItem] = useState<AssetItem | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<AssetItem>({
+    title: "",
+    description: "",
+    category: "",
+    tags: [],
+    price: 0,
+    currency: "INR",
+    fileUrl: "",
+    previewImages: [],
+  });
+  const [tagInput, setTagInput] = useState("");
+  const [uploadingPreview, setUploadingPreview] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const isFree = !form.price || form.price === 0;
+  const previewInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && tagInput.trim()) {
+      e.preventDefault();
+      setForm((f) => ({ ...f, tags: [...(f.tags || []), tagInput.trim()] }));
+      setTagInput("");
+    }
+  };
+
+  const handleUploadPreview = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setUploadingPreview(true);
+    try {
+      const results = await Promise.all(files.map((file) => uploadToCloudinary(file)));
+      const urls = results.map((r) => r.url);
+      setForm((f) => ({ ...f, previewImages: [...(f.previewImages || []), ...urls] }));
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setUploadingPreview(false);
+      if (previewInputRef.current) previewInputRef.current.value = "";
+    }
+  };
+
+  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingFile(true);
+    try {
+      const res = await uploadToCloudinary(file);
+      setForm((f) => ({ ...f, fileUrl: res.url }));
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setUploadingFile(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleSave = async () => {
+    if (!form.title.trim() || !form.fileUrl || !form.previewImages || form.previewImages.length === 0) {
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        title: form.title,
+        description: form.description,
+        category: form.category,
+        tags: form.tags,
+        price: form.price,
+        currency: form.currency,
+        fileUrl: form.fileUrl,
+        previewImages: form.previewImages,
+      };
+      if (editItem && editItem._id) {
+        await api.updateAsset(editItem._id, payload);
+      } else {
+        await api.createAsset(payload);
+      }
+      setShowForm(false);
+      setEditItem(null);
+      setForm({
+        title: "",
+        description: "",
+        category: "",
+        tags: [],
+        price: 0,
+        currency: "INR",
+        fileUrl: "",
+        previewImages: [],
+      });
+      onRefresh();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEdit = (asset: AssetItem) => {
+    setForm({
+      _id: asset._id,
+      title: asset.title,
+      description: asset.description,
+      category: asset.category,
+      tags: asset.tags || [],
+      price: asset.price ?? 0,
+      currency: asset.currency || "INR",
+      fileUrl: asset.fileUrl || "",
+      previewImages: asset.previewImages || [],
+      downloads: asset.downloads,
+      ratings: asset.ratings,
+    });
+    setEditItem(asset);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (asset: AssetItem) => {
+    if (!asset._id) return;
+    if (!confirm("Delete this asset?")) return;
+    try {
+      await api.deleteAsset(asset._id);
+      onRefresh();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Digital Assets (Earn While You Sleep)</h2>
+          <p className="text-sm text-gray-500">
+            Turn your best projects into downloadable products clients can buy again and again.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setEditItem(null);
+            setForm({
+              title: "",
+              description: "",
+              category: "",
+              tags: [],
+              price: 0,
+              currency: "INR",
+              fileUrl: "",
+              previewImages: [],
+            });
+            setShowForm((v) => !v);
+          }}
+          className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black"
+        >
+          <Plus className="h-4 w-4" />
+          New asset
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="space-y-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-gray-700">Title</label>
+                <input
+                  type="text"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                  placeholder="React Admin Dashboard UI"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-700">Description</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                  rows={4}
+                  placeholder="What does this asset include?"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-700">Category</label>
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                >
+                  <option value="">Select category</option>
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                  {form.category && !CATEGORIES.some((c) => c.id === form.category) && (
+                    <option value={form.category}>{form.category}</option>
+                  )}
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3 items-end">
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Pricing</label>
+                  <div className="mt-1 flex items-center gap-3 rounded-xl border border-gray-200 px-3 py-2 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, price: 0 })}
+                      className={`rounded-full px-3 py-1 font-medium ${
+                        isFree ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      Free
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!form.price || form.price === 0) {
+                          setForm({ ...form, price: 199 });
+                        }
+                      }}
+                      className={`rounded-full px-3 py-1 font-medium ${
+                        !isFree ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      Paid
+                    </button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-medium text-gray-700">Price</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={form.price ?? 0}
+                      onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+                      disabled={isFree}
+                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none disabled:bg-gray-50 disabled:text-gray-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-700">Currency</label>
+                    <select
+                      value={form.currency}
+                      onChange={(e) => setForm({ ...form, currency: e.target.value })}
+                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                    >
+                      <option value="INR">INR</option>
+                      <option value="USD">USD</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-gray-700">Tags</label>
+                <div className="mt-1 flex flex-wrap gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm">
+                  {(form.tags || []).map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleAddTag}
+                    placeholder="Press Enter to add tag"
+                    className="flex-1 min-w-[120px] border-none bg-transparent text-xs outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-700">Preview image (what clients see first)</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => previewInputRef.current?.click()}
+                    className="inline-flex items-center gap-2 rounded-full border border-dashed border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:border-gray-400"
+                  >
+                    <ImageIcon className="h-3.5 w-3.5" />
+                    {uploadingPreview ? "Uploading..." : "Upload preview"}
+                  </button>
+                  <input
+                    ref={previewInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleUploadPreview}
+                  />
+                </div>
+
+                {form.previewImages && form.previewImages.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {form.previewImages.map((img, index) => (
+                      <div
+                        key={img + index}
+                        className="group relative h-16 w-24 overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
+                      >
+                        <img
+                          src={img}
+                          alt={`Preview ${index + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm((f) => ({
+                              ...f,
+                              previewImages: (f.previewImages || []).filter((_, i) => i !== index),
+                            }))
+                          }
+                          className="absolute inset-0 flex items-center justify-center bg-black/40 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <label className="mt-3 text-xs font-medium text-gray-700">Asset file (the actual template / kit)</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-2 rounded-full border border-dashed border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:border-gray-400"
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    {uploadingFile ? "Uploading..." : "Upload file"}
+                  </button>
+                  {form.fileUrl && (
+                    <div className="flex items-center gap-2 text-xs text-gray-600 max-w-[220px]">
+                      <span className="truncate">File uploaded</span>
+                      <button
+                        type="button"
+                        onClick={() => setForm((f) => ({ ...f, fileUrl: "" }))}
+                        className="rounded-full border border-gray-200 px-2 py-0.5 text-[11px] text-red-600 hover:bg-red-50"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    onChange={handleUploadFile}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="rounded-full border border-gray-200 px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={
+                saving ||
+                !form.title.trim() ||
+                !form.fileUrl ||
+                !form.previewImages ||
+                form.previewImages.length === 0
+              }
+              className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-black disabled:opacity-60"
+            >
+              {saving && <Loader className="h-3.5 w-3.5 animate-spin" />}
+              Save asset
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {assets.map((asset) => (
+          <div key={asset._id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div className="mb-2 flex items-start justify-between gap-2">
+              <div>
+                <h3 className="line-clamp-1 text-sm font-semibold text-gray-900">{asset.title}</h3>
+                <p className="line-clamp-2 text-xs text-gray-500 mt-1">{asset.description}</p>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                {asset.price !== undefined && (
+                  <span className="text-xs font-medium text-gray-700">
+                    {asset.price === 0 ? "Free" : `₹${asset.price}`}
+                  </span>
+                )}
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleEdit(asset)}
+                    className="rounded-full border border-gray-200 px-2 py-0.5 text-[11px] text-gray-600 hover:bg-gray-50"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(asset)}
+                    className="rounded-full border border-gray-200 px-2 py-0.5 text-[11px] text-red-600 hover:bg-red-50"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-gray-500 mt-1">
+              <span>{asset.downloads ?? 0} downloads</span>
+              {asset.ratings && asset.ratings.count ? (
+                <span>
+                  ⭐ {asset.ratings.average.toFixed(1)} ({asset.ratings.count})
+                </span>
+              ) : (
+                <span>New</span>
+              )}
+            </div>
+          </div>
+        ))}
+        {assets.length === 0 && !showForm && (
+          <div className="col-span-full rounded-2xl border border-dashed border-gray-200 p-8 text-center text-sm text-gray-500">
+            You haven't published any assets yet. Use "New asset" to upload your first template or UI kit.
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -977,18 +1439,20 @@ const FreelancerDashboard = () => {
   const [profile, setProfile] = useState<FreelancerProfile | null>(null);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [assets, setAssets] = useState<AssetItem[]>([]);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [analyticsRes, profileRes, proposalsRes, contractsRes, convsRes] = await Promise.allSettled([
+      const [analyticsRes, profileRes, proposalsRes, contractsRes, convsRes, assetsRes] = await Promise.allSettled([
         api.getFreelancerAnalytics(),
         api.getFreelancer((user as any)?._id || ""),
         api.getProposals(),
         api.getContracts(),
         api.getConversations(),
+        api.getMyAssets(),
       ]);
 
       if (analyticsRes.status === "fulfilled" && analyticsRes.value?.data) {
@@ -1011,6 +1475,10 @@ const FreelancerDashboard = () => {
         const convs: any[] = (convsRes.value.data as any).conversations || [];
         setUnreadMessages(convs.reduce((sum: number, c: any) => sum + (c.unreadCount || 0), 0));
       }
+      if (assetsRes.status === "fulfilled" && assetsRes.value?.data) {
+        const d = assetsRes.value.data as any;
+        setAssets(d.assets || d.data?.assets || d);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -1030,6 +1498,7 @@ const FreelancerDashboard = () => {
   const navItems: NavItem[] = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "portfolio", label: "Portfolio", icon: Grid3X3, badge: profile?.portfolio?.length },
+    { id: "assets", label: "Assets", icon: Layers, badge: assets.length || undefined },
     { id: "find-jobs", label: "Find Jobs", icon: Search },
     { id: "proposals", label: "My Proposals", icon: FileText, badge: proposals.filter(p => ["sent", "viewed", "shortlisted"].includes(p.status)).length },
     { id: "contracts", label: "Contracts", icon: FileCheck, badge: contracts.filter(c => c.status === "active").length },
@@ -1040,10 +1509,16 @@ const FreelancerDashboard = () => {
   const tabContent: Record<string, React.ReactNode> = {
     overview: <OverviewTab analytics={analytics} profile={profile} loading={loading} />,
     portfolio: <PortfolioTab profile={profile} onRefresh={fetchData} />,
+    assets: <AssetsTab assets={assets} onRefresh={fetchData} />,
     "find-jobs": <FindJobsTab />,
     proposals: <MyProposalsTab proposals={proposals} loading={loading} />,
     contracts: <MyContractsTab contracts={contracts} loading={loading} onRefresh={fetchData} />,
-    messages: <MessagesTab onUnreadCount={setUnreadMessages} />,
+    messages: (
+      <MessagesTab
+        onUnreadCount={setUnreadMessages}
+        initialTargetUserId={searchParams.get("userId") || undefined}
+      />
+    ),
     settings: <SettingsTab user={user} profile={profile} onRefresh={fetchData} />,
   };
 

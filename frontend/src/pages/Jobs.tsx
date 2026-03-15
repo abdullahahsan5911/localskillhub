@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FiSearch, FiMapPin, FiClock, FiDollarSign, FiX, FiChevronDown, FiChevronUp, FiCalendar, FiUsers, FiBookmark } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
+import { UserHoverCard, UserHoverCardData } from "@/components/UserHoverCard";
 import Layout from "@/components/layout/Layout";
 import api from "@/lib/api";
 import { CATEGORIES } from "@/constants/categories";
@@ -253,7 +254,18 @@ const Jobs = () => {
               {/* Job Cards Grid */}
               {!loading && jobs.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {jobs.map((job) => (
+                  {jobs.map((job) => {
+                    const client = job.clientId;
+                    const hoverUser: UserHoverCardData | null = client && client._id && client.name
+                      ? {
+                          id: client._id,
+                          name: client.name,
+                          city: job.location?.city,
+                          state: job.location?.state,
+                        }
+                      : null;
+
+                    return (
                     <button
                       key={job._id}
                       onClick={() => setSelectedJob(job)}
@@ -261,15 +273,41 @@ const Jobs = () => {
                     >
                       {/* Company/Client Avatar */}
                       <div className="flex items-start gap-3 mb-4">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                          {job.clientId?.name?.charAt(0) || 'C'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
-                            {job.title}
-                          </h3>
-                          <p className="text-sm text-gray-600 truncate">{job.clientId?.name || 'Anonymous Client'}</p>
-                        </div>
+                        {hoverUser ? (
+                          <UserHoverCard user={hoverUser}>
+                            <div className="flex items-start gap-3">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                                {client.imageUrl ? (
+                                  <img
+                                    src={client.imageUrl}
+                                    alt={client.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-lg">{client.name.charAt(0)}</span>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
+                                  {job.title}
+                                </h3>
+                                <p className="text-sm text-gray-600 truncate">{client.name}</p>
+                              </div>
+                            </div>
+                          </UserHoverCard>
+                        ) : (
+                          <div className="flex items-start gap-3">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                              {job.clientId?.name?.charAt(0) || 'C'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
+                                {job.title}
+                              </h3>
+                              <p className="text-sm text-gray-600 truncate">{job.clientId?.name || 'Anonymous Client'}</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Location and Remote */}
@@ -309,7 +347,7 @@ const Jobs = () => {
                         </div>
                       </div>
                     </button>
-                  ))}
+                  );})}
                 </div>
               )}
             </div>

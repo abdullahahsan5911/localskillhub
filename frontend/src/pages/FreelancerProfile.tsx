@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import Layout from "@/components/layout/Layout";
 import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/components/ui/use-toast";
 
 interface FreelancerData {
   _id: string;
@@ -93,8 +94,55 @@ const FreelancerProfile = () => {
   };
 
   const handleContact = () => {
-    if (!user) { navigate("/login"); return; }
-    navigate(`/messages?userId=${freelancer?.userId._id}`);
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    if (!freelancer?.userId._id) return;
+
+    let dashboardBase = "/";
+    if (user.role === "client") dashboardBase = "/dashboard/client";
+    else if (user.role === "freelancer") dashboardBase = "/dashboard/freelancer";
+    else if (user.role === "both") dashboardBase = "/dashboard/both";
+
+    navigate(`${dashboardBase}?tab=messages&userId=${freelancer.userId._id}`);
+  };
+
+  const handleShare = async () => {
+    if (!freelancer) return;
+
+    const url = window.location.href;
+    const title = `${freelancer.userId.name} – ${freelancer.title}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+        toast({
+          title: "Profile link copied",
+          description: "You can now paste it anywhere to share.",
+        });
+      } else {
+        // Fallback: select URL
+        const dummy = document.createElement("input");
+        dummy.value = url;
+        document.body.appendChild(dummy);
+        dummy.select();
+        document.execCommand("copy");
+        document.body.removeChild(dummy);
+        toast({
+          title: "Profile link copied",
+          description: "You can now paste it anywhere to share.",
+        });
+      }
+    } catch {
+      toast({
+        title: "Unable to share",
+        description: "Something went wrong while sharing this profile.",
+      });
+    }
   };
 
   const formatRate = () => {
@@ -160,11 +208,19 @@ const FreelancerProfile = () => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8">
           {/* Hero card */}
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-6">
-            {/* Cover gradient */}
-            <div className="h-32 bg-gradient-to-r from-blue-600 via-violet-600 to-purple-600" />
+          <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm mb-6">
+            {/* Cover image / gradient */}
+            <div className="h-40 md:h-52 relative bg-gradient-to-r from-gray-700 via-neutral-800 to-gray-800">
+              {freelancer.portfolio?.length > 0 && getPortfolioImage(freelancer.portfolio[0]) && (
+                <img
+                  src={getPortfolioImage(freelancer.portfolio[0])}
+                  alt={freelancer.portfolio[0].title}
+                  className="absolute inset-0 h-full w-full object-cover opacity-80"
+                />
+              )}
+            </div>
 
             <div className="px-6 pb-6">
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 mb-4">
@@ -181,9 +237,8 @@ const FreelancerProfile = () => {
                       {getInitials(freelancer.userId.name)}
                     </div>
                   )}
-                  <span className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white ${
-                    freelancer.availability?.status === "available" ? "bg-green-400" : "bg-orange-400"
-                  }`} />
+                  <span className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white ${freelancer.availability?.status === "available" ? "bg-green-400" : "bg-orange-400"
+                    }`} />
                 </div>
 
                 {/* Action buttons */}
@@ -193,11 +248,10 @@ const FreelancerProfile = () => {
                       onClick={handleFollow}
                       disabled={followLoading}
                       variant={following ? "outline" : "default"}
-                      className={`rounded-xl gap-2 ${
-                        following
+                      className={`rounded-xl gap-2 ${following
                           ? "border-blue-300 text-blue-600 hover:bg-blue-50"
                           : "bg-blue-600 hover:bg-blue-700 text-white"
-                      }`}
+                        }`}
                     >
                       {followLoading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -214,7 +268,11 @@ const FreelancerProfile = () => {
                     >
                       <Mail className="w-4 h-4" /> Message
                     </Button>
-                    <button className="p-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition">
+                    <button
+                      type="button"
+                      onClick={handleShare}
+                      className="p-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition"
+                    >
                       <Share2 className="w-4 h-4 text-gray-500" />
                     </button>
                   </div>
@@ -236,9 +294,8 @@ const FreelancerProfile = () => {
                       <MapPin className="w-4 h-4" />
                       {freelancer.userId.location?.city}, {freelancer.userId.location?.state}
                     </span>
-                    <span className={`flex items-center gap-1 font-medium ${
-                      freelancer.availability?.status === "available" ? "text-green-600" : "text-orange-500"
-                    }`}>
+                    <span className={`flex items-center gap-1 font-medium ${freelancer.availability?.status === "available" ? "text-green-600" : "text-orange-500"
+                      }`}>
                       {freelancer.availability?.status === "available" ? "● Available Now" : "● Busy"}
                     </span>
                   </div>
@@ -249,207 +306,218 @@ const FreelancerProfile = () => {
                 </div>
               </div>
 
-              {/* Stats row */}
-              <div className="flex flex-wrap gap-6 mt-5 pt-5 border-t border-gray-100">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-gray-900">{followerCount}</div>
-                  <div className="text-xs text-gray-500">Followers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-gray-900">{freelancer.userId.following?.length || 0}</div>
-                  <div className="text-xs text-gray-500">Following</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-gray-900">{freelancer.localScore || 0}</div>
-                  <div className="text-xs text-gray-500">Local Score</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-gray-900">{freelancer.completedJobs || 0}</div>
-                  <div className="text-xs text-gray-500">Jobs Done</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-gray-900">{freelancer.profileViews || 0}</div>
-                  <div className="text-xs text-gray-500">Profile Views</div>
-                </div>
-              </div>
-
-              {/* Skills */}
-              {freelancer.skills?.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {freelancer.skills.slice(0, 8).map((skill, i) => (
-                    <Badge key={i} variant="secondary" className="rounded-full text-xs">
-                      {skill.name}
-                    </Badge>
-                  ))}
-                  {freelancer.skills.length > 8 && (
-                    <Badge variant="outline" className="rounded-full text-xs">
-                      +{freelancer.skills.length - 8} more
-                    </Badge>
-                  )}
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Tabs + content */}
-          <div className="bg-white rounded-2xl border border-gray-200">
-            <div className="flex gap-1 border-b border-gray-200 px-6">
-              {tabs.map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  className={`px-4 py-4 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                    activeTab === t.id
-                      ? "text-blue-600 border-blue-600"
-                      : "text-gray-500 border-transparent hover:text-gray-900"
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
+          {/* Sidebar + main content (Behance-style layout) */}
+          <div className="mt-4 flex flex-col lg:flex-row gap-6">
+            {/* Left sidebar */}
+            <aside className="lg:w-72 space-y-4">
+              <div className="bg-white rounded-2xl border border-gray-200 p-4 text-sm">
+                <p className="font-semibold text-gray-900 mb-3">Profile Insights</p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500">Followers</span>
+                    <span className="font-semibold text-gray-900">{followerCount}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500">Following</span>
+                    <span className="font-semibold text-gray-900">{freelancer.userId.following?.length || 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500">Completed Jobs</span>
+                    <span className="font-semibold text-gray-900">{freelancer.completedJobs || 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500">Profile Views</span>
+                    <span className="font-semibold text-gray-900">{freelancer.profileViews || 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500">Local Score</span>
+                    <span className="font-semibold text-gray-900">{freelancer.localScore || 0}</span>
+                  </div>
+                </div>
+              </div>
 
-            <div className="p-6">
-              {/* Portfolio */}
-              {activeTab === "portfolio" && (
-                <div>
-                  {freelancer.portfolio?.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                      {freelancer.portfolio.map(work => (
-                        <div key={work._id} className="group rounded-xl overflow-hidden border border-gray-200 hover:shadow-md transition-shadow">
-                          <div className="relative aspect-video bg-gray-100 overflow-hidden">
-                            {getPortfolioImage(work) ? (
-                              <img
-                                src={getPortfolioImage(work)}
-                                alt={work.title}
-                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
-                                <Briefcase className="w-10 h-10 text-gray-400" />
-                              </div>
-                            )}
-                            {work.link && (
-                              <a
-                                href={work.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={e => e.stopPropagation()}
-                                className="absolute top-2 right-2 p-1.5 bg-white rounded-lg shadow opacity-0 group-hover:opacity-100 transition"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5 text-gray-700" />
-                              </a>
-                            )}
+              {freelancer.bio && (
+                <div className="bg-white rounded-2xl border border-gray-200 p-4 text-sm">
+                  <p className="font-semibold text-gray-900 mb-2">About</p>
+                  <p className="text-gray-700 text-sm leading-relaxed line-clamp-6">{freelancer.bio}</p>
+                </div>
+              )}
+
+              {freelancer.skills?.length > 0 && (
+                <div className="bg-white rounded-2xl border border-gray-200 p-4 text-sm">
+                  <p className="font-semibold text-gray-900 mb-3">Top Skills</p>
+                  <div className="flex flex-wrap gap-2">
+                    {freelancer.skills.slice(0, 10).map((skill, i) => (
+                      <Badge key={i} variant="secondary" className="rounded-full text-xs">
+                        {skill.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </aside>
+
+            {/* Main content with tabs and portfolio */}
+            <div className="flex-1 bg-white rounded-2xl border border-gray-200">
+              <div className="flex gap-1 border-b border-gray-200 px-4 sm:px-6 overflow-x-auto">
+                {tabs.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveTab(t.id)}
+                    className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${activeTab === t.id
+                        ? "text-blue-600 border-blue-600"
+                        : "text-gray-500 border-transparent hover:text-gray-900"
+                      }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="p-4 sm:p-6">
+                {/* Portfolio */}
+                {activeTab === "portfolio" && (
+                  <div>
+                    {freelancer.portfolio?.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {freelancer.portfolio.map(work => (
+                          <div key={work._id} className="group rounded-xl overflow-hidden border border-gray-200 hover:shadow-md transition-shadow">
+                            <div className="relative aspect-video bg-gray-100 overflow-hidden">
+                              {getPortfolioImage(work) ? (
+                                <img
+                                  src={getPortfolioImage(work)}
+                                  alt={work.title}
+                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
+                                  <Briefcase className="w-10 h-10 text-gray-400" />
+                                </div>
+                              )}
+                              {work.link && (
+                                <a
+                                  href={work.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={e => e.stopPropagation()}
+                                  className="absolute top-2 right-2 p-1.5 bg-white rounded-lg shadow opacity-0 group-hover:opacity-100 transition"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5 text-gray-700" />
+                                </a>
+                              )}
+                            </div>
+                            <div className="p-4">
+                              <h3 className="font-semibold text-gray-900 mb-1 text-sm">{work.title}</h3>
+                              {work.description && (
+                                <p className="text-xs text-gray-500 mb-2 line-clamp-2">{work.description}</p>
+                              )}
+                              {work.tags?.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {work.tags.slice(0, 3).map((tag, i) => (
+                                    <span key={i} className="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full">
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className="p-4">
-                            <h3 className="font-semibold text-gray-900 mb-1 text-sm">{work.title}</h3>
-                            {work.description && (
-                              <p className="text-xs text-gray-500 mb-2 line-clamp-2">{work.description}</p>
-                            )}
-                            {work.tags?.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {work.tags.slice(0, 3).map((tag, i) => (
-                                  <span key={i} className="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full">
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-16">
+                        <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-gray-500 font-medium">No portfolio items yet</p>
+                        <p className="text-sm text-gray-400 mt-1">This freelancer hasn't added any work samples</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* About */}
+                {activeTab === "about" && (
+                  <div className="max-w-2xl space-y-6">
+                    {freelancer.bio && (
+                      <div>
+                        <h3 className="text-base font-semibold text-gray-900 mb-2">About</h3>
+                        <p className="text-gray-700 leading-relaxed">{freelancer.bio}</p>
+                      </div>
+                    )}
+                    {freelancer.skills?.length > 0 && (
+                      <div>
+                        <h3 className="text-base font-semibold text-gray-900 mb-3">All Skills</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {freelancer.skills.map((skill, i) => (
+                            <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm">
+                              {skill.name}
+                              <span className={`text-xs font-medium ${skill.level === "Expert" ? "text-purple-600" :
+                                  skill.level === "Intermediate" ? "text-blue-600" : "text-green-600"
+                                }`}>{skill.level}</span>
+                            </span>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-16">
-                      <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500 font-medium">No portfolio items yet</p>
-                      <p className="text-sm text-gray-400 mt-1">This freelancer hasn't added any work samples</p>
-                    </div>
-                  )}
-                </div>
-              )}
+                      </div>
+                    )}
+                    {(!freelancer.bio && !freelancer.skills?.length) && (
+                      <p className="text-gray-500 text-center py-8">No details provided yet.</p>
+                    )}
+                  </div>
+                )}
 
-              {/* About */}
-              {activeTab === "about" && (
-                <div className="max-w-2xl space-y-6">
-                  {freelancer.bio && (
-                    <div>
-                      <h3 className="text-base font-semibold text-gray-900 mb-2">About</h3>
-                      <p className="text-gray-700 leading-relaxed">{freelancer.bio}</p>
-                    </div>
-                  )}
-                  {freelancer.skills?.length > 0 && (
-                    <div>
-                      <h3 className="text-base font-semibold text-gray-900 mb-3">All Skills</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {freelancer.skills.map((skill, i) => (
-                          <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm">
-                            {skill.name}
-                            <span className={`text-xs font-medium ${
-                              skill.level === "Expert" ? "text-purple-600" :
-                              skill.level === "Intermediate" ? "text-blue-600" : "text-green-600"
-                            }`}>{skill.level}</span>
-                          </span>
-                        ))}
+                {/* Experience */}
+                {activeTab === "experience" && (
+                  <div className="max-w-2xl space-y-6">
+                    {freelancer.experience?.length > 0 && (
+                      <div>
+                        <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                          <Star className="w-4 h-4 text-yellow-500" /> Work Experience
+                        </h3>
+                        <div className="space-y-4">
+                          {freelancer.experience.map((exp, i) => (
+                            <div key={i} className="flex gap-4">
+                              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                <Briefcase className="w-5 h-5 text-blue-600" />
+                              </div>
+                              <div className="flex-1 border-b border-gray-100 pb-4">
+                                <h4 className="font-semibold text-gray-900">{exp.title}</h4>
+                                <p className="text-sm text-gray-600">{exp.company}</p>
+                                <p className="text-xs text-gray-400 mt-0.5">{exp.duration}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {(!freelancer.bio && !freelancer.skills?.length) && (
-                    <p className="text-gray-500 text-center py-8">No details provided yet.</p>
-                  )}
-                </div>
-              )}
-
-              {/* Experience */}
-              {activeTab === "experience" && (
-                <div className="max-w-2xl space-y-6">
-                  {freelancer.experience?.length > 0 && (
-                    <div>
-                      <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Star className="w-4 h-4 text-yellow-500" /> Work Experience
-                      </h3>
-                      <div className="space-y-4">
-                        {freelancer.experience.map((exp, i) => (
-                          <div key={i} className="flex gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                              <Briefcase className="w-5 h-5 text-blue-600" />
+                    )}
+                    {freelancer.education?.length > 0 && (
+                      <div>
+                        <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                          <Star className="w-4 h-4 text-green-500" /> Education
+                        </h3>
+                        <div className="space-y-4">
+                          {freelancer.education.map((edu, i) => (
+                            <div key={i} className="flex gap-4">
+                              <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                                <Star className="w-5 h-5 text-green-600" />
+                              </div>
+                              <div className="flex-1 border-b border-gray-100 pb-4">
+                                <h4 className="font-semibold text-gray-900">{edu.degree}</h4>
+                                <p className="text-sm text-gray-600">{edu.institution}</p>
+                                <p className="text-xs text-gray-400 mt-0.5">{edu.year}</p>
+                              </div>
                             </div>
-                            <div className="flex-1 border-b border-gray-100 pb-4">
-                              <h4 className="font-semibold text-gray-900">{exp.title}</h4>
-                              <p className="text-sm text-gray-600">{exp.company}</p>
-                              <p className="text-xs text-gray-400 mt-0.5">{exp.duration}</p>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {freelancer.education?.length > 0 && (
-                    <div>
-                      <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Star className="w-4 h-4 text-green-500" /> Education
-                      </h3>
-                      <div className="space-y-4">
-                        {freelancer.education.map((edu, i) => (
-                          <div key={i} className="flex gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
-                              <Star className="w-5 h-5 text-green-600" />
-                            </div>
-                            <div className="flex-1 border-b border-gray-100 pb-4">
-                              <h4 className="font-semibold text-gray-900">{edu.degree}</h4>
-                              <p className="text-sm text-gray-600">{edu.institution}</p>
-                              <p className="text-xs text-gray-400 mt-0.5">{edu.year}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {!freelancer.experience?.length && !freelancer.education?.length && (
-                    <p className="text-gray-500 text-center py-8">No experience added yet.</p>
-                  )}
-                </div>
-              )}
+                    )}
+                    {!freelancer.experience?.length && !freelancer.education?.length && (
+                      <p className="text-gray-500 text-center py-8">No experience added yet.</p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

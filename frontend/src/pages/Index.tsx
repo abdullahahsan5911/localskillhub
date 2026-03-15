@@ -4,9 +4,11 @@ import { FiUsers, FiShield, FiHeart, FiLoader } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
 import SearchFilterSection from "../components/SearchFilterSection";
+import { UserHoverCard, UserHoverCardData } from "@/components/UserHoverCard";
 import { api } from "@/lib/api";
 import { CATEGORIES } from "@/constants/categories";
 import { DISCOVERY_TAB_PATHS, DiscoveryTab } from "@/constants/discoveryTabs";
+import { Bookmark } from "lucide-react";
 
 interface Freelancer {
   _id: string;
@@ -68,7 +70,7 @@ const Index = () => {
     }
 
     setSelectedCategoryId(categoryId);
-    
+
     // Filter freelancers based on selected category
     const selectedCategory = CATEGORIES.find((cat) => cat.id === categoryId);
     if (selectedCategory) {
@@ -77,8 +79,8 @@ const Index = () => {
         freelancer.skills.some((skill) => {
           const skillNameLower = skill.name.toLowerCase();
           // Match if skill contains category name or category name contains skill
-          return skillNameLower.includes(categoryNameLower) || 
-                 categoryNameLower.includes(skillNameLower);
+          return skillNameLower.includes(categoryNameLower) ||
+            categoryNameLower.includes(skillNameLower);
         })
       );
       setFilteredFreelancers(filtered);
@@ -188,7 +190,7 @@ const Index = () => {
 
             <div className="text-center py-20">
               <p className="text-gray-600 text-lg mb-4">
-                {selectedCategoryId 
+                {selectedCategoryId
                   ? `No freelancers found in ${CATEGORIES.find(cat => cat.id === selectedCategoryId)?.name}`
                   : 'No freelancers found'}
               </p>
@@ -213,6 +215,16 @@ const Index = () => {
 
                 const portfolioItem = freelancer.portfolio?.[0];
                 const user = freelancer.userId;
+
+                const hoverUser: UserHoverCardData = {
+                  id: user._id,
+                  name: user.name,
+                  avatarUrl: user.avatar,
+                  role: "Freelancer",
+                  completedJobs: freelancer.completedJobs,
+                  rating: freelancer.rating,
+                  projectImages: portfolioItem?.images?.filter(Boolean) || [],
+                };
 
                 return (
 
@@ -240,20 +252,20 @@ const Index = () => {
 
                           )}
 
-                          {/* Like */}
+                          {/* bookmark */}
                           <button
                             onClick={(e) => {
                               e.preventDefault();
                               toggleLike(freelancer._id);
                             }}
-                            className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white flex items-center justify-center shadow"
+                            className="opacity-0 group-hover:flex flex  group-hover:opacity-100
+                 transition-opacity duration-300 ease-in-out absolute top-2 right-0 w-10 h-10 rounded-l-full bg-white  items-center justify-center shadow"
                           >
-                            <FiHeart
-                              className={`${
-                                liked.includes(freelancer._id)
-                                  ? "text-red-500 fill-red-500"
+                            <Bookmark
+                              className={`${liked.includes(freelancer._id)
+                                  ? "text-orange-400 fill-orange-400"
                                   : "text-gray-700"
-                              }`}
+                                }`}
                             />
                           </button>
 
@@ -263,23 +275,31 @@ const Index = () => {
                         <div className="p-4">
 
                           <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-black">
-                            {portfolioItem?.title || user.name}
+                            {portfolioItem?.title?.slice(0, 30) || user.name}
                           </h3>
 
                           <div className="flex items-center gap-2 mb-3">
-
-                            <div className="w-6 h-6 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs">
-                              {user.name.charAt(0)}
-                            </div>
-
-                            <span className="text-sm text-gray-600">
-                              {user.name}
-                            </span>
-
-                            {user.verification?.identity && (
-                              <FiShield className="text-gray-700" />
-                            )}
-
+                            <UserHoverCard user={hoverUser}>
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs">
+                                  {user.avatar ? (
+                                    <img
+                                      src={user.avatar}
+                                      alt={user.name}
+                                      className="w-full h-full object-cover rounded-full"
+                                    />
+                                  ) : (
+                                    user.name.charAt(0)
+                                  )}
+                                </div>
+                                <span className="text-sm text-gray-600">
+                                  {user.name}
+                                </span>
+                                {user.verification?.identity && (
+                                  <FiShield className="text-gray-700" />
+                                )}
+                              </div>
+                            </UserHoverCard>
                           </div>
 
                           <div className="flex justify-between text-sm text-gray-500">

@@ -412,6 +412,13 @@ class ApiService {
     });
   }
 
+  // User endpoints
+  async getUser(id: string) {
+    return this.request(`/users/${id}`, {
+      method: 'GET',
+    });
+  }
+
   // Community endpoints
   async getLeaderboard(params?: { city?: string; category?: string; limit?: number }) {
     const queryString = params ? '?' + new URLSearchParams(params as any).toString() : '';
@@ -616,6 +623,69 @@ class ApiService {
     const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
     return this.request(`/geo/jobs/city/${encodeURIComponent(city)}${queryString}`, {
       method: 'GET',
+    });
+  }
+
+  // Asset marketplace endpoints
+  async getAssets(params?: {
+    q?: string;
+    category?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    city?: string;
+    creatorId?: string;
+    page?: number;
+    limit?: number;
+    sort?: string;
+  }) {
+    const queryString = this.toQueryString(params as Record<string, unknown>);
+    return this.request(`/assets${queryString}`, {
+      method: 'GET',
+    });
+  }
+
+  async getAsset(id: string) {
+    return this.request(`/assets/${id}`, {
+      method: 'GET',
+    });
+  }
+
+  async getMyAssets() {
+    return this.request('/assets/me/mine', {
+      method: 'GET',
+    });
+  }
+
+  async createAsset(data: any) {
+    return this.request('/assets', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateAsset(id: string, data: any) {
+    return this.request(`/assets/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteAsset(id: string) {
+    return this.request(`/assets/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async downloadAsset(id: string) {
+    return this.request(`/assets/${id}/download`, {
+      method: 'POST',
+    });
+  }
+
+  async rateAsset(id: string, rating: number) {
+    return this.request(`/assets/${id}/rate`, {
+      method: 'POST',
+      body: JSON.stringify({ rating }),
     });
   }
 

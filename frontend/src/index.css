@@ -76,6 +76,7 @@
     --tracking-normal: 0em;
     --spacing: 0.25rem;
   }
+
   .dark {
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
@@ -130,7 +131,12 @@
     @apply bg-background text-foreground font-body antialiased;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-display;
   }
 }
@@ -140,8 +146,43 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  .scrollbar-custom {
+    scrollbar-width: thin;
+    /* Firefox */
+    scrollbar-color: #1f2937 #f3f4f6;
+    /* thumb color | track color for Firefox */
+  }
+
+  /* Chrome, Safari, Edge */
+  .scrollbar-custom::-webkit-scrollbar {
+    width: 10px;
+    /* width of scrollbar */
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    /* track color */
+    border-radius: 9999px;
+    /* rounded track */
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    background-color: #1f2937;
+    /* thumb color */
+    border-radius: 9999px;
+    /* rounded thumb */
+    border: 2px solid #f3f4f6;
+    /* optional padding around thumb */
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background-color: #111827;
+    /* darker on hover */
   }
 
   .glass-card {
