@@ -76,7 +76,7 @@ const Images = () => {
   return (
     <Layout>
       <section className="border-b border-gray-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <div className="w-full px-4 sm:px-6 py-12">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3 tracking-tight">
             Images
           </h1>
@@ -97,7 +97,7 @@ const Images = () => {
       />
 
       <section className="py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="w-full px-4 sm:px-6">
           {loading ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {[...Array(12)].map((_, i) => (

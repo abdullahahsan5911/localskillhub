@@ -28,7 +28,7 @@ const SearchFilterSection = ({
 }: SearchFilterSectionProps) => {
   return (
     <section className="sticky top-16 z-40 border-y border-gray-200 bg-white/95 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4">
+      <div className="w-full px-4 sm:px-6">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
           <button className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-gray-300 px-5 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50">
             <FiSliders className="h-4 w-4" />

@@ -20,7 +20,7 @@ const CombinedDashboard = () => {
     <div>
       {/* Role switcher bar */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
+        <div className="w-full px-4 sm:px-6 py-3 flex items-center gap-3">
           <span className="text-sm font-medium text-gray-500 mr-2">Viewing as:</span>
           <button
             onClick={() => setActiveRole("freelancer")}

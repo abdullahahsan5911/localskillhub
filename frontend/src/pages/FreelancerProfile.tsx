@@ -178,7 +178,7 @@ const FreelancerProfile = () => {
   if (error || !freelancer) {
     return (
       <Layout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 text-center">
+        <div className="w-full px-4 sm:px-6 py-12 text-center">
           <p className="text-red-600 mb-4">{error || "Freelancer not found"}</p>
           <Link to="/browse" className="text-blue-600 hover:underline">← Back to Browse</Link>
         </div>
@@ -199,7 +199,7 @@ const FreelancerProfile = () => {
       <section className="bg-gray-50 min-h-screen">
         {/* Back nav */}
         <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-2">
+          <div className="w-full px-4 sm:px-6 py-3 flex items-center gap-2">
             <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 transition">
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
@@ -207,8 +207,7 @@ const FreelancerProfile = () => {
             <span className="text-sm text-gray-500">Freelancer Profile</span>
           </div>
         </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8">
+  <div className="w-full px-4 sm:px-6 py-6 md:py-8">
           {/* Hero card */}
           <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm mb-6">
             {/* Cover image / gradient */}

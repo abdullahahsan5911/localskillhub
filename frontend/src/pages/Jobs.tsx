@@ -32,6 +32,7 @@ interface Job {
   clientId: {
     _id: string;
     name: string;
+    avatar?: string;
   };
   proposalsCount?: number;
 }
@@ -129,18 +130,27 @@ const Jobs = () => {
 
   return (
     <Layout>
-      {/* Header with gradient background */}
-      <section className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 py-20">
-        <div className="absolute inset-0 bg-black opacity-10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 text-center text-white">
-          <h1 className="text-5xl md:text-6xl font-bold mb-4">Creative Jobs</h1>
-          <p className="text-xl text-white/90">Browse and discover your next opportunity</p>
+      {/* Hero cover with vibrant gradient background */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#c83d8a] via-[#a36712] to-[#3c27c6]">
+        {/* Dark overlay for readability */}
+        <div className="absolute inset-0 bg-black/30" />
+
+        {/* Centered content */}
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-20 md:py-14 flex flex-col items-center text-center text-white">
+         
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+            Find your next creative job nearby
+          </h1>
+          <p className="text-sm sm:text-base md:text-lg text-white/90 max-w-2xl">
+            Discover local clients looking for designers, editors, videographers, developers, and more.
+            Filter by category, skills, and budget to land the right gig faster.
+          </p>
         </div>
       </section>
 
       {/* Main content area */}
       <section className="bg-gray-50 min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="w-full px-4 sm:px-6 py-8">
           <div className="flex gap-6">
             {/* Left Sidebar - Categories */}
             <aside className="hidden lg:block w-64 flex-shrink-0">
@@ -260,6 +270,8 @@ const Jobs = () => {
                       ? {
                           id: client._id,
                           name: client.name,
+                          avatarUrl: client.avatar,
+                          role: "client",
                           city: job.location?.city,
                           state: job.location?.state,
                         }
@@ -276,17 +288,17 @@ const Jobs = () => {
                         {hoverUser ? (
                           <UserHoverCard user={hoverUser}>
                             <div className="flex items-start gap-3">
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                                {client.imageUrl ? (
-                                  <img
-                                    src={client.imageUrl}
-                                    alt={client.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <span className="text-lg">{client.name.charAt(0)}</span>
-                                )}
-                              </div>
+                              {client.avatar ? (
+                                <img
+                                  src={client.avatar}
+                                  alt={client.name}
+                                  className="w-12 h-12 rounded-full object-cover flex-shrink-0 border border-white shadow"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                                  {client.name.charAt(0)}
+                                </div>
+                              )}
                               <div className="flex-1 min-w-0">
                                 <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
                                   {job.title}
@@ -379,9 +391,17 @@ const Jobs = () => {
             <div className="p-8">
               {/* Company Header */}
               <div className="flex items-start gap-4 mb-6">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
-                  {selectedJob.clientId?.name?.charAt(0) || 'C'}
-                </div>
+                {selectedJob.clientId?.avatar ? (
+                  <img
+                    src={selectedJob.clientId.avatar}
+                    alt={selectedJob.clientId.name}
+                    className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-white shadow"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
+                    {selectedJob.clientId?.name?.charAt(0) || 'C'}
+                  </div>
+                )}
                 <div className="flex-1">
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedJob.title}</h3>
                   <p className="text-lg text-gray-600">{selectedJob.clientId?.name || 'Anonymous Client'}</p>

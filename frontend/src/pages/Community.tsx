@@ -87,15 +87,14 @@ const Community = () => {
       <section className="bg-white">
         {/* Hero */}
         <div className="bg-gradient-to-br from-blue-50 to-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 text-center">
+          <div className="w-full px-4 sm:px-6 py-16 text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Community Hub</h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Connect with local freelancers, earn badges, and grow together
             </p>
           </div>
         </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+  <div className="w-full px-4 sm:px-6 py-12">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Left: Leaderboard & Events */}
             <div className="lg:col-span-2 space-y-8">

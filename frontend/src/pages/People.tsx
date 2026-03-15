@@ -145,7 +145,7 @@ const People = () => {
       {/* Hero banner */}
 
       <section className="border-b border-gray-200 bg-white">
-        <div className="max-w-7xl mx-auto sm:px-6 md:py-4 flex flex-col gap-8">
+        <div className="w-full sm:px-6 md:py-4 flex flex-col gap-8">
 
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-gray-600 via-neutral-500 to-gray-400">
             <div className="absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.7),_transparent_55%),_radial-gradient(circle_at_bottom_right,_rgba(255,255,255,0.8),_transparent_55%)]" />
@@ -173,7 +173,7 @@ const People = () => {
 
       {/* People grid */}
       <section className="bg-white py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="w-full px-4 sm:px-6">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-8">
             <div>
               <p className="text-sm font-medium text-gray-700 mb-1">

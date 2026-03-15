@@ -224,7 +224,7 @@ const JobDetail = () => {
   if (error || !job) {
     return (
       <Layout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <div className="w-full px-4 sm:px-6 py-12">
           <div className="text-center">
             <p className="text-red-600">{error || "Job not found"}</p>
             <Link to="/jobs" className="text-blue-600 hover:underline mt-4 inline-block">← Back to Jobs</Link>
@@ -237,7 +237,7 @@ const JobDetail = () => {
   return (
     <Layout>
       <section className="bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-12">
           <div className="mb-6">
             <Link to="/jobs" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
               ← Back to Jobs

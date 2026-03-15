@@ -116,7 +116,7 @@ const Index = () => {
   };
 
   const displayFreelancers = filteredFreelancers.filter(
-    f =>
+    (f) =>
       f.portfolio &&
       f.portfolio.length > 0 &&
       (f.portfolio[0].images?.[0] || (f.portfolio[0] as any).imageUrl)
@@ -126,18 +126,15 @@ const Index = () => {
     <Layout>
       {/* HERO */}
       <section className="bg-white pt-16 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-
+        <div className="w-full px-4 sm:px-6">
           <div className="text-center mb-12">
-
             <h1 className="text-5xl font-bold text-gray-900 mb-4">
               Discover Local Talent
             </h1>
-
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Connect with skilled freelancers in your region for trusted collaboration
+              Connect with skilled freelancers in your region for trusted
+              collaboration
             </p>
-
           </div>
         </div>
       </section>
@@ -156,16 +153,17 @@ const Index = () => {
 
       {/* GRID */}
       <section className="bg-white py-12">
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-
+        <div className="w-full px-4 sm:px-6">
           {/* Filter Status */}
           {selectedCategoryId && !loading && (
             <div className="mb-6 flex items-center justify-between">
               <p className="text-sm text-gray-600">
-                Showing {displayFreelancers.length} {displayFreelancers.length === 1 ? 'freelancer' : 'freelancers'} in{' '}
+                Showing {displayFreelancers.length}{" "}
+                {displayFreelancers.length === 1 ? "freelancer" : "freelancers"}
+                {" "}
+                in{" "}
                 <span className="font-semibold text-gray-900">
-                  {CATEGORIES.find(cat => cat.id === selectedCategoryId)?.name}
+                  {CATEGORIES.find((cat) => cat.id === selectedCategoryId)?.name}
                 </span>
               </p>
               <button
@@ -181,18 +179,17 @@ const Index = () => {
           )}
 
           {loading ? (
-
             <div className="flex justify-center py-20">
               <FiLoader className="h-10 w-10 animate-spin text-gray-700" />
             </div>
-
           ) : displayFreelancers.length === 0 ? (
-
             <div className="text-center py-20">
               <p className="text-gray-600 text-lg mb-4">
                 {selectedCategoryId
-                  ? `No freelancers found in ${CATEGORIES.find(cat => cat.id === selectedCategoryId)?.name}`
-                  : 'No freelancers found'}
+                  ? `No freelancers found in ${CATEGORIES.find(
+                      (cat) => cat.id === selectedCategoryId
+                    )?.name}`
+                  : "No freelancers found"}
               </p>
               {selectedCategoryId && (
                 <button
@@ -206,13 +203,9 @@ const Index = () => {
                 </button>
               )}
             </div>
-
           ) : (
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-
-              {displayFreelancers.map(freelancer => {
-
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {displayFreelancers.map((freelancer) => {
                 const portfolioItem = freelancer.portfolio?.[0];
                 const user = freelancer.userId;
 
@@ -227,29 +220,20 @@ const Index = () => {
                 };
 
                 return (
-
                   <div key={freelancer._id} className="group">
-
                     <Link to={`/profile/${user._id}`}>
-
-                      <div className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-2xl transition duration-300">
-
+                      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white transition duration-300 hover:shadow-2xl">
                         {/* Image */}
                         <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
-
                           {portfolioItem?.images?.[0] ? (
-
                             <img
                               src={portfolioItem.images[0]}
-                              className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                             />
-
                           ) : (
-
-                            <div className="w-full h-full flex items-center justify-center text-6xl text-gray-400">
+                            <div className="flex h-full w-full items-center justify-center text-6xl text-gray-400">
                               {user.name.charAt(0)}
                             </div>
-
                           )}
 
                           {/* bookmark */}
@@ -258,35 +242,33 @@ const Index = () => {
                               e.preventDefault();
                               toggleLike(freelancer._id);
                             }}
-                            className="opacity-0 group-hover:flex flex  group-hover:opacity-100
-                 transition-opacity duration-300 ease-in-out absolute top-2 right-0 w-10 h-10 rounded-l-full bg-white  items-center justify-center shadow"
+                            className="absolute right-0 top-2 flex h-10 w-10 items-center justify-center rounded-l-full bg-white opacity-0 shadow transition-opacity duration-300 ease-in-out group-hover:flex group-hover:opacity-100"
                           >
                             <Bookmark
-                              className={`${liked.includes(freelancer._id)
+                              className={
+                                liked.includes(freelancer._id)
                                   ? "text-orange-400 fill-orange-400"
                                   : "text-gray-700"
-                                }`}
+                              }
                             />
                           </button>
-
                         </div>
 
                         {/* Info */}
                         <div className="p-4">
-
-                          <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-black">
+                          <h3 className="mb-2 font-semibold text-gray-900 group-hover:text-black">
                             {portfolioItem?.title?.slice(0, 30) || user.name}
                           </h3>
 
-                          <div className="flex items-center gap-2 mb-3">
+                          <div className="mb-3 flex items-center gap-2">
                             <UserHoverCard user={hoverUser}>
                               <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs">
+                                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">
                                   {user.avatar ? (
                                     <img
                                       src={user.avatar}
                                       alt={user.name}
-                                      className="w-full h-full object-cover rounded-full"
+                                      className="h-full w-full rounded-full object-cover"
                                     />
                                   ) : (
                                     user.name.charAt(0)
@@ -303,71 +285,54 @@ const Index = () => {
                           </div>
 
                           <div className="flex justify-between text-sm text-gray-500">
-
-                            <span className="bg-gray-100 px-3 py-1 rounded-full">
+                            <span className="rounded-full bg-gray-100 px-3 py-1">
                               {freelancer.skills[0]?.name}
                             </span>
-
                             <div className="flex items-center gap-1">
                               <FiUsers />
                               {freelancer.completedJobs}
                             </div>
-
                           </div>
-
                         </div>
-
                       </div>
-
                     </Link>
-
                   </div>
-
                 );
-
               })}
-
             </div>
-
           )}
-
         </div>
-
       </section>
 
       {/* CTA */}
       <section className="bg-neutral-800 py-20">
-
-        <div className="max-w-4xl mx-auto text-center text-white">
-
-          <h2 className="text-4xl font-bold mb-4">
+        <div className="w-full max-w-4xl mx-auto text-center text-white">
+          <h2 className="mb-4 text-4xl font-bold">
             Ready to hire local talent?
           </h2>
-
           <p className="mb-8 text-gray-300">
             Join freelancers and businesses in your region
           </p>
-
           <div className="flex justify-center gap-4">
-
             <Link to="/signup">
-              <Button variant="outline" className="bg-white text-black px-8 py-6 rounded-full">
+              <Button
+                variant="outline"
+                className="rounded-full bg-white px-8 py-6 text-black"
+              >
                 Sign Up
               </Button>
             </Link>
-
             <Link to="/browse">
-              <Button variant="outline" className="border-white text-black px-8 py-6 rounded-full">
+              <Button
+                variant="outline"
+                className="rounded-full border-white px-8 py-6 text-black"
+              >
                 Browse Talent
               </Button>
             </Link>
-
           </div>
-
         </div>
-
       </section>
-
     </Layout>
   );
 };

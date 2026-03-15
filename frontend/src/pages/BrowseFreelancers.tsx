@@ -298,7 +298,7 @@ const BrowseFreelancers = () => {
     <Layout>
       {/* Header */}
       <section className="border-b border-gray-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <div className="w-full px-4 sm:px-6 py-12">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-medium mb-5">
               <FiShield className="h-3.5 w-3.5" />
@@ -330,7 +330,7 @@ const BrowseFreelancers = () => {
 
       {/* Results Section */}
       <section className="bg-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="w-full px-4 sm:px-6">
           {/* Filter Bar */}
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
             <span className="text-sm text-gray-600">
