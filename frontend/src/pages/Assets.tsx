@@ -7,6 +7,8 @@ import api from "@/lib/api";
 import AssetCard from "@/components/assets/AssetCard";
 import { X } from "lucide-react";
 
+type AssetSortOption = "Recommended" | "Top rated" | "Most downloaded" | "Newest";
+
 const Assets = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -18,13 +20,42 @@ const Assets = () => {
   const [loading, setLoading] = useState(true);
   const [selectedAsset, setSelectedAsset] = useState<any | null>(null);
   const previewItemRefs = useRef<HTMLDivElement[]>([]);
+  const [sortOption, setSortOption] = useState<AssetSortOption>("Recommended");
+
+  const sortAssets = (list: any[], option: AssetSortOption) => {
+    const sorted = [...list];
+    sorted.sort((a, b) => {
+      const ratingA = a.ratings?.average ?? 0;
+      const ratingB = b.ratings?.average ?? 0;
+      const downloadsA = a.downloads ?? 0;
+      const downloadsB = b.downloads ?? 0;
+      const priceA = a.price ?? 0;
+      const priceB = b.price ?? 0;
+
+      switch (option) {
+        case "Top rated":
+          return ratingB - ratingA || downloadsB - downloadsA;
+        case "Most downloaded":
+          return downloadsB - downloadsA || ratingB - ratingA;
+        case "Newest":
+          // Fallback: prefer non-free, then higher downloads
+          return priceB - priceA || downloadsB - downloadsA;
+        case "Recommended":
+        default:
+          // Heuristic: prioritize rating, then downloads
+          return ratingB - ratingA || downloadsB - downloadsA;
+      }
+    });
+
+    return sorted;
+  };
 
   const fetchAssets = async () => {
     try {
       setLoading(true);
       const res = await api.getAssets({ q: search, category });
       const list = (res as any).data?.assets ?? (res as any).data ?? [];
-      setAssets(list);
+      setAssets(sortAssets(list, sortOption));
     } catch (error) {
       console.error(error);
     } finally {
@@ -36,6 +67,10 @@ const Assets = () => {
     fetchAssets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    setAssets((previous) => sortAssets(previous, sortOption));
+  }, [sortOption]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -109,17 +144,6 @@ const Assets = () => {
 
   return (
     <Layout>
-      <section className="border-b border-gray-200 bg-white">
-        <div className="w-full px-4 sm:px-6 py-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3 tracking-tight">
-            Assets
-          </h1>
-          <p className="text-lg text-gray-600 max-w-xl">
-            Browse asset collections and resources from local freelancers.
-          </p>
-        </div>
-      </section>
-
       <SearchFilterSection
         searchValue={search}
         onSearchChange={setSearch}
@@ -128,8 +152,25 @@ const Assets = () => {
         onDiscoveryTabChange={handleDiscoveryTabChange}
         showDiscoveryTabs={true}
         showCategoryGrid={false}
+        showFilterButton={false}
+        showRecommended={true}
+        recommendedOptions={["Recommended", "Top rated", "Most downloaded", "Newest"]}
+        selectedRecommended={sortOption}
+        onRecommendedChange={(value) => setSortOption(value as AssetSortOption)}
       />
 
+      <section className="border-b border-gray-200 bg-white">
+        <div className="w-full px-4 sm:px-6 py-12 flex flex-col items-center justify-center">
+          <h1 className="text-4xl text-center md:text-5xl font-bold text-gray-900 mb-3 tracking-tight">
+            Assets
+          </h1>
+          <p className="text-lg text-gray-600 max-w-xl text-center">
+            Browse asset collections and resources from local freelancers.
+          </p>
+        </div>
+      </section>
+
+      
       <section className="py-10">
         <div className="w-full px-4 sm:px-6">
           {loading ? (

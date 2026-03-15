@@ -43,6 +43,8 @@ interface PeopleFreelancer {
   localScore?: number;
 }
 
+type PeopleSortOption = "Recommended" | "Top rated" | "Most jobs" | "Newest";
+
 const People = () => {
   const navigate = useNavigate();
   const activeDiscoveryTab: DiscoveryTab = "People";
@@ -51,6 +53,35 @@ const People = () => {
   const [freelancers, setFreelancers] = useState<PeopleFreelancer[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [sortOption, setSortOption] = useState<PeopleSortOption>("Recommended");
+
+  const sortFreelancers = (list: PeopleFreelancer[], option: PeopleSortOption) => {
+    const sorted = [...list];
+    sorted.sort((a, b) => {
+      const scoreA = a.localScore ?? 0;
+      const scoreB = b.localScore ?? 0;
+      const ratingA = a.ratings?.average ?? 0;
+      const ratingB = b.ratings?.average ?? 0;
+      const jobsA = a.completedJobs ?? 0;
+      const jobsB = b.completedJobs ?? 0;
+      const viewsA = a.profileViews ?? 0;
+      const viewsB = b.profileViews ?? 0;
+
+      switch (option) {
+        case "Top rated":
+          return ratingB - ratingA || jobsB - jobsA || scoreB - scoreA;
+        case "Most jobs":
+          return jobsB - jobsA || ratingB - ratingA || scoreB - scoreA;
+        case "Newest":
+          return viewsB - viewsA || jobsB - jobsA || ratingB - ratingA;
+        case "Recommended":
+        default:
+          return scoreB - scoreA || ratingB - ratingA || jobsB - jobsA;
+      }
+    });
+
+    return sorted;
+  };
 
   const handleDiscoveryTabChange = (tab: DiscoveryTab) => {
     const path = DISCOVERY_TAB_PATHS[tab];
@@ -106,9 +137,9 @@ const People = () => {
       const payload = response.data as any;
 
       if (payload && Array.isArray(payload)) {
-        setFreelancers(payload as PeopleFreelancer[]);
+        setFreelancers(sortFreelancers(payload as PeopleFreelancer[], sortOption));
       } else if (payload && payload.freelancers) {
-        setFreelancers(payload.freelancers as PeopleFreelancer[]);
+        setFreelancers(sortFreelancers(payload.freelancers as PeopleFreelancer[], sortOption));
       } else {
         setFreelancers([]);
       }
@@ -123,6 +154,10 @@ const People = () => {
   useEffect(() => {
     fetchFreelancers();
   }, []);
+
+  useEffect(() => {
+    setFreelancers((previous) => sortFreelancers(previous, sortOption));
+  }, [sortOption]);
 
   const handleSearchSubmit = () => {
     fetchFreelancers(searchValue);
@@ -140,12 +175,33 @@ const People = () => {
         onDiscoveryTabChange={handleDiscoveryTabChange}
         showDiscoveryTabs={true}
         showCategoryGrid={false}
+        showFilterButton={false}
+        showRecommended={true}
+        recommendedOptions={["Recommended", "Top rated", "Most jobs", "Newest"]}
+        selectedRecommended={sortOption}
+        onRecommendedChange={(value) => setSortOption(value as PeopleSortOption)}
       />
+
+{/*  searchValue={homeSearch}
+        onSearchChange={setHomeSearch}
+        onSearchSubmit={handleHomeSearch}
+        activeDiscoveryTab={activeDiscoveryTab}
+        onDiscoveryTabChange={handleDiscoveryTabChange}
+        selectedCategoryId={selectedCategoryId}
+        onCategorySelect={handleVisualCategorySelect}
+        showDiscoveryTabs={true}
+        showFilterButton={true}
+        onFilterClick={handleHomeSearch}
+        showRecommended={true}
+        recommendedOptions={["Recommended", "Top rated", "Most jobs", "Newest"]}
+        selectedRecommended={sortOption}
+        onRecommendedChange={(value) => setSortOption(value as HomeSortOption)} */}
+
 
       {/* Hero banner */}
 
       <section className="border-b border-gray-200 bg-white">
-        <div className="w-full sm:px-6 md:py-4 flex flex-col gap-8">
+        <div className="w-full px-4 sm:px-6 py-4 flex flex-col gap-8">
 
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-gray-600 via-neutral-500 to-gray-400">
             <div className="absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.7),_transparent_55%),_radial-gradient(circle_at_bottom_right,_rgba(255,255,255,0.8),_transparent_55%)]" />
@@ -173,7 +229,7 @@ const People = () => {
 
       {/* People grid */}
       <section className="bg-white py-10">
-        <div className="w-full px-4 sm:px-6">
+        <div className="w-full px-4 sm:px-6 py-12">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-8">
             <div>
               <p className="text-sm font-medium text-gray-700 mb-1">
@@ -244,7 +300,7 @@ const People = () => {
 
                     <div className="px-4 pt-9 pb-4">
                       <div className="mb-2">
-                        <div className="flex-row items-center justify-between gap-2 ">
+                        <div className="flex-row items-center justify-center text-center flex gap-2">
                           <UserHoverCard
                             user={{
                               id: user._id,
@@ -259,7 +315,7 @@ const People = () => {
                               projectImages: getCoverImage(freelancer) ? [getCoverImage(freelancer)] : undefined,
                             } as UserHoverCardData}
                           >
-                            <h3 className="text-lg font-semibold flex justify-center items-center  text-gray-900 truncate" title={user.name}>
+                            <h3 className="text-lg  font-semibold flex hover:text-black hover:underline hover:font-bold justify-center items-center  text-gray-900 truncate" title={user.name}>
                               {user.name}
                             </h3>
                           </UserHoverCard>

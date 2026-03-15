@@ -1,12 +1,30 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import MapView from '../components/MapView';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FiUser, FiBriefcase } from 'react-icons/fi';
+import { FiUser, FiBriefcase, FiMapPin } from 'react-icons/fi';
+import { useAuth } from '@/contexts/AuthContext';
 
 const MapPage = () => {
   const [viewType, setViewType] = useState<'freelancers' | 'jobs'>('freelancers');
+  const { user, isAuthenticated } = useAuth();
+
+  const showLocationAlert = useMemo(() => {
+    if (!isAuthenticated || !user) return false;
+
+    const isFreelancerRole = user.role === 'freelancer' || user.role === 'both';
+    if (!isFreelancerRole) return false;
+
+    const city = user.location?.city?.trim();
+    const state = user.location?.state?.trim();
+    const coordinates =
+      (user.location?.coordinates as any)?.coordinates ?? user.location?.coordinates;
+    const hasCoords = Array.isArray(coordinates) && coordinates.length >= 2;
+
+    return !city || !state || !hasCoords;
+  }, [isAuthenticated, user]);
 
   return (
     <Layout>
@@ -35,6 +53,31 @@ const MapPage = () => {
             </div>
           </div>
         </div>
+
+        {showLocationAlert && (
+          <Card className="mb-4 border-amber-200 bg-amber-50/80">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-full bg-amber-100 p-1.5 text-amber-700">
+                <FiMapPin className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-amber-900">
+                  Add your location to appear on the map
+                </p>
+                <p className="text-xs text-amber-800 mt-1">
+                  Profiles without city, state are hidden from Map Search.
+                  Update your location to be shown on the map.
+                </p>
+                <Link
+                  to="/dashboard/freelancer?tab=settings"
+                  className="mt-2 inline-flex text-[11px] font-medium text-amber-900 underline underline-offset-2"
+                >
+                  Update your location settings
+                </Link>
+              </div>
+            </div>
+          </Card>
+        )}
 
         <Card className="p-3 sm:p-4 mb-5 border-slate-200 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

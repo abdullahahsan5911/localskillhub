@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import api from "@/lib/api";
 import { uploadToCloudinary } from "@/lib/cloudinary";
+import { buildPointLocation, resolveCurrentBrowserLocation } from "@/lib/location";
 import DashboardLayout, { NavItem } from "@/components/dashboard/DashboardLayout";
 import MessagesTab from "@/components/dashboard/MessagesTab";
 import { CATEGORIES } from "@/constants/categories";
@@ -535,6 +536,12 @@ const SettingsTab = ({ user }: any) => {
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar || "");
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarFileRef = useRef<HTMLInputElement>(null);
+  const [city, setCity] = useState(user?.location?.city || "");
+  const [stateName, setStateName] = useState(user?.location?.state || "");
+  const [country, setCountry] = useState(user?.location?.country || "India");
+  const [locating, setLocating] = useState(false);
+  const [resolvedLocation, setResolvedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [saveError, setSaveError] = useState("");
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -554,10 +561,70 @@ const SettingsTab = ({ user }: any) => {
 
   const handleSave = async () => {
     try {
-      await api.updateProfile({ name });
+      setSaveError("");
+
+      const hasLocationInput = city.trim() && stateName.trim() && country.trim();
+
+      // If no location fields filled, only update name (keep existing location as-is)
+      if (!hasLocationInput && !resolvedLocation) {
+        await api.updateProfile({ name });
+      } else {
+        let latitude: number;
+        let longitude: number;
+
+        if (resolvedLocation) {
+          latitude = resolvedLocation.latitude;
+          longitude = resolvedLocation.longitude;
+        } else {
+          const geocode = await api.geocodeAddress([
+            city,
+            stateName,
+            country,
+          ]
+            .filter(Boolean)
+            .join(", "));
+          latitude = Number((geocode.data as any)?.latitude);
+          longitude = Number((geocode.data as any)?.longitude);
+
+          if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+            throw new Error("Unable to resolve your location coordinates");
+          }
+        }
+
+        const locationPayload = buildPointLocation({
+          city: city.trim(),
+          state: stateName.trim(),
+          country: country.trim() || "India",
+          latitude,
+          longitude,
+        });
+
+        await api.updateProfile({
+          name,
+          location: locationPayload,
+        });
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch { /* ignore */ }
+    } catch (err: any) {
+      setSaveError(err.message || "Unable to save settings");
+    }
+  };
+
+  const handleUseCurrentLocation = async () => {
+    try {
+      setLocating(true);
+      setSaveError("");
+      const resolved = await resolveCurrentBrowserLocation();
+      setCity(resolved.city);
+      setStateName(resolved.state);
+      setCountry(resolved.country || "India");
+      setResolvedLocation({ latitude: resolved.latitude, longitude: resolved.longitude });
+    } catch (err: any) {
+      setSaveError(err.message || "Unable to detect your current location");
+    } finally {
+      setLocating(false);
+    }
   };
 
   return (
@@ -618,12 +685,66 @@ const SettingsTab = ({ user }: any) => {
             disabled
           />
         </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">City</label>
+            <input
+              type="text"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={city}
+              onChange={e => {
+                setCity(e.target.value);
+                setResolvedLocation(null);
+              }}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">State</label>
+            <input
+              type="text"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={stateName}
+              onChange={e => {
+                setStateName(e.target.value);
+                setResolvedLocation(null);
+              }}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Country</label>
+            <input
+              type="text"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={country}
+              onChange={e => {
+                setCountry(e.target.value);
+                setResolvedLocation(null);
+              }}
+            />
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-gray-500">
+          <p className="-mt-1">Your base location helps local freelancers discover your jobs on the map.</p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="rounded-xl"
+            onClick={handleUseCurrentLocation}
+            disabled={locating}
+          >
+            {locating ? "Detecting..." : "Use my current location"}
+          </Button>
+        </div>
         <Button
           className={`w-full rounded-xl ${saved ? "bg-green-600 hover:bg-green-600" : "bg-blue-600 hover:bg-blue-700"} text-white`}
           onClick={handleSave}
         >
           {saved ? "Saved!" : "Save Changes"}
         </Button>
+        {saveError && (
+          <p className="text-xs text-red-600 mt-1">{saveError}</p>
+        )}
       </div>
     </div>
   );

@@ -31,6 +31,8 @@ interface Freelancer {
   completedJobs: number;
 }
 
+type HomeSortOption = "Recommended" | "Top rated" | "Most jobs" | "Newest";
+
 const Index = () => {
   const navigate = useNavigate();
 
@@ -42,6 +44,33 @@ const Index = () => {
   const [homeSearch, setHomeSearch] = useState("");
   const [activeDiscoveryTab, setActiveDiscoveryTab] = useState<DiscoveryTab>("Projects");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined);
+  const [sortOption, setSortOption] = useState<HomeSortOption>("Recommended");
+
+  const sortFreelancers = (list: Freelancer[], option: HomeSortOption) => {
+    const sorted = [...list];
+    sorted.sort((a, b) => {
+      const ratingA = a.rating ?? 0;
+      const ratingB = b.rating ?? 0;
+      const jobsA = a.completedJobs ?? 0;
+      const jobsB = b.completedJobs ?? 0;
+
+      switch (option) {
+        case "Top rated":
+          return ratingB - ratingA || jobsB - jobsA;
+        case "Most jobs":
+          return jobsB - jobsA || ratingB - ratingA;
+        case "Newest":
+          // No createdAt field available; fall back to completed jobs as a proxy
+          return jobsB - jobsA || ratingB - ratingA;
+        case "Recommended":
+        default:
+          // Simple heuristic: prioritize rating, then jobs
+          return ratingB - ratingA || jobsB - jobsA;
+      }
+    });
+
+    return sorted;
+  };
 
   const handleHomeSearch = () => {
     const params = new URLSearchParams();
@@ -96,8 +125,9 @@ const Index = () => {
         const response = await api.getFreelancers({ completeOnly: false });
         if (response.data) {
           const freelancersList = (response.data as any).freelancers || [];
-          setAllFreelancers(freelancersList);
-          setFilteredFreelancers(freelancersList);
+          const sorted = sortFreelancers(freelancersList, sortOption);
+          setAllFreelancers(sorted);
+          setFilteredFreelancers(sorted);
         }
       } catch (error) {
         console.error("Failed to fetch freelancers:", error);
@@ -113,7 +143,13 @@ const Index = () => {
     setLiked(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
+    setFilteredFreelancers(sortFreelancers(allFreelancers, sortOption));
   };
+
+  useEffect(() => {
+    setAllFreelancers((previous) => sortFreelancers(previous, sortOption));
+    setFilteredFreelancers((previous) => sortFreelancers(previous, sortOption));
+  }, [sortOption]);
 
   const displayFreelancers = filteredFreelancers.filter(
     (f) =>
@@ -149,6 +185,11 @@ const Index = () => {
         selectedCategoryId={selectedCategoryId}
         onCategorySelect={handleVisualCategorySelect}
         showDiscoveryTabs={true}
+        showFilterButton={false}
+        showRecommended={true}
+        recommendedOptions={["Recommended", "Top rated", "Most jobs", "Newest"]}
+        selectedRecommended={sortOption}
+        onRecommendedChange={(value) => setSortOption(value as HomeSortOption)}
       />
 
       {/* GRID */}
@@ -184,7 +225,7 @@ const Index = () => {
             </div>
           ) : displayFreelancers.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-gray-600 text-lg mb-4">
+              <p className="text-gray-600 text-lg mb-4 ">
                 {selectedCategoryId
                   ? `No freelancers found in ${CATEGORIES.find(
                       (cat) => cat.id === selectedCategoryId
@@ -274,7 +315,7 @@ const Index = () => {
                                     user.name.charAt(0)
                                   )}
                                 </div>
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-gray-600 hover:text-black hover:underline hover:font-bold">
                                   {user.name}
                                 </span>
                                 {user.verification?.identity && (

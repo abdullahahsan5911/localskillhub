@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import Job from '../models/Job.js';
 import { AppError } from '../middleware/errorHandler.js';
 
 // @desc    Get all users
@@ -152,6 +153,51 @@ export const unfollowUser = async (req, res, next) => {
     await User.findByIdAndUpdate(currentId, { $pull: { following: targetId } });
 
     res.json({ status: 'success', message: 'Unfollowed successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Bookmark a job for the current user
+// @route   POST /api/users/me/bookmarks
+// @access  Private
+export const addJobBookmark = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { jobId } = req.body;
+
+    if (!jobId) {
+      return next(new AppError('Job ID is required', 400));
+    }
+
+    const job = await Job.findById(jobId).select('_id');
+    if (!job) {
+      return next(new AppError('Job not found', 404));
+    }
+
+    await User.findByIdAndUpdate(userId, { $addToSet: { savedJobs: jobId } });
+
+    res.json({ status: 'success', message: 'Job bookmarked' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Remove a bookmarked job for the current user
+// @route   DELETE /api/users/me/bookmarks/:jobId
+// @access  Private
+export const removeJobBookmark = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { jobId } = req.params;
+
+    if (!jobId) {
+      return next(new AppError('Job ID is required', 400));
+    }
+
+    await User.findByIdAndUpdate(userId, { $pull: { savedJobs: jobId } });
+
+    res.json({ status: 'success', message: 'Job removed from bookmarks' });
   } catch (error) {
     next(error);
   }

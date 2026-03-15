@@ -43,7 +43,7 @@ const AssetCard = ({ asset, onDownload, onClick }: AssetCardProps) => {
                   projectImages: preview ? [preview] : undefined,
                 } as UserHoverCardData}
               >
-                <p className="mt-0.5 text-xs text-gray-500">by {asset.ownerId.name}</p>
+                <p className="mt-0.5 text-xs text-gray-500 hover:text-black hover:underline hover:font-bold">by {asset.ownerId.name}</p>
               </UserHoverCard>
             ) : asset.ownerId?.name ? (
               <p className="mt-0.5 text-xs text-gray-500">by {asset.ownerId.name}</p>

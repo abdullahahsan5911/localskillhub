@@ -419,6 +419,20 @@ class ApiService {
     });
   }
 
+  // Job bookmarks for current user
+  async bookmarkJob(jobId: string) {
+    return this.request('/users/me/bookmarks', {
+      method: 'POST',
+      body: JSON.stringify({ jobId }),
+    });
+  }
+
+  async unbookmarkJob(jobId: string) {
+    return this.request(`/users/me/bookmarks/${jobId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Community endpoints
   async getLeaderboard(params?: { city?: string; category?: string; limit?: number }) {
     const queryString = params ? '?' + new URLSearchParams(params as any).toString() : '';

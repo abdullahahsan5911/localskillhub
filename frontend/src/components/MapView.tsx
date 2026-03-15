@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import api from '@/lib/api';
+import { userInfo } from 'os';
+import ClientProfile from '@/pages/ClientProfile';
 
 interface MapViewProps {
   type: 'freelancers' | 'jobs';
@@ -63,8 +65,8 @@ const isValidCoordinatePair = (lat: number, lng: number) => {
   return true;
 };
 
-const uniqueSorted = (values: string[]) =>
-  [...new Set(values.map((v) => v.trim()).filter(Boolean))].sort((a, b) =>
+const uniqueSorted = (values: unknown[]) =>
+  [...new Set(values.map((v) => String(v ?? '').trim()).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b)
   );
 
@@ -104,9 +106,9 @@ const haversineDistanceKm = (
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) *
+    Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
@@ -126,8 +128,8 @@ const getCoordinates = (item: any, itemType: 'freelancer' | 'job') => {
     const coords = Array.isArray(profileCoords)
       ? profileCoords
       : Array.isArray(userCoords)
-      ? userCoords
-      : null;
+        ? userCoords
+        : null;
 
     if (coords && coords.length >= 2) {
       const lat = toNumber(coords[1], NaN);
@@ -167,7 +169,6 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
   const [fetchSummary, setFetchSummary] = useState({ fetched: 0, mapped: 0 });
   const [missingMapItems, setMissingMapItems] = useState<MissingMapItem[]>([]);
   const [repairingId, setRepairingId] = useState<string | null>(null);
-  const [backfillRunning, setBackfillRunning] = useState(false);
   const [filters, setFilters] = useState<{
     city: string;
     state: string;
@@ -562,18 +563,6 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
     }
   };
 
-  const handleBackfill = async () => {
-    setBackfillRunning(true);
-    try {
-      await api.triggerGeolocationBackfill(200);
-      await fetchMapData();
-    } catch (error) {
-      console.error('Backfill failed:', error);
-    } finally {
-      setBackfillRunning(false);
-    }
-  };
-
   const normalizeAndSort = (items: any[], itemType: 'freelancer' | 'job') => {
     const cityFilter = filters.city.trim().toLowerCase();
     const stateFilter = filters.state.trim().toLowerCase();
@@ -602,13 +591,13 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
           const haystack =
             itemType === 'freelancer'
               ? [item.title, item.bio, item.userId?.name]
-                  .filter(Boolean)
-                  .join(' ')
-                  .toLowerCase()
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase()
               : [item.title, item.description, item.category]
-                  .filter(Boolean)
-                  .join(' ')
-                  .toLowerCase();
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
           if (!haystack.includes(keywordFilter)) return null;
         }
 
@@ -764,20 +753,13 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
             <Badge variant="outline" className="text-sm">
               {loading ? 'Loading' : markerData.length} results
             </Badge>
-            {!loading && (
-              <Badge variant="secondary" className="text-xs rounded-full bg-slate-100 text-slate-700 hover:bg-slate-100">
-                API {fetchSummary.fetched} | Map {fetchSummary.mapped}
-              </Badge>
-            )}
+
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
             <Button variant="outline" size="sm" onClick={() => setShowFilters((s) => !s)}>
               <FiFilter className="h-4 w-4 mr-2" />
               Region Filters
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleBackfill} disabled={backfillRunning}>
-              {backfillRunning ? 'Backfilling...' : 'Backfill Locations'}
             </Button>
           </div>
         </div>
@@ -1006,7 +988,171 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
         )}
       </Card>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.65fr)_360px] items-start">
+      <div className="grid gap-5 lg:grid-cols-[360px_minmax(0,1.7fr)] items-start">
+
+        <Card className="p-3 sm:p-4 border-slate-200 shadow-sm bg-white lg:sticky lg:top-24">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">
+                {type === 'freelancers' ? 'All freelancers' : 'All jobs'}
+              </p>
+              <p className="text-xs text-slate-500">Click a result to focus it on the map. Hover markers to preview details.</p>
+            </div>
+            <Badge variant="outline" className="rounded-full">{visibleResults.length}</Badge>
+          </div>
+
+          <div className="space-y-3 max-h-[680px] overflow-y-auto pr-1">
+            {visibleResults.map((entry) => {
+              if (entry.type === 'freelancer') {
+                const f = entry.data;
+                const name = f.userId?.name || f.name || 'Freelancer';
+                const city = f.userId?.location?.city || f.location?.city || 'Unknown city';
+                const state = f.userId?.location?.state || f.location?.state || 'Unknown state';
+                const rating = toNumber(f.ratings?.average, 0);
+                const reviews = toNumber(f.ratings?.count, 0);
+                const rate = toNumber(f.rates?.minRate, 0);
+                const localTrust = toNumber(f.localScore, 0);
+                const skillTrust = toNumber(f.skillScore, 0);
+                const overall = Math.round((localTrust + toNumber(f.globalScore, 0) + skillTrust) / 3);
+                const isActive = activeResultId === entry.id;
+
+                return (
+                  <button
+                    key={entry.id}
+                    type="button"
+                    onClick={() => focusMarker(entry.id)}
+                    onMouseEnter={() => setActiveResultId(entry.id)}
+                    className="block w-full text-left"
+                  >
+                    <Card className={`p-4 rounded-xl shadow-none transition-colors ${isActive ? 'border-blue-500 bg-blue-50/60' : 'border-slate-200 hover:border-blue-300 hover:bg-slate-50'}`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{name}</h3>
+                          <p className="text-sm text-gray-600">{f.title || 'Local Specialist'}</p>
+                          <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                            <FiMapPin className="h-3 w-3" /> {city}, {state}
+                          </p>
+                        </div>
+                        <Badge variant="outline">{entry.distanceKm.toFixed(1)} km</Badge>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {(f.skills || []).slice(0, 4).map((skill: any, idx: number) => (
+                          <Badge key={`${entry.id}-skill-${idx}`} variant="secondary" className="text-xs">
+                            {typeof skill === 'string' ? skill : skill.name}
+                          </Badge>
+                        ))}
+                      </div>
+
+                      <div className="mt-3 text-sm text-gray-700 space-y-1">
+                        <p>Rates: Rs {rate} / {f.rates?.rateType || 'hourly'}</p>
+                        <p>Availability: {f.availability?.status || 'available'}</p>
+                        <p>Past jobs + reviews: {toNumber(f.completedJobs, 0)} jobs | {rating.toFixed(1)} ({reviews})</p>
+                        <p>Endorsements: {toNumber((f.endorsements || []).length, 0)}</p>
+                      </div>
+
+                      <div className="mt-3 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-900">
+                        <strong>Reputation:</strong> Overall Score {overall} | Local Trust {localTrust} | Skill Trust {skillTrust}
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between text-xs text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <FiStar className="h-3 w-3" /> Social proof enabled
+                        </span>
+                        <a href={`/profile/${f.userId?._id || f._id}`} className="text-blue-600 font-medium">
+                          Open profile
+                        </a>
+                      </div>
+                    </Card>
+                  </button>
+                );
+              }
+
+              const j = entry.data;
+              const city = j.location?.city || 'Unknown city';
+              const state = j.location?.state || 'Unknown state';
+              const budget = toNumber(j.budget?.amount, 0);
+              const isActive = activeResultId === entry.id;
+
+              return (
+                <button
+                  key={entry.id}
+                  type="button"
+                  onClick={() => focusMarker(entry.id)}
+                  onMouseEnter={() => setActiveResultId(entry.id)}
+                  className="block w-full text-left"
+                >
+                  <Card className={`p-4 rounded-xl shadow-none transition-colors ${isActive ? 'border-green-500 bg-green-50/60' : 'border-slate-200 hover:border-green-300 hover:bg-slate-50'}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{j.title || 'Local Job'}</h3>
+                        <p className="text-sm text-gray-600">{j.category || 'General'}</p>
+                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                          <FiMapPin className="h-3 w-3" /> {city}, {state}
+                        </p>
+                      </div>
+                      <Badge variant="outline">{entry.distanceKm.toFixed(1)} km</Badge>
+                    </div>
+
+                    <div className="mt-3 text-sm text-gray-700 space-y-1">
+                      <p>Budget/rate: Rs {budget.toLocaleString()} ({j.budget?.type || 'fixed'})</p>
+                      <p>Milestones: {toNumber((j.milestones || []).length, 0)}</p>
+                      <p>Proposals: {toNumber(j.applicants || (j.proposals || []).length, 0)}</p>
+                      <p>Invites: {toNumber((j.invitedFreelancers || []).length, 0)}</p>
+                      <p>Remote zone: {j.remoteAllowed ? 'Enabled' : 'Local on-site'}</p>
+                    </div>
+
+                    <div className="mt-3 rounded-lg bg-green-50 px-3 py-2 text-xs text-green-900">
+                      <strong>Hiring workflow:</strong> post local jobs, set budget/rate, add milestones, invite proposals, choose service packages.
+                    </div>
+
+                    <div className="mt-3 text-right">
+                      <a href={`/jobs/${j._id}`} className="text-green-700 font-medium text-sm">
+                        Open job
+                      </a>
+                    </div>
+                  </Card>
+                </button>
+              );
+            })}
+            {!loading && missingMapItems.length > 0 && (
+              <div className="rounded-xl  p-4">
+                <div className="flex items-center justify-between gap-3 mb-3">
+
+                  <Badge variant="outline" className="rounded-full border-amber-300 text-amber-800">
+                    {missingMapItems.length} {missingMapItems[0]?.type} with missing location
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  {missingMapItems.map((item) => (
+                    <div key={item.id} className="rounded-lg border border-amber-200 bg-white/80 px-3 py-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">{item.title}</p>
+                          <p className="text-xs text-red-600">{item.locationLabel}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <Badge variant="secondary" className="text-[10px] rounded-full bg-amber-100 text-amber-900 hover:bg-amber-100">
+                            {item.type}
+                          </Badge>
+
+                        </div>
+                      </div>
+                      <p className="text-xs text-blue-600 mt-2"> Reason: {item.reason}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {!loading && visibleResults.length === 0 && (
+              <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
+                No results match the current filter set. Try Any distance or clear city/state filters.
+              </div>
+            )}
+          </div>
+        </Card>
+
         <div>
           <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-slate-600">
             <Badge variant="secondary" className="rounded-full px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-100">
@@ -1058,186 +1204,6 @@ const MapView = ({ type, initialCenter, height = '680px' }: MapViewProps) => {
           </div>
         </div>
 
-        <Card className="p-3 sm:p-4 border-slate-200 shadow-sm bg-white lg:sticky lg:top-24">
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                {type === 'freelancers' ? 'All freelancers' : 'All jobs'}
-              </p>
-              <p className="text-xs text-slate-500">Click a result to focus it on the map. Hover markers to preview details.</p>
-            </div>
-            <Badge variant="outline" className="rounded-full">{visibleResults.length}</Badge>
-          </div>
-
-          <div className="space-y-3 max-h-[680px] overflow-y-auto pr-1">
-        {visibleResults.map((entry) => {
-          if (entry.type === 'freelancer') {
-            const f = entry.data;
-            const name = f.userId?.name || f.name || 'Freelancer';
-            const city = f.userId?.location?.city || f.location?.city || 'Unknown city';
-            const state = f.userId?.location?.state || f.location?.state || 'Unknown state';
-            const rating = toNumber(f.ratings?.average, 0);
-            const reviews = toNumber(f.ratings?.count, 0);
-            const rate = toNumber(f.rates?.minRate, 0);
-            const localTrust = toNumber(f.localScore, 0);
-            const skillTrust = toNumber(f.skillScore, 0);
-            const overall = Math.round((localTrust + toNumber(f.globalScore, 0) + skillTrust) / 3);
-            const isActive = activeResultId === entry.id;
-
-            return (
-              <button
-                key={entry.id}
-                type="button"
-                onClick={() => focusMarker(entry.id)}
-                onMouseEnter={() => setActiveResultId(entry.id)}
-                className="block w-full text-left"
-              >
-              <Card className={`p-4 rounded-xl shadow-none transition-colors ${isActive ? 'border-blue-500 bg-blue-50/60' : 'border-slate-200 hover:border-blue-300 hover:bg-slate-50'}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{name}</h3>
-                    <p className="text-sm text-gray-600">{f.title || 'Local Specialist'}</p>
-                    <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                      <FiMapPin className="h-3 w-3" /> {city}, {state}
-                    </p>
-                  </div>
-                  <Badge variant="outline">{entry.distanceKm.toFixed(1)} km</Badge>
-                </div>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {(f.skills || []).slice(0, 4).map((skill: any, idx: number) => (
-                    <Badge key={`${entry.id}-skill-${idx}`} variant="secondary" className="text-xs">
-                      {typeof skill === 'string' ? skill : skill.name}
-                    </Badge>
-                  ))}
-                </div>
-
-                <div className="mt-3 text-sm text-gray-700 space-y-1">
-                  <p>Rates: Rs {rate} / {f.rates?.rateType || 'hourly'}</p>
-                  <p>Availability: {f.availability?.status || 'available'}</p>
-                  <p>Past jobs + reviews: {toNumber(f.completedJobs, 0)} jobs | {rating.toFixed(1)} ({reviews})</p>
-                  <p>Endorsements: {toNumber((f.endorsements || []).length, 0)}</p>
-                </div>
-
-                <div className="mt-3 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-900">
-                  <strong>Reputation:</strong> Overall Score {overall} | Local Trust {localTrust} | Skill Trust {skillTrust}
-                </div>
-
-                <div className="mt-3 flex items-center justify-between text-xs text-gray-600">
-                  <span className="flex items-center gap-1">
-                    <FiStar className="h-3 w-3" /> Social proof enabled
-                  </span>
-                  <a href={`/profile/${f.userId?._id || f._id}`} className="text-blue-600 font-medium">
-                    Open profile
-                  </a>
-                </div>
-              </Card>
-              </button>
-            );
-          }
-
-          const j = entry.data;
-          const city = j.location?.city || 'Unknown city';
-          const state = j.location?.state || 'Unknown state';
-          const budget = toNumber(j.budget?.amount, 0);
-          const isActive = activeResultId === entry.id;
-
-          return (
-            <button
-              key={entry.id}
-              type="button"
-              onClick={() => focusMarker(entry.id)}
-              onMouseEnter={() => setActiveResultId(entry.id)}
-              className="block w-full text-left"
-            >
-            <Card className={`p-4 rounded-xl shadow-none transition-colors ${isActive ? 'border-green-500 bg-green-50/60' : 'border-slate-200 hover:border-green-300 hover:bg-slate-50'}`}>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-semibold text-gray-900">{j.title || 'Local Job'}</h3>
-                  <p className="text-sm text-gray-600">{j.category || 'General'}</p>
-                  <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                    <FiMapPin className="h-3 w-3" /> {city}, {state}
-                  </p>
-                </div>
-                <Badge variant="outline">{entry.distanceKm.toFixed(1)} km</Badge>
-              </div>
-
-              <div className="mt-3 text-sm text-gray-700 space-y-1">
-                <p>Budget/rate: Rs {budget.toLocaleString()} ({j.budget?.type || 'fixed'})</p>
-                <p>Milestones: {toNumber((j.milestones || []).length, 0)}</p>
-                <p>Proposals: {toNumber(j.applicants || (j.proposals || []).length, 0)}</p>
-                <p>Invites: {toNumber((j.invitedFreelancers || []).length, 0)}</p>
-                <p>Remote zone: {j.remoteAllowed ? 'Enabled' : 'Local on-site'}</p>
-              </div>
-
-              <div className="mt-3 rounded-lg bg-green-50 px-3 py-2 text-xs text-green-900">
-                <strong>Hiring workflow:</strong> post local jobs, set budget/rate, add milestones, invite proposals, choose service packages.
-              </div>
-
-              <div className="mt-3 text-right">
-                <a href={`/jobs/${j._id}`} className="text-green-700 font-medium text-sm">
-                  Open job
-                </a>
-              </div>
-            </Card>
-            </button>
-          );
-        })}
-            {!loading && missingMapItems.length > 0 && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <div>
-                    <p className="text-sm font-semibold text-amber-900">Missing coordinates</p>
-                    <p className="text-xs text-amber-700">Fetched from API but not placed on the map.</p>
-                  </div>
-                  <Badge variant="outline" className="rounded-full border-amber-300 text-amber-800">
-                    {missingMapItems.length}
-                  </Badge>
-                </div>
-
-                <div className="space-y-2">
-                  {missingMapItems.map((item) => (
-                    <div key={item.id} className="rounded-lg border border-amber-200 bg-white/80 px-3 py-2">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">{item.title}</p>
-                          <p className="text-xs text-slate-600">{item.locationLabel}</p>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <Badge variant="secondary" className="text-[10px] rounded-full bg-amber-100 text-amber-900 hover:bg-amber-100">
-                            {item.type}
-                          </Badge>
-                          <Link
-                            to={item.type === 'freelancer' ? '/dashboard/freelancer?tab=settings' : `/post-job?jobId=${item.id}`}
-                            className="text-[11px] font-medium text-blue-700 hover:text-blue-800"
-                          >
-                            Edit source record
-                          </Link>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            className="h-7 rounded-full text-[11px] border-amber-300 text-amber-900 hover:bg-amber-100"
-                            disabled={repairingId === item.id || (!item.city && !item.state)}
-                            onClick={() => handleFixLocation(item)}
-                          >
-                            {repairingId === item.id ? 'Fixing...' : 'Fix location'}
-                          </Button>
-                        </div>
-                      </div>
-                      <p className="text-xs text-amber-800 mt-2">{item.reason}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {!loading && visibleResults.length === 0 && (
-              <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
-                No results match the current filter set. Try Any distance or clear city/state filters.
-              </div>
-            )}
-          </div>
-        </Card>
       </div>
     </div>
   );

@@ -3,15 +3,17 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FiMapPin, FiShield, FiFilter, FiGrid, FiList, FiX } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { UserHoverCard, UserHoverCardData } from "@/components/UserHoverCard";
+import Avatar from "@/components/avatar";
 import Layout from "@/components/layout/Layout";
 import SearchFilterSection from "../components/SearchFilterSection";
 import api from "@/lib/api";
 import { CATEGORIES } from "@/constants/categories";
 import { DISCOVERY_TAB_PATHS, DiscoveryTab } from "@/constants/discoveryTabs";
+
 const skills = ["All", ...CATEGORIES.map((category) => category.name)];
 const availabilityOptions = ["all", "available", "busy", "unavailable"] as const;
+type SortOption = "Recommended" | "Top rated" | "Most jobs" | "Newest";
 const PAGE_SIZE = 12;
-
 interface BrowseFilters {
   minRate: string;
   maxRate: string;
@@ -31,6 +33,7 @@ interface FreelancerProfile {
   userId: {
     _id: string;
     name: string;
+    avatar?: string;
     location: {
       city: string;
       state: string;
@@ -86,6 +89,35 @@ const BrowseFreelancers = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
+  const [sortOption, setSortOption] = useState<SortOption>("Recommended");
+
+  const sortFreelancers = (list: FreelancerProfile[], option: SortOption) => {
+    const sorted = [...list];
+    sorted.sort((a, b) => {
+      const scoreA = a.localScore ?? 0;
+      const scoreB = b.localScore ?? 0;
+      const ratingA = a.ratings?.average ?? 0;
+      const ratingB = b.ratings?.average ?? 0;
+      const jobsA = a.completedJobs ?? 0;
+      const jobsB = b.completedJobs ?? 0;
+      const viewsA = a.profileViews ?? 0;
+      const viewsB = b.profileViews ?? 0;
+
+      switch (option) {
+        case "Top rated":
+          return ratingB - ratingA || jobsB - jobsA || scoreB - scoreA;
+        case "Most jobs":
+          return jobsB - jobsA || ratingB - ratingA || scoreB - scoreA;
+        case "Newest":
+          return viewsB - viewsA || jobsB - jobsA || ratingB - ratingA;
+        case "Recommended":
+        default:
+          return scoreB - scoreA || ratingB - ratingA || jobsB - jobsA;
+      }
+    });
+
+    return sorted;
+  };
 
   useEffect(() => {
     const nextSkill = urlParams.get("skill") || "All";
@@ -174,13 +206,16 @@ const BrowseFreelancers = () => {
       const payload = response.data as any;
 
       if (payload && Array.isArray(payload)) {
-        setFreelancers(payload);
+        setFreelancers(sortFreelancers(payload as FreelancerProfile[], sortOption));
         setCurrentPage(1);
         setTotalPages(1);
         setTotalResults(payload.length);
       } else if (payload && payload.freelancers) {
         const nextResults = payload.freelancers as FreelancerProfile[];
-        setFreelancers((previous) => (resetResults ? nextResults : [...previous, ...nextResults]));
+        setFreelancers((previous) => {
+          const combined = resetResults ? nextResults : [...previous, ...nextResults];
+          return sortFreelancers(combined, sortOption);
+        });
         setCurrentPage(payload.currentPage || page);
         setTotalPages(payload.totalPages || 1);
         setTotalResults(payload.total || nextResults.length);
@@ -203,6 +238,10 @@ const BrowseFreelancers = () => {
       setLoadingMore(false);
     }
   };
+
+  useEffect(() => {
+    setFreelancers((previous) => sortFreelancers(previous, sortOption));
+  }, [sortOption]);
 
   const syncUrl = (overrides: Partial<{ skill: string; search: string; location: string } & BrowseFilters> = {}) => {
     const nextSkill = overrides.skill ?? activeSkill;
@@ -320,11 +359,20 @@ const BrowseFreelancers = () => {
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         onSearchSubmit={handleSearch}
+        searchPlaceholder="Search freelancers, skills, or services..."
         activeDiscoveryTab={activeDiscoveryTab}
         onDiscoveryTabChange={handleDiscoveryTabChange}
         selectedCategoryId={activeSkill !== "All" ? CATEGORIES.find(cat => cat.name === activeSkill)?.id : undefined}
         onCategorySelect={handleVisualCategorySelect}
         showDiscoveryTabs={true}
+        showFilterButton={true}
+        onFilterClick={() => setShowFilters((current) => !current)}
+        isFilterActive={showFilters}
+        filterLabel="Filters"
+        showRecommended={true}
+        recommendedOptions={["Recommended", "Top rated", "Most jobs", "Newest"]}
+        selectedRecommended={sortOption}
+        onRecommendedChange={(value) => setSortOption(value as SortOption)}
       />
 
 
@@ -474,46 +522,46 @@ const BrowseFreelancers = () => {
                       .map((item: any) => item.images?.[0] || item.imageUrl || "")
                       .filter((url: string) => Boolean(url)),
                 };
-
                 return (
                   <Link
+                    key={freelancer._id}
                     to={`/profile/${freelancer.userId?._id}`}
                     className="group bg-white border border-gray-200 rounded-2xl hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
                   >
                     {/* Portfolio Preview */}
                     {/* Portfolio Preview */}
-                    <div className="grid grid-cols-3 gap-1 bg-gray-100 aspect-[3/2] overflow-hidden rounded-t-2xl">        
-                    {freelancer.portfolio && freelancer.portfolio.length > 0 ? (
-                      freelancer.portfolio.slice(0, 3).map((item, idx) => (
-                        <div key={idx} className={`${idx === 0 ? 'col-span-2 row-span-2' : ''} overflow-hidden`}>
-                          <img
-                            src={item.images?.[0] || item.imageUrl || ''}
-                            alt={item.title}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
+                    <div className="grid grid-cols-3 gap-1 bg-gray-100 aspect-[3/2] overflow-hidden rounded-t-2xl">
+                      {freelancer.portfolio && freelancer.portfolio.length > 0 ? (
+                        freelancer.portfolio.slice(0, 3).map((item, idx) => (
+                          <div key={idx} className={`${idx === 0 ? 'col-span-2 row-span-2' : ''} overflow-hidden`}>
+                            <img
+                              src={item.images?.[0] || item.imageUrl || ''}
+                              alt={item.title}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                          </div>
+                        ))
+                      ) : (
+                        <div className="col-span-3 flex items-center justify-center bg-gray-200">
+                          <span className="text-gray-400 text-sm">No portfolio yet</span>
                         </div>
-                      ))
-                    ) : (
-                      <div className="col-span-3 flex items-center justify-center bg-gray-200">
-                        <span className="text-gray-400 text-sm">No portfolio yet</span>
-                      </div>
-                    )}
+                      )}
                     </div>
 
                     {/* Info */}
                     <div className="p-5">
                       <div className="flex items-start gap-3 mb-3">
-                        <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-lg">
-                          {freelancer.userId?.name?.charAt(0) || '?'}
-                        </div>
+                          <Avatar src={freelancer.userId?.avatar} name={freelancer.userId?.name} />
+                        {/* <div className="w-20 h-20 rounded-full overflow-hidden bg-blue-600 flex items-center justify-center">
+                        </div> */}
                         <UserHoverCard key={freelancer._id} user={hoverUser}>
 
                           <div className=" min-w-0 relative z-10">
                             <div className="flex items-center gap-1.5 mb-1">
-                              <h3 className="font-semibold text-gray-900 truncate">{freelancer.userId?.name || 'Unknown'}</h3>
-                              {(freelancer.userId?.isPhoneVerified || freelancer.userId?.isEmailVerified) && (
+                              <h3 className="font-semibold text-gray-900 truncate hover:text-black hover:underline hover:font-bold">{freelancer.userId?.name || 'Unknown'}</h3>
+                              {/* {(freelancer.userId?.isPhoneVerified || freelancer.userId?.isEmailVerified) && (
                                 <FiShield className="h-4 w-4 text-blue-600 shrink-0" />
-                              )}
+                              )} */}
                             </div>
                             <p className="text-sm text-gray-600 truncate">{freelancer.title}</p>
                           </div>
@@ -544,8 +592,8 @@ const BrowseFreelancers = () => {
                       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                         <span className="text-sm font-semibold text-gray-900">{formatRate(freelancer.rates)}</span>
                         <span className={`text-xs px-2 py-1 rounded-full ${freelancer.availability?.status === "available"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-orange-100 text-orange-700"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-orange-100 text-orange-700"
                           }`}>
                           {freelancer.availability?.status === "available" ? "Available Now" : "Busy"}
                         </span>
@@ -566,7 +614,7 @@ const BrowseFreelancers = () => {
                   to={`/profile/${freelancer.userId?._id}`}
                   className="group bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 flex gap-6"
                 >
-                  <div className="w-20 h-20 rounded-xl bg-blue-600 flex items-center justify-center text-white font-semibold text-2xl shrink-0">
+                  <div className="w-20 h-20 rounded-xl bg-blue-600  flex items-center justify-center text-white font-semibold text-2xl shrink-0">
                     {freelancer.userId?.name?.charAt(0) || '?'}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -599,8 +647,8 @@ const BrowseFreelancers = () => {
                   </div>
                   <div className="flex flex-col justify-between items-end shrink-0">
                     <span className={`text-xs px-3 py-1.5 rounded-full ${freelancer.availability?.status === "available"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-orange-100 text-orange-700"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-orange-100 text-orange-700"
                       }`}>
                       {freelancer.availability?.status === "available" ? "Available Now" : "Busy"}
                     </span>

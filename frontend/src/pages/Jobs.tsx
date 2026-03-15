@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { FiSearch, FiMapPin, FiClock, FiDollarSign, FiX, FiChevronDown, FiChevronUp, FiCalendar, FiUsers, FiBookmark } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { UserHoverCard, UserHoverCardData } from "@/components/UserHoverCard";
 import Layout from "@/components/layout/Layout";
 import api from "@/lib/api";
 import { CATEGORIES } from "@/constants/categories";
+import { Coins, DollarSignIcon } from "lucide-react";
+import { FcMoneyTransfer } from "react-icons/fc";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Job {
   _id: string;
@@ -38,6 +41,8 @@ interface Job {
 }
 
 const Jobs = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [urlParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(urlParams.get('search') || "");
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -46,6 +51,7 @@ const Jobs = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("All"); // Store category ID
   const [showCategories, setShowCategories] = useState(true);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
 
   const categoryOptions = [
     { id: "All", name: "All" },
@@ -126,6 +132,45 @@ const Jobs = () => {
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
     if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
     return new Date(date).toLocaleDateString();
+  };
+
+  const handleSubmitProposalClick = () => {
+    if (!selectedJob) return;
+
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    if (!user || (user.role !== "freelancer" && user.role !== "both")) {
+      // Reuse same rule as JobDetail: only freelancers/both can propose
+      window.alert("Only freelancers can submit proposals.");
+      return;
+    }
+
+    // Navigate to full job detail page where the proposal form lives
+    navigate(`/jobs/${selectedJob._id}`);
+  };
+
+  const handleBookmarkClick = async () => {
+    if (!selectedJob) return;
+
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setBookmarkLoading(true);
+      await api.bookmarkJob(selectedJob._id);
+      // Minimal UX feedback; can be replaced with a toast
+      window.alert("Job saved to your bookmarks.");
+    } catch (err) {
+      console.error("Failed to bookmark job", err);
+      window.alert("Could not save bookmark. Please try again.");
+    } finally {
+      setBookmarkLoading(false);
+    }
   };
 
   return (
@@ -281,13 +326,12 @@ const Jobs = () => {
                     <button
                       key={job._id}
                       onClick={() => setSelectedJob(job)}
-                      className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 text-left group"
+                      className="bg-white border border-gray-600 p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 text-left group"
                     >
                       {/* Company/Client Avatar */}
                       <div className="flex items-start gap-3 mb-4">
                         {hoverUser ? (
-                          <UserHoverCard user={hoverUser}>
-                            <div className="flex items-start gap-3">
+                          <div className="flex items-start gap-3">
                               {client.avatar ? (
                                 <img
                                   src={client.avatar}
@@ -299,14 +343,16 @@ const Jobs = () => {
                                   {client.name.charAt(0)}
                                 </div>
                               )}
+                                  <UserHoverCard user={hoverUser}>
                               <div className="flex-1 min-w-0">
                                 <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
                                   {job.title}
                                 </h3>
-                                <p className="text-sm text-gray-600 truncate">{client.name}</p>
+                                <p className="text-sm text-gray-600 truncate hover:text-black hover:underline hover:font-bold">{client.name}
+                                 </p>
                               </div>
-                            </div>
                           </UserHoverCard>
+                            </div>
                         ) : (
                           <div className="flex items-start gap-3">
                             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
@@ -348,7 +394,7 @@ const Jobs = () => {
                       </div>
 
                       {/* Footer - Budget and Time */}
-                      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                      <div className="flex items-center justify-between pt-4 border-t border-zinc-300">
                         <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-900">
                           {/* <FiDollarSign className="h-4 w-4" /> */}
                           {formatBudget(job)}
@@ -368,143 +414,179 @@ const Jobs = () => {
       </section>
 
       {/* Right Slide-out Detail Panel */}
-      {selectedJob && (
-        <>
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black/50 z-40 transition-opacity"
-            onClick={() => setSelectedJob(null)}
-          />
-          
-          {/* Slide Panel */}
-          <div className="fixed right-0 top-0 bottom-0 w-full max-w-2xl bg-white z-50 shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-between z-10">
-              <h2 className="text-2xl font-bold text-gray-900">Job Details</h2>
-              <button
-                onClick={() => setSelectedJob(null)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <FiX className="h-6 w-6 text-gray-600" />
-              </button>
+    {selectedJob && (
+  <>
+    {/* Backdrop */}
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"
+      onClick={() => setSelectedJob(null)}
+    />
+
+    {/* Slide Panel */}
+    <div className="fixed right-0 top-0 bottom-0 w-full max-w-2xl bg-white z-50 shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
+
+      {/* Header */}
+      <div className="sticky top-0 bg-white/95 backdrop-blur border-b px-8 py-6 flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-gray-900">Job Details</h2>
+
+        <button
+          onClick={() => setSelectedJob(null)}
+          className="p-2 rounded-full hover:bg-gray-100 transition"
+        >
+          <FiX className="h-5 w-5 text-gray-600" />
+        </button>
+      </div>
+
+      <div className="p-8 pb-3">
+
+        {/* Job Title + Client */}
+        <div className="flex flex-col gap-4 mb-8 items-center justify-center ">
+
+          {selectedJob.clientId?.avatar ? (
+            <img
+              src={selectedJob.clientId.avatar}
+              alt={selectedJob.clientId.name}
+              className="w-28 h-auto rounded-full object-cover border"
+            />
+          ) : (
+            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl">
+              {selectedJob.clientId?.name?.charAt(0) || "C"}
             </div>
+          )}
 
-            <div className="p-8">
-              {/* Company Header */}
-              <div className="flex items-start gap-4 mb-6">
-                {selectedJob.clientId?.avatar ? (
-                  <img
-                    src={selectedJob.clientId.avatar}
-                    alt={selectedJob.clientId.name}
-                    className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-white shadow"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
-                    {selectedJob.clientId?.name?.charAt(0) || 'C'}
-                  </div>
-                )}
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedJob.title}</h3>
-                  <p className="text-lg text-gray-600">{selectedJob.clientId?.name || 'Anonymous Client'}</p>
-                </div>
-              </div>
+          <div className="flex-col items-center justify-center text-center">
+          
+            <p className="text-gray-500 mt-1">
+              {selectedJob.clientId?.name || "Anonymous Client"}
+            </p>
+              <h3 className="text-2xl font-bold text-gray-900 leading-tight">
+              {selectedJob.title}
+            </h3>
 
-              {/* Key Info Grid */}
-              <div className="grid grid-cols-2 gap-4 mb-8 p-5 bg-gray-50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <FiDollarSign className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600">Budget</p>
-                    <p className="font-semibold text-gray-900">{formatBudget(selectedJob)}</p>
-                  </div>
-                </div>
+          </div>
+        </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                    <FiMapPin className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600">Location</p>
-                    <p className="font-semibold text-gray-900">
-                      {selectedJob.location.city}, {selectedJob.location.state}
-                    </p>
-                  </div>
-                </div>
+        {/* Info Cards */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
 
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                    <FiClock className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600">Posted</p>
-                    <p className="font-semibold text-gray-900">{getTimeAgo(selectedJob.createdAt)}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                    <FiUsers className="h-5 w-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600">Proposals</p>
-                    <p className="font-semibold text-gray-900">{selectedJob.proposalsCount || 0}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="mb-8">
-                <h4 className="text-lg font-bold text-gray-900 mb-3">Job Description</h4>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{selectedJob.description}</p>
-              </div>
-
-              {/* Experience Level */}
-              {selectedJob.experienceLevel && (
-                <div className="mb-8">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3">Experience Level</h4>
-                  <span className="inline-block px-4 py-2 bg-blue-50 text-blue-700 rounded-lg font-medium capitalize">
-                    {selectedJob.experienceLevel}
-                  </span>
-                </div>
-              )}
-
-              {/* Duration */}
-              {selectedJob.duration && (
-                <div className="mb-8">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3">Project Duration</h4>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <FiCalendar className="h-5 w-5" />
-                    <span className="capitalize">{selectedJob.duration}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Required Skills */}
-              <div className="mb-8">
-                <h4 className="text-lg font-bold text-gray-900 mb-3">Required Skills</h4>
-                <div className="flex flex-wrap gap-2">
-                  {selectedJob.skills.map((skill) => (
-                    <span key={skill} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 sticky bottom-0 bg-white pt-4 pb-6 border-t border-gray-200">
-                <Button className="flex-1 bg-blue-600 text-white hover:bg-blue-700 rounded-xl py-6 text-base font-semibold">
-                  Submit Proposal
-                </Button>
-                <Button variant="outline" className="border-2 border-gray-300 rounded-xl px-8">
-                  <FiBookmark className="h-5 w-5" />
-                </Button>
-              </div>
+          <div className="flex items-center gap-3 p-4 rounded-xl border bg-gray-50">
+            <Coins className="text-blue-600 h-5 w-5" />
+            <div>
+              <p className="text-xs text-gray-500">Budget</p>
+              <p className="font-semibold">{formatBudget(selectedJob)}</p>
             </div>
           </div>
-        </>
-      )}
+
+          <div className="flex items-center gap-3 p-4 rounded-xl border bg-gray-50">
+            <FiMapPin className="text-green-800 h-5 w-5" />
+            <div>
+              <p className="text-xs text-gray-500">Location</p>
+              <p className="font-semibold">
+                {selectedJob.location.city}, {selectedJob.location.state}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-4 rounded-xl border bg-gray-50">
+            <FiClock className="text-purple-600 h-5 w-5" />
+            <div>
+              <p className="text-xs text-gray-500">Posted</p>
+              <p className="font-semibold">{getTimeAgo(selectedJob.createdAt)}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-4 rounded-xl border bg-gray-50">
+            <FiUsers className="text-orange-600 h-5 w-5" />
+            <div>
+              <p className="text-xs text-gray-500">Proposals</p>
+              <p className="font-semibold">{selectedJob.proposalsCount || 0}</p>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Description */}
+        <div className="mb-8">
+          <h4 className="font-semibold text-gray-900 mb-3">
+            Job Description
+          </h4>
+
+          <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+            {selectedJob.description}
+          </p>
+        </div>
+
+        {/* Experience */}
+        {selectedJob.experienceLevel && (
+          <div className="mb-8">
+            <h4 className="font-semibold text-gray-900 mb-3">
+              Experience Level
+            </h4>
+
+            <span className="px-4 py-2 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium capitalize">
+              {selectedJob.experienceLevel}
+            </span>
+          </div>
+        )}
+
+        {/* Duration */}
+        {selectedJob.duration && (
+          <div className="mb-8">
+            <h4 className="font-semibold text-gray-900 mb-3">
+              Project Duration
+            </h4>
+
+            <div className="flex items-center gap-2 text-gray-600">
+              <FiCalendar />
+              {selectedJob.duration}
+            </div>
+          </div>
+        )}
+
+        {/* Skills */}
+        <div className="mb-10">
+          <h4 className="font-semibold text-gray-900 mb-3">
+            Required Skills
+          </h4>
+
+          <div className="flex flex-wrap gap-2">
+            {selectedJob.skills.map((skill) => (
+              <span
+                key={skill}
+                className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition"
+              >
+                {skill}
+              </span>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Sticky Footer CTA */}
+      <div className="sticky bottom-0 bg-white border-t px-8 py-5 flex gap-3">
+
+        <Button
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-xl font-semibold"
+          onClick={handleSubmitProposalClick}
+        >
+          Submit Proposal
+        </Button>
+
+        <Button
+          variant="outline"
+          className="px-5 border rounded-xl"
+          onClick={handleBookmarkClick}
+          disabled={bookmarkLoading}
+        >
+          <FiBookmark />
+        </Button>
+
+      </div>
+
+    </div>
+  </>
+)}
     </Layout>
   );
 };

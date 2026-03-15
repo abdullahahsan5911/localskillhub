@@ -207,9 +207,9 @@ const FreelancerProfile = () => {
             <span className="text-sm text-gray-500">Freelancer Profile</span>
           </div>
         </div>
-  <div className="w-full px-4 sm:px-6 py-6 md:py-8">
+        <div className="w-full px-4 sm:px-6 py-6 md:py-8">
           {/* Hero card */}
-          <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm mb-6">
+          <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm mb-2">
             {/* Cover image / gradient */}
             <div className="h-40 md:h-52 relative bg-gradient-to-r from-gray-700 via-neutral-800 to-gray-800">
               {freelancer.portfolio?.length > 0 && getPortfolioImage(freelancer.portfolio[0]) && (
@@ -229,10 +229,10 @@ const FreelancerProfile = () => {
                     <img
                       src={freelancer.userId.avatar}
                       alt={freelancer.userId.name}
-                      className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-md"
+                      className="w-32 h-32 object-cover rounded-full shadow-md"
                     />
                   ) : (
-                    <div className="w-24 h-24 rounded-2xl bg-blue-600 border-4 border-white shadow-md flex items-center justify-center text-white text-2xl font-bold">
+                    <div className="w-32 h-32 rounded-full bg-blue-600 border-4 border-white shadow-md flex items-center justify-center text-white text-2xl font-bold">
                       {getInitials(freelancer.userId.name)}
                     </div>
                   )}
@@ -248,8 +248,8 @@ const FreelancerProfile = () => {
                       disabled={followLoading}
                       variant={following ? "outline" : "default"}
                       className={`rounded-xl gap-2 ${following
-                          ? "border-blue-300 text-blue-600 hover:bg-blue-50"
-                          : "bg-blue-600 hover:bg-blue-700 text-white"
+                        ? "border-blue-300 text-blue-600 hover:bg-blue-50"
+                        : "bg-blue-600 hover:bg-blue-700 text-white"
                         }`}
                     >
                       {followLoading ? (
@@ -367,8 +367,8 @@ const FreelancerProfile = () => {
                     key={t.id}
                     onClick={() => setActiveTab(t.id)}
                     className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${activeTab === t.id
-                        ? "text-blue-600 border-blue-600"
-                        : "text-gray-500 border-transparent hover:text-gray-900"
+                      ? "text-blue-600 border-blue-600"
+                      : "text-gray-500 border-transparent hover:text-gray-900"
                       }`}
                   >
                     {t.label}
@@ -453,7 +453,7 @@ const FreelancerProfile = () => {
                             <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm">
                               {skill.name}
                               <span className={`text-xs font-medium ${skill.level === "Expert" ? "text-purple-600" :
-                                  skill.level === "Intermediate" ? "text-blue-600" : "text-green-600"
+                                skill.level === "Intermediate" ? "text-blue-600" : "text-green-600"
                                 }`}>{skill.level}</span>
                             </span>
                           ))}
