@@ -207,7 +207,7 @@ const FreelancerProfile = () => {
             <span className="text-sm text-gray-500">Freelancer Profile</span>
           </div>
         </div>
-        <div className="w-full px-4 sm:px-6 py-6 md:py-8">
+        <div className="w-full px-4 sm:px-6 py-6 md:py-4 md:pt-0 md:px-4">
           {/* Hero card */}
           <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm mb-2">
             {/* Cover image / gradient */}
@@ -222,9 +222,9 @@ const FreelancerProfile = () => {
             </div>
 
             <div className="px-6 pb-6">
-              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 mb-4">
+              <div className="flex flex-col items-center gap-4 md:flex-row md:items-end md:justify-between">
                 {/* Avatar */}
-                <div className="relative">
+                <div className="relative top-[-40px] w-32 h-32 rounded-full shadow-md">
                   {freelancer.userId.avatar ? (
                     <img
                       src={freelancer.userId.avatar}
@@ -236,44 +236,52 @@ const FreelancerProfile = () => {
                       {getInitials(freelancer.userId.name)}
                     </div>
                   )}
-                  <span className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white ${freelancer.availability?.status === "available" ? "bg-green-400" : "bg-orange-400"
-                    }`} />
+                  <span
+                    className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white ${freelancer.availability?.status === "available" ? "bg-green-400" : "bg-orange-400"
+                      }`}
+                  />
                 </div>
 
                 {/* Action buttons */}
                 {!isOwnProfile && (
-                  <div className="flex gap-2 flex-wrap">
-                    <Button
-                      onClick={handleFollow}
-                      disabled={followLoading}
-                      variant={following ? "outline" : "default"}
-                      className={`rounded-xl gap-2 ${following
-                        ? "border-blue-300 text-blue-600 hover:bg-blue-50"
-                        : "bg-blue-600 hover:bg-blue-700 text-white"
-                        }`}
-                    >
-                      {followLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : following ? (
-                        <><UserCheck className="w-4 h-4" /> Following</>
-                      ) : (
-                        <><UserPlus className="w-4 h-4" /> Follow</>
-                      )}
-                    </Button>
-                    <Button
-                      onClick={handleContact}
-                      variant="outline"
-                      className="rounded-xl gap-2 border-gray-300"
-                    >
-                      <Mail className="w-4 h-4" /> Message
-                    </Button>
-                    <button
-                      type="button"
-                      onClick={handleShare}
-                      className="p-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition"
-                    >
-                      <Share2 className="w-4 h-4 text-gray-500" />
-                    </button>
+                  <div className="w-full md:w-auto flex justify-center md:justify-end mx-2 my-2 mb-4">
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        onClick={handleFollow}
+                        disabled={followLoading}
+                        variant={following ? "outline" : "default"}
+                        className={`rounded-xl gap-2 ${following
+                          ? "border-blue-300 text-blue-600 hover:bg-blue-50"
+                          : "bg-blue-600 hover:bg-blue-700 text-white"
+                          }`}
+                      >
+                        {followLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : following ? (
+                          <>
+                            <UserCheck className="w-4 h-4" /> Following
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="w-4 h-4" /> Follow
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={handleContact}
+                        variant="outline"
+                        className="rounded-xl gap-2 border-gray-300"
+                      >
+                        <Mail className="w-4 h-4" /> Message
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={handleShare}
+                        className="p-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition"
+                      >
+                        <Share2 className="w-4 h-4 text-gray-500" />
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -361,22 +369,21 @@ const FreelancerProfile = () => {
 
             {/* Main content with tabs and portfolio */}
             <div className="flex-1 bg-white rounded-2xl border border-gray-200">
-              <div className="flex gap-1 border-b border-gray-200 px-4 sm:px-6 overflow-x-auto">
-                {tabs.map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => setActiveTab(t.id)}
-                    className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${activeTab === t.id
-                      ? "text-blue-600 border-blue-600"
-                      : "text-gray-500 border-transparent hover:text-gray-900"
-                      }`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
+              <div className="flex gap-1 border-b border-gray-200 px-4 sm:px-6 overflow-x-auto scrollbar-hide">                {tabs.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${activeTab === t.id
+                    ? "text-blue-600 border-blue-600"
+                    : "text-gray-500 border-transparent hover:text-gray-900"
+                    }`}
+                >
+                  {t.label}
+                </button>
+              ))}
               </div>
 
-              <div className="p-4 sm:p-6">
+              <div className="p-4 sm:p-6 scrollbar-hide">
                 {/* Portfolio */}
                 {activeTab === "portfolio" && (
                   <div>
