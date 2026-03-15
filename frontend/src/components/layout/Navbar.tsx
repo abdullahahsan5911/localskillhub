@@ -94,9 +94,7 @@ const Navbar = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-              <HiOutlineLocationMarker className="h-5 w-5 text-white" />
-            </div>
+
             <span className="text-lg font-bold text-gray-900">
               LocalSkillHub
             </span>
@@ -108,16 +106,21 @@ const Navbar = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  location.pathname === link.href
-                    ? "text-blue-600 bg-blue-50"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
+                className="relative px-4 py-2 text-sm font-medium text-gray-600 hover:text-black group "
               >
                 {link.label}
+
+                <span
+                  className={`absolute left-0 -bottom-1 h-[2px] w-full bg-black origin-left transition-transform duration-300 ${location.pathname === link.href
+                    ? "scale-x-100"
+                    : "scale-x-0 group-hover:scale-x-100"
+                    }`}
+                />
               </Link>
+
             ))}
           </div>
+
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
