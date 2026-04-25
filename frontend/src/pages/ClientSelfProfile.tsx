@@ -383,8 +383,15 @@ const ClientProfileSettings = ({ user, activeTab, onTabChange, onRefreshUser, on
             className="bg-white rounded-lg sm:rounded-xl md:rounded-2xl border border-slate-200 shadow-sm md:shadow-[0_10px_25px_rgba(15,23,42,0.06)] p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-5"
           >
             <div>
-              <h3 className="text-sm md:text-base font-semibold text-slate-900">Company profile</h3>
-              <p className="text-xs text-slate-500 mt-0.5 sm:mt-1">Behance-style client details: company name, industry, website, and what you are hiring for.</p>
+              <div className="flex items-center justify-between gap-4 mb-2">
+                <h3 className="text-sm md:text-base font-semibold text-slate-900">Company profile</h3>
+                {user?.companyId && (
+                  <div className="text-xs px-2.5 py-1 rounded-full font-semibold bg-blue-100 text-blue-700">
+                    View full details in Company Dashboard →
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5 sm:mt-1">Behance-style client details: company name, industry, website, and what you are hiring for. For document uploads and verification, visit the Company Dashboard.</p>
             </div>
             <div className="space-y-2 sm:space-y-3">
               <div>
@@ -461,6 +468,18 @@ const ClientProfileSettings = ({ user, activeTab, onTabChange, onRefreshUser, on
               >
                 {switchingAccountType ? "Switching..." : "Switch to Individual Account"}
               </Button>
+              
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full text-xs sm:text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  onClick={() => onNavigate('/company-dashboard?tab=company')}
+                >
+                  📄 Manage Verification Documents →
+                </Button>
+              </div>
+
               {companyError && <p className="text-xs text-red-600 mt-1">{companyError}</p>}
               {switchError && <p className="text-xs text-red-600 mt-1">{switchError}</p>}
             </div>

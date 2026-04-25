@@ -806,7 +806,45 @@ class ApiService {
     });
   }
 
-  // Communities endpoints (new collection-based communities)
+  async uploadCompanyDocument(companyId: string, file: File, documentType: string) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('documentType', documentType);
+
+    const url = `${this.baseURL}/companies/${companyId}/documents`;
+    const headers: HeadersInit = {};
+
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to upload document');
+    }
+
+    return response.json();
+  }
+
+  async getCompanyDocuments(companyId: string) {
+    return this.request(`/companies/${companyId}/documents`, {
+      method: 'GET',
+    });
+  }
+
+  async deleteCompanyDocument(companyId: string, docId: string) {
+    return this.request(`/companies/${companyId}/documents/${docId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  
   async getCommunities(params?: { q?: string; category?: string; page?: number; limit?: number }) {
     const queryString = this.toQueryString(params as Record<string, unknown>);
     return this.request(`/communities${queryString}`, {

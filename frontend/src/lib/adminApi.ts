@@ -363,3 +363,56 @@ export interface AdminContractReport {
   createdAt: string;
 }
 
+// ── Company Verification ───────────────────────────────────────
+export type AdminCompany = {
+  _id: string;
+  name: string;
+  description?: string;
+  industry?: string;
+  website?: string;
+  location?: {
+    city?: string;
+    state?: string;
+    country?: string;
+  };
+  verificationStatus: 'unverified' | 'pending' | 'approved' | 'rejected';
+  ownerId: {
+    _id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdminCompanyDocument = {
+  _id: string;
+  documentType: string;
+  fileName: string;
+  fileUrl: string;
+  status: 'pending' | 'approved' | 'rejected';
+  uploadedAt: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+};
+
+export type AdminCompaniesResponse = {
+  companies: AdminCompany[];
+  total: number;
+  totalPages: number;
+  currentPage: number;
+};
+
+export const fetchPendingCompanies = (params?: QueryParams) =>
+  get<{ data: AdminCompaniesResponse }>('/companies/pending', params).then(r => r.data);
+
+export const fetchCompanyReviewDetails = (companyId: string) =>
+  get<{ data: { company: AdminCompany; documents: AdminCompanyDocument[] } }>(`/companies/${companyId}/review`).then(r => r.data);
+
+export const approveCompany = (companyId: string) =>
+  post(`/companies/${companyId}/approve`);
+
+export const rejectCompany = (companyId: string, rejectionReason: string) =>
+  post(`/companies/${companyId}/reject`, { rejectionReason });
+

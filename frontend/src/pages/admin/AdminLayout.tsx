@@ -26,6 +26,7 @@ const navItems: NavItem[] = [
       { label: 'Verifications', href: '/admin/verifications' },
       { label: 'Banned Users', href: '/admin/users/banned' },
       { label: 'Ban Appeals', href: '/admin/appeals' },
+      { label: 'Company Verifications', href: '/admin/companies' },
     ]
   },
   {

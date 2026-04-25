@@ -1,4 +1,5 @@
 import Job from '../models/Job.js';
+import Company from '../models/Company.js';
 import { AppError } from '../middleware/errorHandler.js';
 import GeoLocationService from '../services/geolocation.service.js';
 import PlatformSettings from '../models/PlatformSettings.js';
@@ -145,6 +146,19 @@ export const createJob = async (req, res, next) => {
     if (req.user.accountType === 'company' && req.user.companyId) {
       postedByType = 'company';
       companyId = req.user.companyId;
+
+      // Check if company is verified
+      const company = await Company.findById(companyId);
+      if (!company) {
+        return next(new AppError('Company not found', 404));
+      }
+
+      if (company.verificationStatus !== 'approved') {
+        return next(new AppError(
+          'Your company must be verified before posting jobs. Please complete the verification process.',
+          403
+        ));
+      }
     }
 
     const settings = await PlatformSettings.findOne();

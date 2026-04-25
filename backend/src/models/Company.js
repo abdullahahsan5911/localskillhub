@@ -28,7 +28,6 @@ const companySchema = new mongoose.Schema(
       enum: ['unverified', 'pending', 'approved', 'rejected'],
       default: 'unverified',
     },
-    isVerified: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

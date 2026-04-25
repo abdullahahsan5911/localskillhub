@@ -20,6 +20,8 @@ import {
   getAllReputations, getUserReputation, adjustReputationScore, recalculateReputationScore,
   // Communities
   getAllCommunities, deleteCommunity, suspendCommunity, restoreCommunity,
+  // Companies
+  getPendingCompanies, getCompanyReviewDetails, approveCompanyVerification, rejectCompanyVerification,
   // Settings
   getSettings, updateSettings,
   // Audit Logs
@@ -93,6 +95,12 @@ router.get('/communities', getAllCommunities);
 router.delete('/communities/:id', deleteCommunity);
 router.post('/communities/:id/suspend', suspendCommunity);
 router.post('/communities/:id/restore', restoreCommunity);
+
+// ── Companies ───────────────────────────────────────────────────
+router.get('/companies/pending', getPendingCompanies);
+router.get('/companies/:id/review', getCompanyReviewDetails);
+router.post('/companies/:id/approve', approveCompanyVerification);
+router.post('/companies/:id/reject', rejectCompanyVerification);
 
 // ── Payments ───────────────────────────────────────────────────
 router.get('/payments/stats', getPaymentStats);

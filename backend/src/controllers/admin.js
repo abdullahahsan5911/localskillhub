@@ -2297,3 +2297,151 @@ export const approveWithdrawalRequest = async (req, res, next) => {
   }
 };
 
+// ── Company Verification ───────────────────────────────────────
+import Company from '../models/Company.js';
+import CompanyDocument from '../models/CompanyDocument.js';
+import CompanyReview from '../models/CompanyReview.js';
+
+// @desc    Get pending companies for review
+// @route   GET /api/admin/companies/pending
+// @access  Private (Admin only)
+export const getPendingCompanies = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return next(new AppError('Only admins can view pending companies', 403));
+    }
+
+    const { page = 1, limit = 10 } = req.query;
+
+    const companies = await Company.find({ verificationStatus: 'pending' })
+      .populate('ownerId', 'name email')
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 });
+
+    const count = await Company.countDocuments({ verificationStatus: 'pending' });
+
+    res.json({
+      status: 'success',
+      data: {
+        companies,
+        total: count,
+        totalPages: Math.ceil(count / limit),
+        currentPage: Number(page)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get company details with documents (for admin review)
+// @route   GET /api/admin/companies/:id/review
+// @access  Private (Admin only)
+export const getCompanyReviewDetails = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return next(new AppError('Only admins can view company reviews', 403));
+    }
+
+    const company = await Company.findById(req.params.id)
+      .populate('ownerId', 'name email avatar');
+
+    if (!company) {
+      return next(new AppError('Company not found', 404));
+    }
+
+    const documents = await CompanyDocument.find({ companyId: req.params.id });
+    const review = await CompanyReview.findOne({ companyId: req.params.id });
+
+    res.json({
+      status: 'success',
+      data: { company, documents, review }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Approve company verification
+// @route   POST /api/admin/companies/:id/approve
+// @access  Private (Admin only)
+export const approveCompanyVerification = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return next(new AppError('Only admins can approve companies', 403));
+    }
+
+    const company = await Company.findById(req.params.id);
+    if (!company) {
+      return next(new AppError('Company not found', 404));
+    }
+
+    company.verificationStatus = 'approved';
+    await company.save();
+
+    // Update or create review record
+    await CompanyReview.findOneAndUpdate(
+      { companyId: req.params.id },
+      {
+        status: 'approved',
+        reviewedBy: req.user.id,
+        approvalDate: new Date(),
+      },
+      { upsert: true, new: true }
+    );
+
+    res.json({
+      status: 'success',
+      message: 'Company approved successfully',
+      data: { company }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Reject company verification
+// @route   POST /api/admin/companies/:id/reject
+// @access  Private (Admin only)
+export const rejectCompanyVerification = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return next(new AppError('Only admins can reject companies', 403));
+    }
+
+    const { rejectionReason } = req.body;
+    if (!rejectionReason) {
+      return next(new AppError('Rejection reason is required', 400));
+    }
+
+    const company = await Company.findById(req.params.id);
+    if (!company) {
+      return next(new AppError('Company not found', 404));
+    }
+
+    company.verificationStatus = 'rejected';
+    await company.save();
+
+    // Update or create review record
+    await CompanyReview.findOneAndUpdate(
+      { companyId: req.params.id },
+      {
+        status: 'rejected',
+        reviewedBy: req.user.id,
+        rejectionDate: new Date(),
+        rejectionReason,
+      },
+      { upsert: true, new: true }
+    );
+
+    res.json({
+      status: 'success',
+      message: 'Company rejected',
+      data: { company }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

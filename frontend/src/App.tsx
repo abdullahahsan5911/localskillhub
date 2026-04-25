@@ -46,6 +46,7 @@ import AdminHiringRequests from "./pages/admin/contracts/AdminHiringRequests";
 import DisputeResolution from "./pages/admin/contracts/DisputeResolution";
 import ReviewModeration from "./pages/admin/reputation/ReviewModeration";
 import AdminCommunities from "./pages/admin/community/AdminCommunities";
+import AdminCompanyVerifications from "./pages/admin/companies/AdminCompanyVerifications";
 import AdminSettings from "./pages/admin/settings/AdminSettings";
 import AuditLogs from "./pages/admin/logs/AuditLogs";
 import EscrowMonitor from "./pages/admin/payments/EscrowMonitor";
@@ -503,6 +504,7 @@ const App = () => {
                             <Route path="users/banned" element={<AllUsers />} />
                             <Route path="users/:id" element={<UserDetail />} />
                             <Route path="verifications" element={<VerificationRequests />} />
+                            <Route path="companies" element={<AdminCompanyVerifications />} />
                             <Route path="appeals" element={<AppealsList />} />
                             {/* Jobs */}
                             <Route path="jobs" element={<AllJobs />} />
