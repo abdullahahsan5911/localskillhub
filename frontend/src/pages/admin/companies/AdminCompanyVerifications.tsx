@@ -104,6 +104,9 @@ export default function AdminCompanyVerifications() {
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-slate-900 truncate">{company.name}</p>
                       <p className="text-xs text-slate-600 mt-0.5">{company.industry || 'N/A'}</p>
+                      {company.businessPhone && (
+                        <p className="text-xs text-slate-500 mt-0.5">Phone: {company.businessPhone}</p>
+                      )}
                       <p className="text-xs text-slate-500 mt-1">
                         {new Date(company.createdAt).toLocaleDateString()}
                       </p>
@@ -144,6 +147,13 @@ export default function AdminCompanyVerifications() {
                       <p className="text-sm text-slate-900 mt-1">{selected.industry || 'Not specified'}</p>
                     </div>
                   </div>
+
+                  {companyDetails?.company?.businessPhone && (
+                    <div className="mb-4">
+                      <p className="text-xs text-slate-600 font-medium mb-1">Business Phone</p>
+                      <p className="text-sm text-slate-900">{companyDetails.company.businessPhone}</p>
+                    </div>
+                  )}
 
                   {selected.location && (
                     <div className="mb-4">

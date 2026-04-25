@@ -221,6 +221,7 @@ const CompaniesTab = () => {
     city: "",
     state: "",
     country: "India",
+    phone: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -257,6 +258,7 @@ const CompaniesTab = () => {
             city: primary.location?.city || "",
             state: primary.location?.state || "",
             country: primary.location?.country || "India",
+            phone: primary.businessPhone || "",
           });
           setVerificationStatus(primary.verificationStatus || "unverified");
 
@@ -300,6 +302,7 @@ const CompaniesTab = () => {
         description: form.description.trim() || undefined,
         industry: form.industry.trim() || undefined,
         website: form.website.trim() || undefined,
+        businessPhone: form.phone?.trim() || undefined,
         location:
           form.city.trim() || form.state.trim() || form.country.trim()
             ? {
@@ -319,6 +322,7 @@ const CompaniesTab = () => {
         if (createdCompany?._id) {
           setCompanyId(createdCompany._id);
           setVerificationStatus("unverified");
+          setForm((prev) => ({ ...prev, phone: createdCompany.businessPhone || "" }));
           try {
             await refreshUser();
           } catch (refreshErr) {
@@ -492,6 +496,19 @@ const CompaniesTab = () => {
                   className="text-xs sm:text-sm"
                 />
               </div>
+
+                {/* Business Phone */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium mb-1.5">Business Phone</label>
+                  <Input
+                    name="phone"
+                    value={form.phone}
+                    onChange={handleChange}
+                    placeholder="+1 555 555 5555"
+                    className="text-xs sm:text-sm"
+                    type="tel"
+                  />
+                </div>
 
               {/* Location */}
               <div>

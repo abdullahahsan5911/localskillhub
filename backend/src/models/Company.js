@@ -22,6 +22,7 @@ const companySchema = new mongoose.Schema(
       state: String,
       country: String,
     },
+    businessPhone: String,
     logo: String,
     verificationStatus: {
       type: String,

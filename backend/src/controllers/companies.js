@@ -10,7 +10,7 @@ import { v2 as cloudinary } from 'cloudinary';
 // @access  Private (Client/Both/Admin/Superadmin)
 export const createCompany = async (req, res, next) => {
   try {
-    const { name, description, industry, website, location, logo } = req.body;
+    const { name, description, industry, website, location, logo, businessPhone } = req.body;
 
     if (!name) {
       return next(new AppError('Company name is required', 400));
@@ -22,6 +22,7 @@ export const createCompany = async (req, res, next) => {
       industry,
       website,
       location,
+      businessPhone,
       logo,
       ownerId: req.user.id,
       teamMembers: [req.user.id]
@@ -137,7 +138,7 @@ export const updateCompany = async (req, res, next) => {
       return next(new AppError('Not authorized to update this company', 403));
     }
 
-    const allowedFields = ['name', 'description', 'industry', 'website', 'location', 'logo'];
+    const allowedFields = ['name', 'description', 'industry', 'website', 'location', 'logo', 'businessPhone'];
     const updates = {};
 
     allowedFields.forEach((field) => {

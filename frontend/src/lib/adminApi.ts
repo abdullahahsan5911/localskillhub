@@ -369,6 +369,7 @@ export type AdminCompany = {
   name: string;
   description?: string;
   industry?: string;
+  businessPhone?: string;
   website?: string;
   location?: {
     city?: string;
