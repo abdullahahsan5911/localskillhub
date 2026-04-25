@@ -1,0 +1,27 @@
+{
+  "name": "localskillhub-monorepo",
+  "version": "1.0.0",
+  "description": "LocalSkillHub - Region-specific freelancer marketplace",
+  "private": true,
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "postinstall": "npm --prefix backend install",
+    "install:all": "cd frontend && npm install && cd ../backend && npm install",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build"
+  },
+  "keywords": [
+    "freelancer",
+    "marketplace",
+    "local",
+    "gig-economy"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

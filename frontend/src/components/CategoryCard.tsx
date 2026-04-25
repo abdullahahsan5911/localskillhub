@@ -1,0 +1,162 @@
+import React, { useState } from 'react';
+import { Category } from '@/constants/categories';
+import { Check, CheckCircle } from 'lucide-react';
+// removed unused import
+
+interface CategoryCardProps {
+    category: Category;
+    isSelected?: boolean;
+    onClick?: () => void;
+    variant?: 'default' | 'compact' | 'detailed';
+    showImage?: boolean;
+}
+
+export const CategoryCard: React.FC<CategoryCardProps> = ({
+    category,
+    isSelected = false,
+    onClick,
+    variant = 'default',
+    showImage = false
+}) => {
+    const [imgError, setImgError] = useState(false);
+    const Icon = category.icon;
+
+    if (variant === 'compact') {
+        return (
+            <button
+                onClick={onClick}
+                className={`relative border-2 border-slate-300 rounded-xl p-2 transition-all duration-300 ${isSelected
+                    ? "border-blue-700 bg-blue-50 shadow-md"
+                    : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                    }`}
+            >
+                <div className="flex flex-col items-center text-center gap-2">
+                    {showImage && category.image && !imgError ? (
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 relative">
+                            <img
+                                src={category.image}
+                                alt={category.name}
+                                className="w-full h-full object-cover absolute inset-0"
+                                onError={() => setImgError(true)}
+                            />
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: category.lightColor }}>
+                                <Icon className="h-6 w-6" style={{ color: category.color }} />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isSelected ? "bg-blue-600" : ""
+                            }`} style={{ backgroundColor: isSelected ? category.color : category.lightColor }}>
+                            <Icon className={`h-4 w-4 ${isSelected ? "text-white" : ""
+                                }`} style={{ color: isSelected ? 'white' : category.color }} />
+                        </div>
+                    )}
+                    <span className={`text-sm font-medium ${isSelected ? "text-blue-900" : "text-gray-700"
+                        }`}>
+                        {category.name}
+                    </span>
+                </div>
+                {isSelected && (
+                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: category.color }}>
+                        <Check className="w-4 h-4 text-white" />
+                    </div>
+                )}
+            </button>
+        );
+    }
+
+    if (variant === 'detailed') {
+        return (
+            <div
+                onClick={onClick}
+                className={`flex w-auto h-auto border border-slate-300 rounded-xl bg-white hover:shadow-xl transition-all duration-300 cursor-pointer hover:border-blue-500 `} 
+            >
+                <div className="flex items-center gap-4 relative">
+                    {showImage && category.image && !imgError ? (
+                        <div className=" w-auto h-auto rounded-lg flex relative overflow-hidden ">
+                            
+                            <img
+                                src={category.image}
+                                alt={category.name}
+                                className="w-full h-auto  object-cover rounded-lg inset-0 "
+                                onError={() => setImgError(true)}
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <Icon className="w-8 h-8 text-white" />
+                            </div>
+                            <div>
+                                {/* <span className="text-lg font-semibold font-mono  text-white absolute bottom-2 left-2">
+                                    {category.name}
+                                </span> */}
+                            </div>
+                        </div>
+                    ) : (
+                        <div
+                            className="w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ backgroundColor: category.lightColor }}
+                        >
+                            <Icon className="w-8 h-8" style={{ color: category.color }} />
+                        </div>
+                    )}
+
+                    {isSelected && (
+                        <div
+                            className="w-8 h-8 rounded-full absolute top-2 right-2 flex items-center justify-center z-50"
+                            style={{ background: category.color }}
+                        >
+                            <CheckCircle className="w-5 h-5 text-white" />
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // Default variant
+    return (
+        <button
+            onClick={onClick}
+            className={`relative border-2 rounded-xl p-6 transition-all duration-300 ${isSelected
+                ? "border-blue-600 bg-blue-50 shadow-md"
+                : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                }`}
+        >
+            <div className="flex flex-col items-center text-center gap-3">
+                {showImage && category.image && !imgError ? (
+                    <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-100 relative">
+                        <img
+                            src={category.image}
+                            alt={category.name}
+                            className="w-full h-full object-cover absolute inset-0"
+                            onError={() => setImgError(true)}
+                        />
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: category.lightColor }}>
+                            <Icon className="h-7 w-7" style={{ color: category.color }} />
+                        </div>
+                    </div>
+                ) : (
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isSelected ? "bg-blue-600" : ""
+                        }`} style={{ backgroundColor: isSelected ? category.color : category.lightColor }}>
+                        <Icon className={`h-7 w-7 ${isSelected ? "text-white" : ""
+                            }`} style={{ color: isSelected ? 'white' : category.color }} />
+                    </div>
+                )}
+                <span className={`text-sm font-medium ${isSelected ? "text-blue-900" : "text-gray-700"
+                    }`}>
+                    {category.name}
+                </span>
+            </div>
+            {isSelected && (
+                <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: category.color }}>
+                    <Check className="w-4 h-4 text-white" />
+                </div>
+            )}
+        </button>
+    );
+};
+
+export default CategoryCard;
+
+
+
+///////////////////////////////////////////////////
+

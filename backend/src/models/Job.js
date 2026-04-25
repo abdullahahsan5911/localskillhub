@@ -1,0 +1,180 @@
+import mongoose from 'mongoose';
+import { DEFAULT_CURRENCY } from '../config/currency.js';
+
+const pointSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true,
+    },
+    coordinates: {
+      type: [Number],
+      validate: {
+        validator: (value) => value === undefined || (Array.isArray(value) && value.length === 2),
+        message: 'Point coordinates must contain [longitude, latitude]',
+      },
+    },
+  },
+  { _id: false }
+);
+
+const jobSchema = new mongoose.Schema({
+  clientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  postedByType: {
+    type: String,
+    enum: ['user', 'company'],
+    default: 'user'
+  },
+  companyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    default: null
+  },
+  title: {
+    type: String,
+    required: [true, 'Job title is required'],
+    trim: true
+  },
+  description: {
+    type: String,
+    required: [true, 'Job description is required']
+  },
+  category: {
+    type: String,
+    required: true
+  },
+  skills: [{
+    type: String,
+    required: true
+  }],
+  location: {
+    city: String,
+    state: String,
+    country: String,
+    coordinates: {
+      type: pointSchema,
+      default: undefined,
+    },
+    radius: {
+      type: Number, // in kilometers
+      default: 50
+    }
+  },
+  budget: {
+    type: {
+      type: String,
+      enum: ['fixed', 'hourly'],
+      required: true
+    },
+    amount: {
+      type: Number,
+      required: true
+    },
+    currency: {
+      type: String,
+      default: DEFAULT_CURRENCY
+    },
+    min: Number,
+    max: Number
+  },
+  duration: {
+    type: String,
+    enum: ['short', 'medium', 'long'], // < 1 month, 1-3 months, > 3 months
+  },
+  experienceLevel: {
+    type: String,
+    enum: ['beginner', 'intermediate', 'expert'],
+    default: 'intermediate'
+  },
+  remoteAllowed: {
+    type: Boolean,
+    default: false
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'open', 'in-progress', 'completed', 'cancelled', 'closed'],
+    default: 'open'
+  },
+  milestones: [{
+    title: String,
+    description: String,
+    amount: Number,
+    dueDate: Date,
+    status: {
+      type: String,
+      enum: ['pending', 'in-progress', 'completed', 'approved'],
+      default: 'pending'
+    }
+  }],
+  attachments: [{
+    filename: String,
+    url: String,
+    uploadedAt: Date
+  }],
+  proposals: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Proposal'
+  }],
+  hiredFreelancer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  views: {
+    type: Number,
+    default: 0
+  },
+  applicants: {
+    type: Number,
+    default: 0
+  },
+  deadline: Date,
+  preferredStartDate: Date,
+  isUrgent: {
+    type: Boolean,
+    default: false
+  },
+  isFeatured: {
+    type: Boolean,
+    default: false
+  },
+  visibility: {
+    type: String,
+    enum: ['public', 'private', 'invited-only'],
+    default: 'public'
+  },
+  invitedFreelancers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  isFlagged: { type: Boolean, default: false },
+  flagReason: String,
+  flaggedAt: Date,
+  isDeleted: { type: Boolean, default: false }
+}, {
+  timestamps: true
+});
+
+// Index for geospatial queries
+jobSchema.index({ 'location.coordinates': '2dsphere' });
+jobSchema.index({ status: 1, createdAt: -1 });
+jobSchema.index({ skills: 1 });
+
+jobSchema.pre('validate', function(next) {
+  const coords = this.location?.coordinates?.coordinates;
+  const hasValidPoint = Array.isArray(coords) && coords.length === 2;
+
+  if (this.location?.coordinates && !hasValidPoint) {
+    this.location.coordinates = undefined;
+  }
+
+  next();
+});
+
+const Job = mongoose.model('Job', jobSchema);
+
+export default Job;
