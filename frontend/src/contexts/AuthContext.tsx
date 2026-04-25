@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { signInWithPopup, signOut, signInWithRedirect } from 'firebase/auth';
+import { signInWithPopup, signOut, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth, googleProvider, githubProvider } from '@/lib/firebase';
 import api from '@/lib/api';
 import { getGuestSavedJobs, clearGuestSavedJobs, getGuestFollows, clearGuestFollows } from '@/lib/guestStorage';
@@ -105,6 +105,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        // If the user was redirected back from an OAuth provider (redirect flow),
+        // getRedirectResult will contain the Firebase user and tokens. Handle it
+        // first so we can apply the session immediately after redirect.
+        try {
+          const redirectResult = await getRedirectResult(auth);
+          const firebaseUser = redirectResult?.user;
+          if (firebaseUser) {
+            const idToken = await firebaseUser.getIdToken();
+            const providerId = firebaseUser?.providerData?.[0]?.providerId || '';
+            let provider: 'google' | 'github' | 'email' = 'email';
+            if (providerId.includes('google')) provider = 'google';
+            else if (providerId.includes('github')) provider = 'github';
+
+            try {
+              const response = await api.oauthLogin({ idToken, provider });
+              if (response.status === 'success') {
+                const userData = (response.data as any)?.user;
+                const token = (response as any).token;
+                applySession(userData, token);
+              }
+            } catch (e) {
+              // If exchanging the token with our backend failed, sign out the firebase session
+              await signOut(auth).catch(() => {});
+            }
+          }
+        } catch (redirectErr) {
+          // Ignore if there's no redirect result or it failed; continue init flow.
+        }
+
         const token = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
         const isAuth = localStorage.getItem('isAuthenticated') === 'true';
