@@ -109,6 +109,10 @@ const CompanyDashboard = () => {
       if (!primaryCompany?.location?.city || !primaryCompany?.location?.state || !primaryCompany?.location?.country) {
         missing.push("company location");
       }
+      // Require admin approval before allowing company posting
+      if (primaryCompany && primaryCompany.verificationStatus !== 'approved') {
+        missing.push('company verification (pending admin approval)');
+      }
 
       setCompanyProfileMissing(missing);
       setCompanyProfileReady(missing.length === 0);
@@ -178,7 +182,7 @@ const CompanyDashboard = () => {
       />
     ),
     companies: <CompaniesTab />,
-    "my-jobs": <MyJobsTab jobs={jobs} loading={loading} onRefresh={fetchData} />,
+    "my-jobs": <MyJobsTab jobs={jobs} loading={loading} onRefresh={fetchData} canPostCompanyJob={companyProfileReady} isCompanyScope={true} />,
     proposals: <ProposalsTab proposals={proposals} loading={loading} onAction={() => { /* reuse client actions later */ }} />,
     contracts: <ContractsTab contracts={contracts} loading={loading} onRefresh={fetchData} focusContractId={focusContractId} />,
     connections: <ConnectionsTab user={user} />,

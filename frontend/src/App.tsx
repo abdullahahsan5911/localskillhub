@@ -100,7 +100,7 @@ const CompanyProtectedRoute = ({ children }: { children: JSX.Element }) => {
   }
 
   if (!user || user.role === "freelancer" || user.accountType !== "company") {
-    return <Navigate to="/client-dashboard" replace />;
+    return <Navigate to="/dashboard/client" replace />;
   }
 
   // Check onboarding for company dashboard access
@@ -164,6 +164,11 @@ const RoleRoute = ({
 
   if (!allowedRoles.includes(user.role)) {
     return <NotFound />;
+  }
+
+  // Redirect company users to company dashboard
+  if (user.role === "client" && user.accountType === "company") {
+    return <Navigate to="/company-dashboard" replace />;
   }
 
   // Check onboarding for non-admin users trying to access protected routes

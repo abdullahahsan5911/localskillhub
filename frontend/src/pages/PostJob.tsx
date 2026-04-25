@@ -69,9 +69,12 @@ const PostJob = () => {
         navigate("/login", { replace: true });
       } else if (user && user.role !== "client") {
         navigate("/dashboard/freelancer", { replace: true });
+      } else if (user?.accountType === "company" && !isCompanyMode) {
+        // Company users trying to access /post-job without scope - redirect to company dashboard
+        navigate("/company-dashboard?tab=my-jobs", { replace: true });
       }
     }
-  }, [isAuthenticated, isLoading, user, navigate]);
+  }, [isAuthenticated, isLoading, user, navigate, isCompanyMode]);
 
   const editJobId = searchParams.get('jobId');
   const [step, setStep] = useState(() => {
@@ -161,6 +164,9 @@ const PostJob = () => {
         if (!primaryCompany?.description?.trim()) missing.push("company description");
         if (!primaryCompany?.location?.city || !primaryCompany?.location?.state || !primaryCompany?.location?.country) {
           missing.push("company location");
+        }
+        if (primaryCompany?.verificationStatus !== 'approved') {
+          missing.push("company verification (pending admin approval)");
         }
 
         if (!isMounted) return;

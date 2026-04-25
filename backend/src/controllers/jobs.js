@@ -143,21 +143,28 @@ export const createJob = async (req, res, next) => {
     let postedByType = 'user';
     let companyId;
 
-    if (req.user.accountType === 'company' && req.user.companyId) {
-      postedByType = 'company';
-      companyId = req.user.companyId;
+    // Check company verification for all users with company accounts
+    if (req.user.accountType === 'company') {
+      if (!req.user.companyId) {
+        return next(new AppError('Company account setup incomplete. Please complete your company profile.', 403));
+      }
 
-      // Check if company is verified
-      const company = await Company.findById(companyId);
+      const company = await Company.findById(req.user.companyId);
       if (!company) {
         return next(new AppError('Company not found', 404));
       }
 
       if (company.verificationStatus !== 'approved') {
         return next(new AppError(
-          'Your company must be verified before posting jobs. Please complete the verification process.',
+          'Your company must be verified by an admin before you can post jobs. Please complete the verification process and wait for approval.',
           403
         ));
+      }
+
+      // If posting as company, set the company details
+      if (req.body.postedByType === 'company' || !req.body.postedByType) {
+        postedByType = 'company';
+        companyId = req.user.companyId;
       }
     }
 

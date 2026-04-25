@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import LocationSelector from "@/components/LocationSelector";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Company {
   _id: string;
@@ -68,6 +69,7 @@ const VERIFICATION_STATUS_CONFIG = {
 
 const CompaniesTab = () => {
   const { toast } = useToast();
+  const { refreshUser } = useAuth();
   const [companyId, setCompanyId] = useState("");
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
@@ -175,6 +177,13 @@ const CompaniesTab = () => {
         if (createdCompany?._id) {
           setCompanyId(createdCompany._id);
           setVerificationStatus('unverified');
+          
+          // Refresh user data to update accountType to 'company'
+          try {
+            await refreshUser();
+          } catch (refreshErr) {
+            console.error('Failed to refresh user data after company creation:', refreshErr);
+          }
         }
         toast({
           title: "Company created",

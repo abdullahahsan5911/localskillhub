@@ -13,9 +13,12 @@ interface MyJobsTabProps {
 	jobs: Job[];
 	loading: boolean;
 	onRefresh: () => void;
+	// When embedded in CompanyDashboard, controls whether company users may post
+	canPostCompanyJob?: boolean;
+	isCompanyScope?: boolean; // if true, post link should include company scope
 }
 
-const MyJobsTab = ({ jobs, loading, onRefresh }: MyJobsTabProps) => {
+const MyJobsTab = ({ jobs, loading, onRefresh, canPostCompanyJob = true, isCompanyScope = false }: MyJobsTabProps) => {
 	const [search, setSearch] = useState("");
 	const [statusFilter, setStatusFilter] = useState("all");
 
@@ -77,11 +80,25 @@ const MyJobsTab = ({ jobs, loading, onRefresh }: MyJobsTabProps) => {
 				<div className="rounded-2xl border border-dashed border-slate-200 p-12 text-center bg-white shadow-[0_10px_25px_rgba(15,23,42,0.04)]">
 					<Briefcase className="w-12 h-12 text-slate-200 mx-auto mb-3" />
 					<p className="text-slate-600 font-medium">No jobs found</p>
-					<Link to="/post-job">
-						<Button className="mt-4 bg-blue-600 text-white hover:bg-blue-700 rounded-xl">
-							Post a Job
-						</Button>
-					</Link>
+					{isCompanyScope ? (
+						canPostCompanyJob ? (
+							<Link to="/post-job?scope=company">
+								<Button className="mt-4 bg-blue-600 text-white hover:bg-blue-700 rounded-xl">
+									Post a Job
+								</Button>
+							</Link>
+						) : (
+							<Button size="sm" className="mt-4 rounded-xl" variant="outline" disabled title={`Complete profile first: ${(!canPostCompanyJob && 'company profile') || ''}`}>
+								Complete profile to post
+							</Button>
+						)
+					) : (
+						<Link to="/post-job">
+							<Button className="mt-4 bg-blue-600 text-white hover:bg-blue-700 rounded-xl">
+								Post a Job
+							</Button>
+						</Link>
+					)}
 				</div>
 			) : (
 				<div className="space-y-3">

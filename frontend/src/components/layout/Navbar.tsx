@@ -169,7 +169,8 @@ const Navbar = () => {
         return { label: "Dashboard", href: getDashboardLink(), isOnboarding: false };
     };
 
-    const canCreateJob = isAuthenticated && user?.role === "client";
+    // For company users, don't show Create New Job in navbar - they should use company dashboard
+    const canCreateJob = isAuthenticated && user?.role === "client" && user?.accountType !== "company";
     const canManageCommunities = isAuthenticated && !!user && user.role !== "admin";
     const dashboardAction = getDashboardAction();
 
