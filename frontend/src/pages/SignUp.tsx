@@ -4,6 +4,7 @@ import { FiMail, FiLock, FiUser, FiEye, FiEyeOff, FiGithub, FiRefreshCw } from "
 import { FcGoogle } from "react-icons/fc";
 import { HiOutlineMail, HiOutlineSparkles } from "react-icons/hi";
 import { useAuth } from "@/contexts/AuthContext";
+import normalizeError from "@/utils/normalizeError";
 
 const STATS = [
   { value: "10K+", label: "Freelancers" },
@@ -102,7 +103,7 @@ const SignUp = () => {
       localStorage.removeItem("pendingVerificationEmail");
       await redirectAfterAuth();
     } catch (err: any) {
-      setOtpError(err.message || "Invalid OTP. Please try again.");
+      setOtpError(normalizeError(err) || "Invalid OTP. Please try again.");
     } finally {
       setOtpLoading(false);
     }
@@ -117,7 +118,7 @@ const SignUp = () => {
       setOtp(["", "", "", "", "", ""]);
       setTimeout(() => setResendSuccess(false), 4000);
     } catch (err: any) {
-      setOtpError(err.message || "Failed to resend OTP.");
+      setOtpError(normalizeError(err) || "Failed to resend OTP.");
     } finally {
       setResending(false);
     }
@@ -146,7 +147,7 @@ const SignUp = () => {
         localStorage.setItem("pendingVerificationEmail", result.email);
       }
     } catch (err: any) {
-      setError(err.message || "Registration failed. Please try again.");
+      setError(normalizeError(err) || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -155,14 +156,14 @@ const SignUp = () => {
   const handleGoogle = async () => {
     setError(""); setSocialLoading("google");
     try { await loginWithGoogle(); await redirectAfterAuth(); }
-    catch (err: any) { setError(err.message || "Google sign-in failed."); }
+    catch (err: any) { setError(normalizeError(err) || "Google sign-in failed."); }
     finally { setSocialLoading(null); }
   };
 
   const handleGithub = async () => {
     setError(""); setSocialLoading("github");
     try { await loginWithGithub(); await redirectAfterAuth(); }
-    catch (err: any) { setError(err.message || "GitHub sign-in failed."); }
+    catch (err: any) { setError(normalizeError(err) || "GitHub sign-in failed."); }
     finally { setSocialLoading(null); }
   };
 

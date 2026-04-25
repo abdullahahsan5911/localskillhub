@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { signInWithPopup, signOut } from 'firebase/auth';
+import { signInWithPopup, signOut, signInWithRedirect } from 'firebase/auth';
 import { auth, googleProvider, githubProvider } from '@/lib/firebase';
 import api from '@/lib/api';
 import { getGuestSavedJobs, clearGuestSavedJobs, getGuestFollows, clearGuestFollows } from '@/lib/guestStorage';
@@ -239,6 +239,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         applySession(userData, token);
       }
     } catch (error: any) {
+      // If popup is blocked or environment doesn't support popups, fall back to redirect.
+      const code = error?.code || '';
+      const message = String(error?.message || '');
+      if (code.includes('popup') || /blocked/i.test(message) || code === 'auth/operation-not-supported-in-this-environment') {
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        } catch (e) {
+          await signOut(auth).catch(() => {});
+          throw e;
+        }
+      }
       await signOut(auth).catch(() => {});
       throw error;
     }
@@ -257,6 +269,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         applySession(userData, token);
       }
     } catch (error: any) {
+      const code = error?.code || '';
+      const message = String(error?.message || '');
+      if (code.includes('popup') || /blocked/i.test(message) || code === 'auth/operation-not-supported-in-this-environment') {
+        try {
+          await signInWithRedirect(auth, githubProvider);
+          return;
+        } catch (e) {
+          await signOut(auth).catch(() => {});
+          throw e;
+        }
+      }
       await signOut(auth).catch(() => {});
       throw error;
     }

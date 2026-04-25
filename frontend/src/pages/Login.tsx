@@ -4,6 +4,7 @@ import { FiMail, FiLock, FiEye, FiEyeOff, FiGithub, FiRefreshCw } from "react-ic
 import { FcGoogle } from "react-icons/fc";
 import { HiOutlineSparkles } from "react-icons/hi";
 import { useAuth } from "@/contexts/AuthContext";
+import normalizeError from "@/utils/normalizeError";
 
 const requiresOnboarding = (u: any) => {
   // Once onboardingCompleted is true, never send the user back.
@@ -60,6 +61,7 @@ const Login = () => {
     } catch (err: any) {
       const errorCode = err?.response?.data?.code;
       const errorMessage = err?.response?.data?.message || err?.message || "Login failed";
+      const friendly = normalizeError(err);
 
       if (errorCode === "EMAIL_NOT_VERIFIED" || err?.message?.includes("verify your email")) {
         setUnverifiedEmail(email);
@@ -69,7 +71,7 @@ const Login = () => {
       } else if (errorCode === "ACCOUNT_SUSPENDED") {
         setError(`Your account is suspended until ${err?.response?.data?.data?.suspendedUntil ? new Date(err.response.data.data.suspendedUntil).toLocaleDateString() : 'the specified date'}. Please try again later or contact support.`);
       } else {
-        setError(errorMessage.includes("credentials") ? "Login failed. Please check your credentials." : errorMessage);
+        setError(friendly || (errorMessage.includes("credentials") ? "Login failed. Please check your credentials." : errorMessage));
       }
     } finally {
       setLoading(false);
@@ -85,7 +87,7 @@ const Login = () => {
       setResendSuccess(true);
       setTimeout(() => setResendSuccess(false), 5000);
     } catch (err: any) {
-      setError(err.message || "Failed to resend OTP.");
+      setError(normalizeError(err) || "Failed to resend OTP.");
     } finally {
       setResending(false);
     }
@@ -101,7 +103,7 @@ const Login = () => {
   const handleGithub = async () => {
     setError(""); setUnverifiedEmail(null); setSocialLoading("github");
     try { await loginWithGithub(); await redirectAfterLogin(); }
-    catch (err: any) { setError(err.message || "GitHub sign-in failed."); }
+    catch (err: any) { setError(normalizeError(err) || "GitHub sign-in failed."); }
     finally { setSocialLoading(null); }
   };
 
