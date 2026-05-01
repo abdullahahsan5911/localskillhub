@@ -734,7 +734,7 @@ const CompaniesTab = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeleteDocument(doc._id)}
-                            className="flex-shrink-0 flex items-center gap-1 text-xs text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                            className="flex-shrink-0 flex items-center gap-1 text-xs text-red-600 border-red-200 hover:bg-red-500 hover:text-white"
                           >
                             <FiTrash2 className="w-3.5 h-3.5" />
                             <span className="hidden sm:inline">Delete</span>
@@ -782,4 +782,4 @@ const CompaniesTab = () => {
   );
 };
 
-export default CompaniesTab;
+export default CompaniesTab;  
