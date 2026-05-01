@@ -37,6 +37,7 @@ interface Company {
     state?: string;
     country?: string;
   };
+  businessPhone?: string;
   verificationStatus?: "unverified" | "pending" | "approved" | "rejected";
 }
 
@@ -193,15 +194,7 @@ const AcceptedDocsPanel = ({ onClose }: { onClose: () => void }) => (
           ))}
         </ul>
 
-        <a
-          href="https://support.example.com/verification-documents"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline font-medium"
-        >
-          Learn about the types of documents accepted
-          <FiExternalLink className="w-3 h-3" />
-        </a>
+        
       </div>
     </div>
   </div>
@@ -559,13 +552,18 @@ const CompaniesTab = () => {
           </section>
 
           {/* ── RIGHT: Verification Documents ── */}
-          {companyId && (
-            <section className="bg-white rounded-lg md:rounded-xl border border-gray-200 p-4 md:p-6 flex flex-col gap-6">
+          <section className="bg-white rounded-lg md:rounded-xl border border-gray-200 p-4 md:p-6 flex flex-col gap-6">
               {/* Header */}
               <div className="flex items-center gap-2">
                 <FiShield className="w-5 h-5 text-blue-600" />
                 <h2 className="text-base sm:text-lg font-semibold">Verification Documents</h2>
               </div>
+
+              {!companyId && (
+                <div className="rounded-xl border border-slate-200 bg-slate-200 p-4 text-sm text-gray-700">
+                  Create your company first to unlock verification document upload.
+                </div>
+              )}
 
               {/* Info banner */}
               <div className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -583,7 +581,8 @@ const CompaniesTab = () => {
                   <button
                     type="button"
                     onClick={() => setShowDocReference(true)}
-                    className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:underline font-medium"
+                    disabled={!companyId}
+                    className={`inline-flex items-center gap-1.5 text-xs font-medium ${companyId ? "text-blue-600 hover:underline" : "text-slate-400 cursor-not-allowed"}`}
                   >
                     <FiFileText className="w-3.5 h-3.5" />
                     View accepted document types ({DOCUMENT_TYPES.length})
@@ -610,7 +609,8 @@ const CompaniesTab = () => {
                     <select
                       value={selectedDocType}
                       onChange={(e) => setSelectedDocType(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:border-blue-500 bg-white"
+                      disabled={!companyId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:border-blue-500 bg-white disabled:bg-slate-100 disabled:text-slate-400"
                     >
                       <option value="">Select a document type…</option>
                       {DOCUMENT_CATEGORIES.map((cat) => (
@@ -635,7 +635,7 @@ const CompaniesTab = () => {
                       type="file"
                       accept=".pdf,.png,.jpg,.jpeg"
                       onChange={handleFileUpload}
-                      disabled={uploading || !selectedDocType}
+                      disabled={!companyId || uploading || !selectedDocType}
                       className="w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
@@ -776,7 +776,6 @@ const CompaniesTab = () => {
                 </div>
               )}
             </section>
-          )}
         </div>
       )}
     </div>

@@ -24,7 +24,10 @@ const CompanyDashboard = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(() => {
+    const tab = searchParams.get("tab");
+    return tab ? (tab === "company" ? "companies" : tab) : "overview";
+  });
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -128,10 +131,11 @@ const CompanyDashboard = () => {
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab) {
-      setActiveTab(tab);
+    const nextTab = tab ? (tab === "company" ? "companies" : tab) : "overview";
+    if (nextTab !== activeTab) {
+      setActiveTab(nextTab);
     }
-  }, [searchParams]);
+  }, [searchParams.toString(), activeTab]);
 
   const navItems: NavItem[] = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -201,12 +205,16 @@ const CompanyDashboard = () => {
     ),
   };
 
+  const handleSetActiveTab = useCallback((tab: string) => {
+    navigate(`/company-dashboard?tab=${tab}`);
+  }, [navigate]);
+
   return (
     <>
     <DashboardLayout
       navItems={navItems}
       activeTab={activeTab}
-      setActiveTab={setActiveTab}
+      setActiveTab={handleSetActiveTab}
       notificationCount={unreadNotifications}
       onNotificationClick={() => setActiveTab("notifications")}
       headerActions={
@@ -232,7 +240,7 @@ const CompanyDashboard = () => {
               size="sm"
               variant="outline"
               className="border-amber-300 bg-white/70 text-amber-900"
-              onClick={() => navigate("/profile?tab=company")}
+              onClick={() => navigate("/company-dashboard?tab=companies")}
             >
               Open Company Profile
             </Button>

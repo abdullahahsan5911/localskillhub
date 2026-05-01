@@ -474,9 +474,9 @@ const ClientProfileSettings = ({ user, activeTab, onTabChange, onRefreshUser, on
                   type="button"
                   variant="ghost"
                   className="w-full text-xs sm:text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                  onClick={() => onNavigate('/company-dashboard?tab=company')}
+                  onClick={() => onNavigate('/company-dashboard?tab=companies')}
                 >
-                  📄 Manage Verification Documents →
+                  Manage Verification Documents
                 </Button>
               </div>
 

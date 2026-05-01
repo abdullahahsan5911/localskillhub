@@ -472,7 +472,7 @@ const Navbar = () => {
 
                                             {user.role !== "admin" && (
                                                 <DropdownMenuItem
-                                                    onClick={() => navigate("/communities/manage")}
+                                                    onClick={() => navigate("/communities/manage?showCreate=1")}
                                                     className={profileDropdownItemClass(isRouteActive("/communities/manage"))}
                                                 >
                                                     <Plus className="mr-3 h-5 w-5" />
@@ -616,7 +616,7 @@ const Navbar = () => {
                                         </DropdownMenuItem>
 
                                         {user.role !== "admin" && (
-                                            <DropdownMenuItem onClick={() => navigate("/communities/manage")}
+                                            <DropdownMenuItem onClick={() => navigate("/communities/manage?showCreate=1")}
                                             >
                                                 <CiCirclePlus className="mr-2 h-4 w-4 text-gray-500" />
                                                 <span className="font-medium">Create Community</span>

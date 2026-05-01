@@ -166,11 +166,6 @@ const RoleRoute = ({
     return <NotFound />;
   }
 
-  // Redirect company users to company dashboard
-  if (user.role === "client" && user.accountType === "company") {
-    return <Navigate to="/company-dashboard" replace />;
-  }
-
   // Check onboarding for non-admin users trying to access protected routes
   if (requireOnboarding && user.role !== "admin") {
     const isOnboardingComplete = user.onboardingCompleted;
