@@ -730,7 +730,7 @@ const CommunityAdminWorkspace = ({
       setEditOpen(false);
       try {
         localStorage.setItem("communities-updated", JSON.stringify({ id: String(community._id), ts: Date.now() }));
-      } catch (_) {}
+      } catch (_) { }
     } catch (error) {
       console.error("savePageDetails error", error);
       const serverMessage = (error as any)?.response?.data?.message || (error as any)?.message || String(error);
@@ -955,7 +955,7 @@ const CommunityAdminWorkspace = ({
     }
   };
 
-  const openComments = async (_post: CommunityPostItem) => {};
+  const openComments = async (_post: CommunityPostItem) => { };
 
   const handleAddComment = async (postId: string, communityId: string, content: string) => {
     try {
@@ -978,6 +978,82 @@ const CommunityAdminWorkspace = ({
       console.error("Reply failed", error);
       toast({ title: "Could not post reply", variant: "destructive" });
       throw error;
+    }
+  };
+
+  // Generic handlers for jobs/articles/products/events where supported
+  const refreshCommunityEvents = async () => {
+    try {
+      const eventsRes = await api.getEvents();
+      const payload: any = (eventsRes as any).data || eventsRes;
+      const events = payload.events || payload.data?.events || payload.data || [];
+      setCommunityEvents((Array.isArray(events) ? events : []).filter((event: any) => normalizeCommunityId(event.communityId) === String(community._id)));
+    } catch (err) {
+      // ignore
+    }
+  };
+
+  const handleLikeItem = async (type: string, item: any) => {
+    try {
+      if (type === 'post') return await handleLikePost(item);
+      if (type === 'event') {
+        await api.toggleEventLike(item._id);
+        await refreshCommunityEvents();
+        return;
+      }
+      toast({ title: "Not supported", description: "Liking this item type is not implemented yet." });
+    } catch (error) {
+      console.error('Like failed', error);
+      toast({ title: 'Could not like item', variant: 'destructive' });
+    }
+  };
+
+  const handleRepostItem = async (type: string, item: any) => {
+    try {
+      if (type === 'post') return await handleRepost(item);
+      toast({ title: "Not supported", description: "Reposting this item type is not implemented yet." });
+    } catch (error) {
+      console.error('Repost failed', error);
+      toast({ title: 'Could not repost', variant: 'destructive' });
+    }
+  };
+
+  const handleAddCommentItem = async (type: string, itemId: string, communityId: string, content: string) => {
+    try {
+      if (type === 'event') {
+        await api.commentEvent(itemId, content);
+        await refreshCommunityEvents();
+        toast({ title: 'Comment posted' });
+        return;
+      }
+      toast({ title: "Not supported", description: "Commenting on this item type is not implemented yet." });
+    } catch (error) {
+      console.error('Comment failed', error);
+      toast({ title: 'Could not post comment', variant: 'destructive' });
+      throw error;
+    }
+  };
+
+  const handleAddReplyItem = async (type: string, itemId: string, communityId: string, commentId: string, content: string) => {
+    try {
+      if (type === 'event') {
+        await api.replyEventComment(itemId, commentId, content);
+        await refreshCommunityEvents();
+        toast({ title: 'Reply posted' });
+        return;
+      }
+      toast({ title: "Not supported", description: "Replying on this item type is not implemented yet." });
+    } catch (error) {
+      console.error('Reply failed', error);
+      toast({ title: 'Could not post reply', variant: 'destructive' });
+      throw error;
+    }
+  };
+
+  const handleOpenCommentsItem = async (type: string, item: any) => {
+    // No-op for now; PostsEventsList already toggles UI locally. This is here if we want to prefetch comments.
+    if (type === 'event') {
+      await refreshCommunityEvents();
     }
   };
 
@@ -1209,6 +1285,11 @@ const CommunityAdminWorkspace = ({
                     onOpenComments={openComments}
                     onAddComment={handleAddComment}
                     onAddReply={handleAddReply}
+                    onLikeItem={handleLikeItem}
+                    onRepostItem={handleRepostItem}
+                    onAddCommentItem={handleAddCommentItem}
+                    onAddReplyItem={handleAddReplyItem}
+                    onOpenCommentsItem={handleOpenCommentsItem}
                     onEditPost={openEditPost}
                     onDeletePost={handleDeletePost}
                     onDeleteComment={handleDeleteComment}
@@ -1267,6 +1348,11 @@ const CommunityAdminWorkspace = ({
                     onOpenComments={openComments}
                     onAddComment={handleAddComment}
                     onAddReply={handleAddReply}
+                    onLikeItem={handleLikeItem}
+                    onRepostItem={handleRepostItem}
+                    onAddCommentItem={handleAddCommentItem}
+                    onAddReplyItem={handleAddReplyItem}
+                    onOpenCommentsItem={handleOpenCommentsItem}
                     onEditPost={openEditPost}
                     onDeletePost={handleDeletePost}
                     onEditEvent={openEditEvent}
@@ -1407,14 +1493,14 @@ const CommunityAdminWorkspace = ({
                                 const commentId = comment?._id || comment?.id || "";
                                 const commentAuthorId = String(
                                   comment?.author?._id ||
-                                    comment?.authorId?._id ||
-                                    comment?.authorId ||
-                                    comment?.user?._id ||
-                                    comment?.userId?._id ||
-                                    comment?.userId ||
-                                    comment?.createdBy?._id ||
-                                    comment?.createdBy ||
-                                    "",
+                                  comment?.authorId?._id ||
+                                  comment?.authorId ||
+                                  comment?.user?._id ||
+                                  comment?.userId?._id ||
+                                  comment?.userId ||
+                                  comment?.createdBy?._id ||
+                                  comment?.createdBy ||
+                                  "",
                                 );
                                 const authorName =
                                   comment?.author?.name ||
@@ -1697,30 +1783,45 @@ const CommunityAdminWorkspace = ({
           </DialogHeader>
 
           {createMode === "menu" && (
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="flex flex-col">
               <button type="button" onClick={() => setCreateMode("post")} className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left hover:border-slate-300 hover:bg-white">
-                <FiMessageSquare className="mb-2 text-slate-500" />
-                <p className="text-sm font-semibold text-slate-900">Create post</p>
+
+                <div className="flex items-center gap-3">
+                  <FiMessageSquare className=" text-slate-500 " />
+                  <p className="text-sm font-semibold text-slate-900">Create post</p>
+                </div>
                 <p className="mt-1 text-xs text-slate-500">Share an update with your followers.</p>
               </button>
               <button type="button" onClick={() => setCreateMode("event")} className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left hover:border-slate-300 hover:bg-white">
-                <FiCalendar className="mb-2 text-slate-500" />
-                <p className="text-sm font-semibold text-slate-900">Create event</p>
+                <div className="flex items-center gap-3">
+
+                  <FiCalendar className=" text-slate-500" />
+                  <p className="text-sm font-semibold text-slate-900">Create event</p>
+                </div>
                 <p className="mt-1 text-xs text-slate-500">Host a session or meetup.</p>
               </button>
               <button type="button" onClick={() => setCreateMode("job")} className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left hover:border-slate-300 hover:bg-white">
-                <FiBriefcase className="mb-2 text-slate-500" />
-                <p className="text-sm font-semibold text-slate-900">Share that you're hiring</p>
+                <div className="flex items-center gap-3">
+
+                  <FiBriefcase className=" text-slate-500" />
+                  <p className="text-sm font-semibold text-slate-900">Share that you're hiring</p>
+                </div>
                 <p className="mt-1 text-xs text-slate-500">Reach candidates outside your network with a job post.</p>
               </button>
               <button type="button" onClick={() => setCreateMode("article")} className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left hover:border-slate-300 hover:bg-white">
-                <FiFileText className="mb-2 text-slate-500" />
-                <p className="text-sm font-semibold text-slate-900">Publish an article</p>
+                <div className="flex items-center gap-3">
+
+                  <FiFileText className="mb-2 text-slate-500" />
+                  <p className="text-sm font-semibold text-slate-900">Publish an article</p>
+                </div>
                 <p className="mt-1 text-xs text-slate-500">Connect with followers through long-form content.</p>
               </button>
               <button type="button" onClick={() => setCreateMode("product")} className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left hover:border-slate-300 hover:bg-white">
-                <FiPackage className="mb-2 text-slate-500" />
-                <p className="text-sm font-semibold text-slate-900">Add a product</p>
+                <div className="flex items-center gap-3">
+
+                  <FiPackage className=" text-slate-500" />
+                  <p className="text-sm font-semibold text-slate-900">Add a product</p>
+                </div>
                 <p className="mt-1 text-xs text-slate-500">Spotlight your organization's products.</p>
               </button>
             </div>
@@ -1968,18 +2069,18 @@ const CommunityAdminWorkspace = ({
                 }}
                 disabled={
                   createMode === 'post' ? submittingPost :
-                  createMode === 'event' ? submittingEvent :
-                  createMode === 'job' ? submittingJob :
-                  createMode === 'article' ? submittingArticle :
-                  createMode === 'product' ? submittingProduct : false
+                    createMode === 'event' ? submittingEvent :
+                      createMode === 'job' ? submittingJob :
+                        createMode === 'article' ? submittingArticle :
+                          createMode === 'product' ? submittingProduct : false
                 }
               >
                 {createMode === 'post' ? (submittingPost ? 'Saving...' : (editingPost ? 'Update' : 'Publish')) :
                   createMode === 'event' ? (submittingEvent ? 'Saving...' : (editingEvent ? 'Update' : 'Publish')) :
-                  createMode === 'job' ? (submittingJob ? 'Saving...' : (editingJob ? 'Update' : 'Publish')) :
-                  createMode === 'article' ? (submittingArticle ? 'Saving...' : (editingArticle ? 'Update' : 'Publish')) :
-                  createMode === 'product' ? (submittingProduct ? 'Saving...' : (editingProduct ? 'Update' : 'Publish')) :
-                  'Publish'
+                    createMode === 'job' ? (submittingJob ? 'Saving...' : (editingJob ? 'Update' : 'Publish')) :
+                      createMode === 'article' ? (submittingArticle ? 'Saving...' : (editingArticle ? 'Update' : 'Publish')) :
+                        createMode === 'product' ? (submittingProduct ? 'Saving...' : (editingProduct ? 'Update' : 'Publish')) :
+                          'Publish'
                 }
               </Button>
             )}
@@ -2083,8 +2184,7 @@ const CommunityAdminWorkspace = ({
           <DialogHeader>
             <DialogTitle>Delete page</DialogTitle>
             <DialogDescription>
-              This permanently removes this page and related posts, events, comments, likes, and community follow links.
-              Type DELETE or the page name to continue.
+              This permanently removes this page and related posts, events, comments, likes, and community follow links. This action will only delete the page and its content; your user account will not be deleted and you will not be logged out. Type DELETE or the page name to continue.
             </DialogDescription>
           </DialogHeader>
           <Input
@@ -2134,29 +2234,61 @@ const CommunityAdminWorkspace = ({
           <div className="mt-5 space-y-6">
             <section>
               <div className="mb-3">
-                <p className="text-sm font-semibold text-slate-900">Promote a member to admin</p>
-                <p className="text-xs text-slate-400">Open a dialog to select a member and grant admin access.</p>
+                <p className="text-sm font-semibold text-slate-900">Admins</p>
+                <p className="text-xs text-slate-400">Current page admins. Promote new admins from the dialog.</p>
               </div>
-              <div>
-                <Button type="button" size="sm" onClick={openPromoteDialog}>Open promote dialog</Button>
+              <div className="mb-3 flex items-center gap-2 flex-wrap">
+                {admins && admins.length > 0 ? (
+                  admins.slice(0, 6).map((a: any) => {
+                    const id = String(a?._id || a?.id || a || "");
+                    const name = a?.name || a?.fullName || "Admin";
+                    return (
+                      <div key={id} className="flex items-center gap-2 rounded-full bg-white px-2 py-1 border border-slate-100">
+                        <Avatar src={resolveAvatarSrc(a?.avatar)} name={name} size={28} />
+                        <span className="text-xs font-medium text-slate-800">{name}</span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-slate-500">No admins assigned yet.</p>
+                )}
+                <div>
+                  <Button type="button" size="sm" onClick={openPromoteDialog}>Assign admin</Button>
+                </div>
               </div>
             </section>
 
             <section>
               <div className="mb-3">
-                <p className="text-sm font-semibold text-slate-900">Restrict a member</p>
-                <p className="text-xs text-slate-400">Open a dialog to select a member to restrict.</p>
+                <p className="text-sm font-semibold text-slate-900">Restricted members</p>
+                <p className="text-xs text-slate-400">Members prevented from participating. Manage restrictions from the dialog.</p>
               </div>
-              <div>
-                <Button type="button" size="sm" onClick={openRestrictDialog}>Open restrict dialog</Button>
+              <div className="mb-3 flex items-center gap-2 flex-wrap">
+                {restrictedMembers && restrictedMembers.length > 0 ? (
+                  restrictedMembers.slice(0, 6).map((m: any) => {
+                    const id = String(m?._id || m?.id || m || "");
+                    const name = m?.name || m?.fullName || "Member";
+                    return (
+                      <div key={id} className="flex items-center gap-2 rounded-full bg-white px-2 py-1 border border-slate-100">
+                        <Avatar src={resolveAvatarSrc(m?.avatar)} name={name} size={28} />
+                        <span className="text-xs font-medium text-slate-800">{name}</span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-slate-500">No restricted members.</p>
+                )}
+                <div>
+                  <Button type="button" size="sm" onClick={openRestrictDialog}>Restrict member</Button>
+                </div>
               </div>
             </section>
 
             <section className="rounded-xl border border-red-200 bg-red-50 p-4">
               <div className="flex items-start justify-between gap-3">
-                <div>
+                <div className="max-w-[70%]">
                   <p className="text-sm font-semibold text-red-700">Delete page</p>
-                  <p className="text-xs text-red-600">This permanently removes the page and all associated content.</p>
+                  <p className="text-xs text-red-600">This permanently removes the page and all associated content (posts, events, comments, likes, and follow links). This action only deletes the page — it will not log you out or delete your user account.</p>
                 </div>
                 <Button type="button" variant="destructive" onClick={() => setDeletePageOpen(true)}>Delete</Button>
               </div>
