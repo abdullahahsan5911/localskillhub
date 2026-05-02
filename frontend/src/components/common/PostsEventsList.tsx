@@ -123,6 +123,12 @@ interface Props {
   onDeletePost?: (post: CommunityPostItem) => void;
   onEditEvent?: (event: EventItem) => void;
   onDeleteEvent?: (event: EventItem) => void;
+  onEditJob?: (job: JobItem) => void;
+  onDeleteJob?: (job: JobItem) => void;
+  onEditArticle?: (article: ArticleItem) => void;
+  onDeleteArticle?: (article: ArticleItem) => void;
+  onEditProduct?: (product: ProductItem) => void;
+  onDeleteProduct?: (product: ProductItem) => void;
   onDeleteComment?: (postId: string, commentId: string) => void;
   isAdminView?: boolean;
 }
@@ -153,6 +159,12 @@ const PostsEventsList = ({
   onAddComment,
   onAddReply,
   onJoinEvent,
+  onEditJob,
+  onDeleteJob,
+  onEditArticle,
+  onDeleteArticle,
+  onEditProduct,
+  onDeleteProduct,
   onEditPost,
   onDeletePost,
   onEditEvent,
@@ -792,6 +804,31 @@ const PostsEventsList = ({
             // Jobs
             if (item.type === 'job') {
               const job = item.job;
+              // Admin action buttons for jobs
+              const jobActions = isAdminView && (onEditJob || onDeleteJob) ? (
+                <div className="mb-2 flex justify-end gap-1">
+                  {onEditJob ? (
+                    <button
+                      type="button"
+                      onClick={() => onEditJob(job)}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                      title="Edit job"
+                    >
+                      <FiEdit2 size={12} />
+                    </button>
+                  ) : null}
+                  {onDeleteJob ? (
+                    <button
+                      type="button"
+                      onClick={() => onDeleteJob(job)}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:text-red-600"
+                      title="Delete job"
+                    >
+                      <FiTrash2 size={12} />
+                    </button>
+                  ) : null}
+                </div>
+              ) : null;
               return (
                 <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5">
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
@@ -805,6 +842,7 @@ const PostsEventsList = ({
                   <p className="mt-1 text-xs text-slate-700">{job?.location || ''} • {job?.type || ''} • {job?.salary || ''}</p>
                   {job?.description && <p className="mt-2 text-sm text-slate-700 line-clamp-3">{job.description}</p>}
                   {renderAttachmentGallery(item.id, job.images, 'Job attachment')}
+                      {jobActions}
                   {Array.isArray(job.links) && job.links.length > 0 && (
                     <div className="mt-3 flex flex-col gap-2">
                       {job.links.map((ln, idx) => (
@@ -821,6 +859,30 @@ const PostsEventsList = ({
             // Articles
             if (item.type === 'article') {
               const article = item.article;
+              const articleActions = isAdminView && (onEditArticle || onDeleteArticle) ? (
+                <div className="mb-2 flex justify-end gap-1">
+                  {onEditArticle ? (
+                    <button
+                      type="button"
+                      onClick={() => onEditArticle(article)}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                      title="Edit article"
+                    >
+                      <FiEdit2 size={12} />
+                    </button>
+                  ) : null}
+                  {onDeleteArticle ? (
+                    <button
+                      type="button"
+                      onClick={() => onDeleteArticle(article)}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:text-red-600"
+                      title="Delete article"
+                    >
+                      <FiTrash2 size={12} />
+                    </button>
+                  ) : null}
+                </div>
+              ) : null;
               return (
                 <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5">
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
@@ -833,6 +895,7 @@ const PostsEventsList = ({
                   <h3 className="text-sm font-semibold text-slate-900">{article?.title}</h3>
                   {article?.content && <p className="mt-2 text-sm text-slate-700 line-clamp-4">{article.content}</p>}
                   {renderAttachmentGallery(item.id, article.images, 'Article attachment')}
+                  {articleActions}
                   {Array.isArray(article.links) && article.links.length > 0 && (
                     <div className="mt-3 flex flex-col gap-2">
                       {article.links.map((ln, idx) => (
@@ -849,6 +912,30 @@ const PostsEventsList = ({
             // Products
             if (item.type === 'product') {
               const product = item.product;
+              const productActions = isAdminView && (onEditProduct || onDeleteProduct) ? (
+                <div className="mb-2 flex justify-end gap-1">
+                  {onEditProduct ? (
+                    <button
+                      type="button"
+                      onClick={() => onEditProduct(product)}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                      title="Edit product"
+                    >
+                      <FiEdit2 size={12} />
+                    </button>
+                  ) : null}
+                  {onDeleteProduct ? (
+                    <button
+                      type="button"
+                      onClick={() => onDeleteProduct(product)}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:text-red-600"
+                      title="Delete product"
+                    >
+                      <FiTrash2 size={12} />
+                    </button>
+                  ) : null}
+                </div>
+              ) : null;
               return (
                 <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5">
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
@@ -862,6 +949,7 @@ const PostsEventsList = ({
                   <p className="mt-1 text-xs text-slate-700">{product?.price ? `$${product.price}` : ''}</p>
                   {product?.description && <p className="mt-2 text-sm text-slate-700 line-clamp-3">{product.description}</p>}
                   {renderAttachmentGallery(item.id, product.images, 'Product attachment')}
+                  {productActions}
                   {Array.isArray(product.links) && product.links.length > 0 && (
                     <div className="mt-3 flex flex-col gap-2">
                       {product.links.map((ln, idx) => (

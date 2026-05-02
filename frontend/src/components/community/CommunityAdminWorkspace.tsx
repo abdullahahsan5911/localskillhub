@@ -158,6 +158,13 @@ const CommunityAdminWorkspace = ({
   const [deleteEventConfirmOpen, setDeleteEventConfirmOpen] = useState(false);
   const [deleteEventId, setDeleteEventId] = useState<string | null>(null);
 
+  const [deleteJobConfirmOpen, setDeleteJobConfirmOpen] = useState(false);
+  const [deleteJobId, setDeleteJobId] = useState<string | null>(null);
+  const [deleteArticleConfirmOpen, setDeleteArticleConfirmOpen] = useState(false);
+  const [deleteArticleId, setDeleteArticleId] = useState<string | null>(null);
+  const [deleteProductConfirmOpen, setDeleteProductConfirmOpen] = useState(false);
+  const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
+
   const [deletePageOpen, setDeletePageOpen] = useState(false);
   const [deletePageConfirmText, setDeletePageConfirmText] = useState("");
   const [deletingPage, setDeletingPage] = useState(false);
@@ -256,6 +263,90 @@ const CommunityAdminWorkspace = ({
     setDeleteEventId(null);
   };
 
+  const handleDeleteJob = (job: any) => {
+    setDeleteJobId(job._id || job.id || null);
+    setDeleteJobConfirmOpen(true);
+  };
+
+  const confirmDeleteJob = async () => {
+    if (!deleteJobId) return;
+    const id = deleteJobId;
+    try {
+      setMutating(id);
+      setDeleteJobConfirmOpen(false);
+      await api.deleteCommunityJob(id);
+      setCommunityJobs((prev) => (prev || []).filter((j: any) => String(j._id) !== String(id)));
+      toast({ title: "Job deleted" });
+    } catch (error) {
+      console.error("Failed to delete job", error);
+      toast({ title: "Could not delete job", variant: "destructive" });
+    } finally {
+      setMutating(null);
+      setDeleteJobId(null);
+    }
+  };
+
+  const cancelDeleteJob = () => {
+    setDeleteJobConfirmOpen(false);
+    setDeleteJobId(null);
+  };
+
+  const handleDeleteArticle = (article: any) => {
+    setDeleteArticleId(article._id || article.id || null);
+    setDeleteArticleConfirmOpen(true);
+  };
+
+  const confirmDeleteArticle = async () => {
+    if (!deleteArticleId) return;
+    const id = deleteArticleId;
+    try {
+      setMutating(id);
+      setDeleteArticleConfirmOpen(false);
+      await api.deleteCommunityArticle(id);
+      setCommunityArticles((prev) => (prev || []).filter((a: any) => String(a._id) !== String(id)));
+      toast({ title: "Article deleted" });
+    } catch (error) {
+      console.error("Failed to delete article", error);
+      toast({ title: "Could not delete article", variant: "destructive" });
+    } finally {
+      setMutating(null);
+      setDeleteArticleId(null);
+    }
+  };
+
+  const cancelDeleteArticle = () => {
+    setDeleteArticleConfirmOpen(false);
+    setDeleteArticleId(null);
+  };
+
+  const handleDeleteProduct = (product: any) => {
+    setDeleteProductId(product._id || product.id || null);
+    setDeleteProductConfirmOpen(true);
+  };
+
+  const confirmDeleteProduct = async () => {
+    if (!deleteProductId) return;
+    const id = deleteProductId;
+    try {
+      setMutating(id);
+      setDeleteProductConfirmOpen(false);
+      await api.deleteCommunityProduct(id);
+      setCommunityProducts((prev) => (prev || []).filter((p: any) => String(p._id) !== String(id)));
+      toast({ title: "Product deleted" });
+    } catch (error) {
+      console.error("Failed to delete product", error);
+      toast({ title: "Could not delete product", variant: "destructive" });
+    } finally {
+      setMutating(null);
+      setDeleteProductId(null);
+    }
+  };
+
+  const cancelDeleteProduct = () => {
+    setDeleteProductConfirmOpen(false);
+    setDeleteProductId(null);
+  };
+
   // ─── edit post ─────────────────────────────────────────────────────────────
   const openEditPost = (post: CommunityPostItem) => {
     setEditingPost(post);
@@ -287,6 +378,42 @@ const CommunityAdminWorkspace = ({
     });
     setEventImages(Array.isArray(event.images) ? event.images : []);
     setEventLinks(Array.isArray(event.links) ? event.links : []);
+    setActiveTab("posts");
+  };
+
+  const openEditJob = (job: any) => {
+    setEditingJob(job);
+    setJobForm({
+      title: job.title || "",
+      description: job.description || "",
+      location: job.location || "",
+      salary: job.salary || "",
+      type: job.type || "full-time",
+    });
+    setJobImages(Array.isArray(job.images) ? job.images : []);
+    setJobLinks(Array.isArray(job.links) ? job.links : []);
+    setCreateOpen(true);
+    setCreateMode("job");
+    setActiveTab("posts");
+  };
+
+  const openEditArticle = (article: any) => {
+    setEditingArticle(article);
+    setArticleForm({ title: article.title || "", content: article.content || "" });
+    setArticleImages(Array.isArray(article.images) ? article.images : []);
+    setArticleLinks(Array.isArray(article.links) ? article.links : []);
+    setCreateOpen(true);
+    setCreateMode("article");
+    setActiveTab("posts");
+  };
+
+  const openEditProduct = (product: any) => {
+    setEditingProduct(product);
+    setProductForm({ title: product.title || "", description: product.description || "", price: product.price ? String(product.price) : "" });
+    setProductImages(Array.isArray(product.images) ? product.images : []);
+    setProductLinks(Array.isArray(product.links) ? product.links : []);
+    setCreateOpen(true);
+    setCreateMode("product");
     setActiveTab("posts");
   };
 
@@ -404,7 +531,7 @@ const CommunityAdminWorkspace = ({
       type: 'job' as const,
       id: `job-${job._id}`,
       timestamp: job.createdAt || job._id,
-      communityId: String(job.communityId || community._id || ''),
+      communityId: normalizeCommunityId(job.communityId) || String(community._id || ''),
       job,
     }));
 
@@ -412,7 +539,7 @@ const CommunityAdminWorkspace = ({
       type: 'article' as const,
       id: `article-${article._id}`,
       timestamp: article.createdAt || article._id,
-      communityId: String(article.communityId || community._id || ''),
+      communityId: normalizeCommunityId(article.communityId) || String(community._id || ''),
       article,
     }));
 
@@ -420,14 +547,14 @@ const CommunityAdminWorkspace = ({
       type: 'product' as const,
       id: `product-${product._id}`,
       timestamp: product.createdAt || product._id,
-      communityId: String(product.communityId || community._id || ''),
+      communityId: normalizeCommunityId(product.communityId) || String(community._id || ''),
       product,
     }));
 
     return [...postItems, ...eventItems, ...jobItems, ...articleItems, ...productItems].sort(
       (a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime(),
     );
-  }, [posts, communityEvents, community._id]);
+  }, [posts, communityEvents, communityJobs, communityArticles, communityProducts, community._id]);
 
   useEffect(() => {
     setEditForm({
@@ -482,7 +609,7 @@ const CommunityAdminWorkspace = ({
           const jobsRes = await api.getCommunityJobs();
           const jobsPayload: any = (jobsRes as any).data || jobsRes;
           const jobs = jobsPayload.jobs || jobsPayload.data?.jobs || jobsPayload.data || [];
-          setCommunityJobs((Array.isArray(jobs) ? jobs : []).filter((j: any) => String(j.communityId) === String(community._id)));
+          setCommunityJobs((Array.isArray(jobs) ? jobs : []).filter((j: any) => normalizeCommunityId(j.communityId) === String(community._id)));
         } catch (err) {
           setCommunityJobs([]);
         }
@@ -490,7 +617,7 @@ const CommunityAdminWorkspace = ({
           const articlesRes = await api.getCommunityArticles();
           const artPayload: any = (articlesRes as any).data || articlesRes;
           const arts = artPayload.articles || artPayload.data?.articles || artPayload.data || [];
-          setCommunityArticles((Array.isArray(arts) ? arts : []).filter((a: any) => String(a.communityId) === String(community._id)));
+          setCommunityArticles((Array.isArray(arts) ? arts : []).filter((a: any) => normalizeCommunityId(a.communityId) === String(community._id)));
         } catch (err) {
           setCommunityArticles([]);
         }
@@ -498,7 +625,7 @@ const CommunityAdminWorkspace = ({
           const productsRes = await api.getCommunityProducts();
           const prodPayload: any = (productsRes as any).data || productsRes;
           const prods = prodPayload.products || prodPayload.data?.products || prodPayload.data || [];
-          setCommunityProducts((Array.isArray(prods) ? prods : []).filter((p: any) => String(p.communityId) === String(community._id)));
+          setCommunityProducts((Array.isArray(prods) ? prods : []).filter((p: any) => normalizeCommunityId(p.communityId) === String(community._id)));
         } catch (err) {
           setCommunityProducts([]);
         }
@@ -1144,6 +1271,12 @@ const CommunityAdminWorkspace = ({
                     onDeletePost={handleDeletePost}
                     onEditEvent={openEditEvent}
                     onDeleteEvent={handleDeleteEvent}
+                    onEditJob={openEditJob}
+                    onDeleteJob={handleDeleteJob}
+                    onEditArticle={openEditArticle}
+                    onDeleteArticle={handleDeleteArticle}
+                    onEditProduct={openEditProduct}
+                    onDeleteProduct={handleDeleteProduct}
                     onDeleteComment={handleDeleteComment}
                     isAdminView
                   />
@@ -1892,6 +2025,48 @@ const CommunityAdminWorkspace = ({
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={cancelDeleteEvent}>Cancel</Button>
             <Button type="button" variant="destructive" onClick={confirmDeleteEvent} disabled={mutating !== null}>{mutating ? "Deleting..." : "Delete"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete job confirmation */}
+      <Dialog open={deleteJobConfirmOpen} onOpenChange={setDeleteJobConfirmOpen}>
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete job</DialogTitle>
+            <DialogDescription>Are you sure you want to delete this job? This action cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={cancelDeleteJob}>Cancel</Button>
+            <Button type="button" variant="destructive" onClick={confirmDeleteJob} disabled={mutating !== null}>{mutating ? "Deleting..." : "Delete"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete article confirmation */}
+      <Dialog open={deleteArticleConfirmOpen} onOpenChange={setDeleteArticleConfirmOpen}>
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete article</DialogTitle>
+            <DialogDescription>Are you sure you want to delete this article? This action cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={cancelDeleteArticle}>Cancel</Button>
+            <Button type="button" variant="destructive" onClick={confirmDeleteArticle} disabled={mutating !== null}>{mutating ? "Deleting..." : "Delete"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete product confirmation */}
+      <Dialog open={deleteProductConfirmOpen} onOpenChange={setDeleteProductConfirmOpen}>
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete product</DialogTitle>
+            <DialogDescription>Are you sure you want to delete this product? This action cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={cancelDeleteProduct}>Cancel</Button>
+            <Button type="button" variant="destructive" onClick={confirmDeleteProduct} disabled={mutating !== null}>{mutating ? "Deleting..." : "Delete"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
