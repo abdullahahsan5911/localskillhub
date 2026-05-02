@@ -702,7 +702,7 @@ class ApiService {
   }
 
   // Community jobs/articles/products endpoints
-  async getCommunityJobs(params?: { communityId?: string; page?: number; limit?: number }) {
+  async getCommunityJobs(params?: { communityId?: string; page?: number; limit?: number; includeImages?: boolean; includeLinks?: boolean }) {
     const queryString = this.toQueryString(params as Record<string, unknown>);
     return this.request(`/communities/jobs${queryString}`, { method: 'GET' });
   }
@@ -719,7 +719,7 @@ class ApiService {
     return this.request(`/communities/jobs/${id}`, { method: 'DELETE' });
   }
 
-  async getCommunityArticles(params?: { communityId?: string; page?: number; limit?: number }) {
+  async getCommunityArticles(params?: { communityId?: string; page?: number; limit?: number; includeImages?: boolean; includeLinks?: boolean }) {
     const queryString = this.toQueryString(params as Record<string, unknown>);
     return this.request(`/communities/articles${queryString}`, { method: 'GET' });
   }
@@ -736,7 +736,7 @@ class ApiService {
     return this.request(`/communities/articles/${id}`, { method: 'DELETE' });
   }
 
-  async getCommunityProducts(params?: { communityId?: string; page?: number; limit?: number }) {
+  async getCommunityProducts(params?: { communityId?: string; page?: number; limit?: number; includeImages?: boolean; includeLinks?: boolean }) {
     const queryString = this.toQueryString(params as Record<string, unknown>);
     return this.request(`/communities/products${queryString}`, { method: 'GET' });
   }

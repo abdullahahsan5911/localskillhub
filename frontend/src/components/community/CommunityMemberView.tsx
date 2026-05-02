@@ -92,6 +92,7 @@ type CommunityFeedItem =
       timestamp: string;
       communityId: string;
       job: CommunityJobItem;
+      
     }
   | {
       type: "article";
