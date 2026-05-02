@@ -211,6 +211,7 @@ const ClientProfile = () => {
 
   const getDashboardBase = () => {
     if (!currentUser) return "/";
+    if ((currentUser as any)?.accountType === "company") return "/company-dashboard";
     if (currentUser.role === "client") return "/dashboard/client";
     if (currentUser.role === "freelancer") return "/dashboard/freelancer";
     return "/";

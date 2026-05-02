@@ -29,7 +29,7 @@ export interface CommunityPostItem {
 }
 
 export interface CommunityFeedItem {
-  type: "post" | "event";
+  type: "post" | "event" | "job" | "article" | "product";
   createdAt: string;
   post?: CommunityPostItem;
   event?: {
@@ -38,6 +38,34 @@ export interface CommunityFeedItem {
     description?: string;
     location?: string;
     date: string;
+    communityId?: string;
+    images?: string[];
+    links?: string[];
+  };
+  job?: {
+    _id: string;
+    title: string;
+    description?: string;
+    location?: string;
+    salary?: string;
+    type?: string;
+    communityId?: string;
+    images?: string[];
+    links?: string[];
+  };
+  article?: {
+    _id: string;
+    title: string;
+    content?: string;
+    communityId?: string;
+    images?: string[];
+    links?: string[];
+  };
+  product?: {
+    _id: string;
+    title: string;
+    description?: string;
+    price?: string;
     communityId?: string;
     images?: string[];
     links?: string[];

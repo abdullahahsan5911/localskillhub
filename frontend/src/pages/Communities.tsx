@@ -19,7 +19,7 @@ import {
   FiUsers,
 } from "react-icons/fi";
 import { FiHeart, FiRepeat } from "react-icons/fi";
-import PostsEventsList from "@/components/common/PostsEventsList";
+import PostsEventsList from "../components/common/PostsEventsList";
 import { HiOutlineSparkles } from "react-icons/hi2";
 
 interface Community {
@@ -51,6 +51,40 @@ interface CommunityPostItem {
   createdAt: string;
   reposts?: any[];
   repostsCount?: number;
+}
+
+interface CommunityJobItem {
+  _id: string;
+  communityId?: string | { _id?: string };
+  title: string;
+  description?: string;
+  location?: string;
+  salary?: string;
+  type?: string;
+  images?: string[];
+  links?: string[];
+  createdAt?: string;
+}
+
+interface CommunityArticleItem {
+  _id: string;
+  communityId?: string | { _id?: string };
+  title: string;
+  content?: string;
+  images?: string[];
+  links?: string[];
+  createdAt?: string;
+}
+
+interface CommunityProductItem {
+  _id: string;
+  communityId?: string | { _id?: string };
+  title: string;
+  description?: string;
+  price?: string;
+  images?: string[];
+  links?: string[];
+  createdAt?: string;
 }
 
 interface LeaderboardUser {
@@ -221,6 +255,27 @@ type FeedItem =
       timestamp: string;
       communityId: string;
       event: EventItem;
+    }
+  | {
+      type: "job";
+      id: string;
+      timestamp: string;
+      communityId: string;
+      job: CommunityJobItem;
+    }
+  | {
+      type: "article";
+      id: string;
+      timestamp: string;
+      communityId: string;
+      article: CommunityArticleItem;
+    }
+  | {
+      type: "product";
+      id: string;
+      timestamp: string;
+      communityId: string;
+      product: CommunityProductItem;
     };
 
 const Communities = () => {
@@ -234,6 +289,12 @@ const Communities = () => {
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [feedJobs, setFeedJobs] = useState<CommunityJobItem[]>([]);
+  const [feedArticles, setFeedArticles] = useState<CommunityArticleItem[]>([]);
+  const [feedProducts, setFeedProducts] = useState<CommunityProductItem[]>([]);
+  const [loadingFeedJobs, setLoadingFeedJobs] = useState(true);
+  const [loadingFeedArticles, setLoadingFeedArticles] = useState(true);
+  const [loadingFeedProducts, setLoadingFeedProducts] = useState(true);
   const [togglingEvents, setTogglingEvents] = useState<string[]>([]);
   const [feedPosts, setFeedPosts] = useState<CommunityPostItem[]>([]);
   const [loadingFeedPosts, setLoadingFeedPosts] = useState(true);
@@ -328,12 +389,42 @@ const Communities = () => {
       })
       .filter((eventItem) => !eventItem.communityId || visibleCommunityIds.has(eventItem.communityId));
 
-    return [...postItems, ...eventItems].sort((a, b) => {
+    const jobItems: FeedItem[] = feedJobs
+      .map((job) => ({
+        type: "job" as const,
+        id: `job-${job._id}`,
+        timestamp: job.createdAt || job._id,
+        communityId: normalizeCommunityId(job.communityId),
+        job,
+      }))
+      .filter((jobItem) => !jobItem.communityId || visibleCommunityIds.has(jobItem.communityId));
+
+    const articleItems: FeedItem[] = feedArticles
+      .map((article) => ({
+        type: "article" as const,
+        id: `article-${article._id}`,
+        timestamp: article.createdAt || article._id,
+        communityId: normalizeCommunityId(article.communityId),
+        article,
+      }))
+      .filter((articleItem) => !articleItem.communityId || visibleCommunityIds.has(articleItem.communityId));
+
+    const productItems: FeedItem[] = feedProducts
+      .map((product) => ({
+        type: "product" as const,
+        id: `product-${product._id}`,
+        timestamp: product.createdAt || product._id,
+        communityId: normalizeCommunityId(product.communityId),
+        product,
+      }))
+      .filter((productItem) => !productItem.communityId || visibleCommunityIds.has(productItem.communityId));
+
+    return [...postItems, ...eventItems, ...jobItems, ...articleItems, ...productItems].sort((a, b) => {
       const at = new Date(a.timestamp).getTime() || 0;
       const bt = new Date(b.timestamp).getTime() || 0;
       return bt - at;
     });
-  }, [events, feedPosts, visibleCommunityIds]);
+  }, [events, feedPosts, feedJobs, feedArticles, feedProducts, visibleCommunityIds]);
 
   const refreshCommunities = async () => {
     try {
@@ -369,32 +460,46 @@ const Communities = () => {
   const refreshFeedPosts = async (communityList: Community[]) => {
     if (communityList.length === 0) {
       setFeedPosts([]);
+      setFeedJobs([]);
+      setFeedArticles([]);
+      setFeedProducts([]);
       setLoadingFeedPosts(false);
+      setLoadingFeedJobs(false);
+      setLoadingFeedArticles(false);
+      setLoadingFeedProducts(false);
       return;
     }
 
     setLoadingFeedPosts(true);
+    setLoadingFeedJobs(true);
+    setLoadingFeedArticles(true);
+    setLoadingFeedProducts(true);
     try {
-      const postResponses = await Promise.allSettled(
-        communityList.map((community) => api.getCommunityPosts(community._id, { limit: 5 }))
-      );
+      const [postResponses, jobsRes, articlesRes, productsRes] = await Promise.allSettled([
+        Promise.allSettled(communityList.map((community) => api.getCommunityPosts(community._id, { limit: 5 }))),
+        api.getCommunityJobs({ limit: 50 }),
+        api.getCommunityArticles({ limit: 50 }),
+        api.getCommunityProducts({ limit: 50 }),
+      ]);
 
       const allPosts: CommunityPostItem[] = [];
 
-      postResponses.forEach((result, index) => {
-        if (result.status !== "fulfilled") return;
-        const payload: any = (result.value as any).data || {};
-        const rawPosts = payload.data?.posts || payload.posts || [];
-        const posts: CommunityPostItem[] = Array.isArray(rawPosts) ? rawPosts : [];
-        const communityId = communityList[index]?._id;
+      if (postResponses.status === "fulfilled") {
+        postResponses.value.forEach((result, index) => {
+          if (result.status !== "fulfilled") return;
+          const payload: any = (result.value as any).data || {};
+          const rawPosts = payload.data?.posts || payload.posts || [];
+          const posts: CommunityPostItem[] = Array.isArray(rawPosts) ? rawPosts : [];
+          const communityId = communityList[index]?._id;
 
-        posts.forEach((post) => {
-          allPosts.push({
-            ...post,
-            communityId: post.communityId || communityId,
+          posts.forEach((post) => {
+            allPosts.push({
+              ...post,
+              communityId: post.communityId || communityId,
+            });
           });
         });
-      });
+      }
 
       allPosts.sort((a, b) => {
         const at = new Date(a.createdAt).getTime() || 0;
@@ -403,11 +508,25 @@ const Communities = () => {
       });
 
       setFeedPosts(allPosts);
+
+      const jobsPayload: any = jobsRes.status === "fulfilled" ? (jobsRes.value as any).data || {} : {};
+      const articlesPayload: any = articlesRes.status === "fulfilled" ? (articlesRes.value as any).data || {} : {};
+      const productsPayload: any = productsRes.status === "fulfilled" ? (productsRes.value as any).data || {} : {};
+
+      setFeedJobs(Array.isArray(jobsPayload.data?.jobs || jobsPayload.jobs) ? (jobsPayload.data?.jobs || jobsPayload.jobs) : []);
+      setFeedArticles(Array.isArray(articlesPayload.data?.articles || articlesPayload.articles) ? (articlesPayload.data?.articles || articlesPayload.articles) : []);
+      setFeedProducts(Array.isArray(productsPayload.data?.products || productsPayload.products) ? (productsPayload.data?.products || productsPayload.products) : []);
     } catch (err) {
-      console.error("Failed to load feed posts", err);
+      console.error("Failed to load feed content", err);
       setFeedPosts([]);
+      setFeedJobs([]);
+      setFeedArticles([]);
+      setFeedProducts([]);
     } finally {
       setLoadingFeedPosts(false);
+      setLoadingFeedJobs(false);
+      setLoadingFeedArticles(false);
+      setLoadingFeedProducts(false);
     }
   };
 
@@ -876,7 +995,7 @@ const Communities = () => {
 
           <div className="space-y-4 lg:col-span-6 lg:space-y-5 min-w-0">
             <Section title="Community Activity" icon={<FiTrendingUp size={16} />}>
-              {(loadingFeedPosts || loadingEvents) ? (
+              {(loadingFeedPosts || loadingEvents || loadingFeedJobs || loadingFeedArticles || loadingFeedProducts) ? (
                 <div className="flex items-center justify-center py-10">
                   <FiLoader className="h-5 w-5 animate-spin text-slate-400" />
                 </div>
@@ -884,12 +1003,12 @@ const Communities = () => {
                 <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
                   <FiMessageSquare className="mx-auto mb-2 h-5 w-5 text-slate-300" />
                   <p className="text-sm font-medium text-slate-500">No activity yet</p>
-                  <p className="mt-1 text-xs text-slate-400">Posts and events from all communities will appear here.</p>
+                  <p className="mt-1 text-xs text-slate-400">Posts, events, jobs, articles, and products from all communities will appear here.</p>
                 </div>
               ) : (
                 <PostsEventsList
                   feed={mixedFeed}
-                  loading={loadingFeedPosts || loadingEvents}
+                  loading={loadingFeedPosts || loadingEvents || loadingFeedJobs || loadingFeedArticles || loadingFeedProducts}
                   feedPosts={feedPosts}
                   currentUserId={currentUserId}
                   togglingEvents={togglingEvents}

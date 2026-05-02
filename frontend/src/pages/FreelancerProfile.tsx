@@ -417,7 +417,8 @@ const FreelancerProfile = () => {
     if (!freelancer?.userId?._id) return;
 
     let dashboardBase = "/";
-    if (user.role === "client") dashboardBase = "/dashboard/client";
+    if ((user as any)?.accountType === "company") dashboardBase = "/company-dashboard";
+    else if (user.role === "client") dashboardBase = "/dashboard/client";
     else if (user.role === "freelancer") dashboardBase = "/dashboard/freelancer";
 
     navigate(`${dashboardBase}?tab=messages&userId=${freelancer.userId._id}`);

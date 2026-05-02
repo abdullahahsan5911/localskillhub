@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import PostsEventsList from "@/components/common/PostsEventsList";
+import PostsEventsList from "../common/PostsEventsList";
 import Avatar from "@/components/Avatar";
 import { FiHeart, FiRepeat } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,40 @@ import {
 } from "react-icons/fi";
 import type { Community, CommunityPostItem } from "./types";
 
+interface CommunityJobItem {
+  _id: string;
+  communityId?: string | { _id?: string };
+  title: string;
+  description?: string;
+  location?: string;
+  salary?: string;
+  type?: string;
+  images?: string[];
+  links?: string[];
+  createdAt?: string;
+}
+
+interface CommunityArticleItem {
+  _id: string;
+  communityId?: string | { _id?: string };
+  title: string;
+  content?: string;
+  images?: string[];
+  links?: string[];
+  createdAt?: string;
+}
+
+interface CommunityProductItem {
+  _id: string;
+  communityId?: string | { _id?: string };
+  title: string;
+  description?: string;
+  price?: string;
+  images?: string[];
+  links?: string[];
+  createdAt?: string;
+}
+
 interface CommunityMemberViewProps {
   community: Community;
   headerMembers: number;
@@ -36,6 +70,43 @@ type MemberTab = "home" | "about" | "posts" | "people";
 
 const HOME_POSTS_INITIAL = 5;
 const MEMBERS_PREVIEW_COUNT = 3;
+
+type CommunityFeedItem =
+  | {
+      type: "post";
+      id: string;
+      timestamp: string;
+      communityId: string;
+      post: CommunityPostItem;
+    }
+  | {
+      type: "event";
+      id: string;
+      timestamp: string;
+      communityId: string;
+      event: any;
+    }
+  | {
+      type: "job";
+      id: string;
+      timestamp: string;
+      communityId: string;
+      job: CommunityJobItem;
+    }
+  | {
+      type: "article";
+      id: string;
+      timestamp: string;
+      communityId: string;
+      article: CommunityArticleItem;
+    }
+  | {
+      type: "product";
+      id: string;
+      timestamp: string;
+      communityId: string;
+      product: CommunityProductItem;
+    };
 
 const normalizeCommunityId = (value: unknown): string => {
   if (!value) return "";
@@ -67,7 +138,13 @@ const CommunityMemberView = ({
   const [showAllMembers, setShowAllMembers] = useState(false);
   const [myCommunities, setMyCommunities] = useState<Community[]>([]);
   const [communityEvents, setCommunityEvents] = useState<any[]>([]);
+  const [communityJobs, setCommunityJobs] = useState<CommunityJobItem[]>([]);
+  const [communityArticles, setCommunityArticles] = useState<CommunityArticleItem[]>([]);
+  const [communityProducts, setCommunityProducts] = useState<CommunityProductItem[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
+  const [jobsLoading, setJobsLoading] = useState(false);
+  const [articlesLoading, setArticlesLoading] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(false);
   const [memberFollowLoading, setMemberFollowLoading] = useState<Record<string, boolean>>({});
 
   const currentUserId = (user as any)?._id;
@@ -111,6 +188,53 @@ const CommunityMemberView = ({
     [sortedPostsByEngagement, homePostsLimit],
   );
   const hasMoreHomePosts = homePostsLimit < sortedPostsByEngagement.length;
+
+  const communityFeed = useMemo<CommunityFeedItem[]>(() => {
+    const postItems = sortedPostsByEngagement.slice(0, homePostsLimit).map((post) => ({
+      type: "post" as const,
+      id: `post-${post._id}`,
+      timestamp: post.createdAt,
+      communityId: post.communityId || String(community._id),
+      post,
+    }));
+
+    const eventItems = communityEvents.map((event: any) => ({
+      type: "event" as const,
+      id: `event-${event._id}`,
+      timestamp: event.date,
+      communityId: normalizeCommunityId(event.communityId) || String(community._id),
+      event,
+    }));
+
+    const jobItems = communityJobs.map((job) => ({
+      type: "job" as const,
+      id: `job-${job._id}`,
+      timestamp: job.createdAt || job._id,
+      communityId: normalizeCommunityId(job.communityId) || String(community._id),
+      job,
+    }));
+
+    const articleItems = communityArticles.map((article) => ({
+      type: "article" as const,
+      id: `article-${article._id}`,
+      timestamp: article.createdAt || article._id,
+      communityId: normalizeCommunityId(article.communityId) || String(community._id),
+      article,
+    }));
+
+    const productItems = communityProducts.map((product) => ({
+      type: "product" as const,
+      id: `product-${product._id}`,
+      timestamp: product.createdAt || product._id,
+      communityId: normalizeCommunityId(product.communityId) || String(community._id),
+      product,
+    }));
+
+    return [...postItems, ...eventItems, ...jobItems, ...articleItems, ...productItems].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
+  }, [sortedPostsByEngagement, homePostsLimit, communityEvents, communityJobs, communityArticles, communityProducts, community._id]);
+
   const followingIds = useMemo(
     () => (Array.isArray((user as any)?.following) ? (user as any).following.map((id: any) => String(id)) : []),
     [user],
@@ -457,18 +581,8 @@ const CommunityMemberView = ({
         </div>
 
         <PostsEventsList
-          // combine top posts + events so events also appear in the Home feed
-          feed={[
-            ...homePostsVisible.map((p) => ({ type: 'post' as const, id: `post-${p._id}`, timestamp: p.createdAt, communityId: p.communityId || '', post: p })),
-            ...communityEvents.map((e) => ({
-              type: 'event' as const,
-              id: `event-${e._id}`,
-              timestamp: e.date,
-              communityId: normalizeCommunityId(e.communityId),
-              event: e,
-            })),
-          ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())}
-          loading={false}
+          feed={communityFeed}
+          loading={postsLoading || activityLoading || jobsLoading || articlesLoading || productsLoading}
           feedPosts={homePostsVisible}
           currentUserId={currentUserId}
           formatRelative={formatRelativeTime}
@@ -527,6 +641,46 @@ const CommunityMemberView = ({
     };
 
     void loadEvents();
+  }, [community._id]);
+
+  useEffect(() => {
+    const loadExtraContent = async () => {
+      try {
+        setJobsLoading(true);
+        setArticlesLoading(true);
+        setProductsLoading(true);
+
+        const [jobsRes, articlesRes, productsRes] = await Promise.allSettled([
+          api.getCommunityJobs({ communityId: community._id, limit: 50 }),
+          api.getCommunityArticles({ communityId: community._id, limit: 50 }),
+          api.getCommunityProducts({ communityId: community._id, limit: 50 }),
+        ]);
+
+        const jobsPayload: any = jobsRes.status === "fulfilled" ? (jobsRes.value as any).data || jobsRes.value || {} : {};
+        const articlesPayload: any = articlesRes.status === "fulfilled" ? (articlesRes.value as any).data || articlesRes.value || {} : {};
+        const productsPayload: any = productsRes.status === "fulfilled" ? (productsRes.value as any).data || productsRes.value || {} : {};
+
+        const jobs = jobsPayload.jobs || jobsPayload.data?.jobs || jobsPayload.data || [];
+        const articles = articlesPayload.articles || articlesPayload.data?.articles || articlesPayload.data || [];
+        const products = productsPayload.products || productsPayload.data?.products || productsPayload.data || [];
+
+        const communityId = String(community._id);
+        setCommunityJobs(Array.isArray(jobs) ? jobs.filter((item: any) => normalizeCommunityId(item.communityId) === communityId || String(item.communityId || "") === communityId) : []);
+        setCommunityArticles(Array.isArray(articles) ? articles.filter((item: any) => normalizeCommunityId(item.communityId) === communityId || String(item.communityId || "") === communityId) : []);
+        setCommunityProducts(Array.isArray(products) ? products.filter((item: any) => normalizeCommunityId(item.communityId) === communityId || String(item.communityId || "") === communityId) : []);
+      } catch (error) {
+        console.error("Failed to load community content", error);
+        setCommunityJobs([]);
+        setCommunityArticles([]);
+        setCommunityProducts([]);
+      } finally {
+        setJobsLoading(false);
+        setArticlesLoading(false);
+        setProductsLoading(false);
+      }
+    };
+
+    void loadExtraContent();
   }, [community._id]);
 
   return (

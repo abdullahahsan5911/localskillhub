@@ -74,7 +74,8 @@ export const UserHoverCard = ({ user, children }: UserHoverCardProps) => {
 
         // Logged-in users go to their dashboard messages tab
         let dashboardBase = "/";
-        if (currentUser?.role === "client") dashboardBase = "/dashboard/client";
+        if (currentUser?.accountType === "company") dashboardBase = "/company-dashboard";
+        else if (currentUser?.role === "client") dashboardBase = "/dashboard/client";
         else if (currentUser?.role === "freelancer") dashboardBase = "/dashboard/freelancer";
 
         navigate(`${dashboardBase}?tab=messages&userId=${displayUser.id}`);

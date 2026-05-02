@@ -701,6 +701,58 @@ class ApiService {
     });
   }
 
+  // Community jobs/articles/products endpoints
+  async getCommunityJobs(params?: { communityId?: string; page?: number; limit?: number }) {
+    const queryString = this.toQueryString(params as Record<string, unknown>);
+    return this.request(`/communities/jobs${queryString}`, { method: 'GET' });
+  }
+
+  async createCommunityJob(data: any) {
+    return this.request('/communities/jobs', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async updateCommunityJob(id: string, data: any) {
+    return this.request(`/communities/jobs/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+
+  async deleteCommunityJob(id: string) {
+    return this.request(`/communities/jobs/${id}`, { method: 'DELETE' });
+  }
+
+  async getCommunityArticles(params?: { communityId?: string; page?: number; limit?: number }) {
+    const queryString = this.toQueryString(params as Record<string, unknown>);
+    return this.request(`/communities/articles${queryString}`, { method: 'GET' });
+  }
+
+  async createCommunityArticle(data: any) {
+    return this.request('/communities/articles', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async updateCommunityArticle(id: string, data: any) {
+    return this.request(`/communities/articles/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+
+  async deleteCommunityArticle(id: string) {
+    return this.request(`/communities/articles/${id}`, { method: 'DELETE' });
+  }
+
+  async getCommunityProducts(params?: { communityId?: string; page?: number; limit?: number }) {
+    const queryString = this.toQueryString(params as Record<string, unknown>);
+    return this.request(`/communities/products${queryString}`, { method: 'GET' });
+  }
+
+  async createCommunityProduct(data: any) {
+    return this.request('/communities/products', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async updateCommunityProduct(id: string, data: any) {
+    return this.request(`/communities/products/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+
+  async deleteCommunityProduct(id: string) {
+    return this.request(`/communities/products/${id}`, { method: 'DELETE' });
+  }
+
   async createEvent(data: { title: string; description?: string; location?: string; date: string; communityId?: string; images?: string[]; links?: string[] }) {
     return this.request('/communities/events', {
       method: 'POST',

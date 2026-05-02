@@ -27,6 +27,9 @@ import {
   FiRepeat,
   FiMenu,
   FiBarChart2,
+  FiBriefcase,
+  FiFileText,
+  FiPackage,
 } from "react-icons/fi";
 import type { Community, CommunityPostItem } from "./types";
 
@@ -47,7 +50,7 @@ interface CommunityAdminWorkspaceProps {
 }
 
 type AdminTab = "dashboard" | "posts" | "activity";
-type CreateMode = "menu" | "post" | "event";
+type CreateMode = "menu" | "post" | "event" | "job" | "article" | "product";
 
 type EditableEvent = {
   _id: string;
@@ -110,6 +113,21 @@ const CommunityAdminWorkspace = ({
   const [eventLinks, setEventLinks] = useState<string[]>([]);
   const [eventLinkInput, setEventLinkInput] = useState("");
   const [eventImageUploading, setEventImageUploading] = useState(false);
+  const [jobForm, setJobForm] = useState({ title: "", description: "", location: "", salary: "", type: "full-time" });
+  const [jobImages, setJobImages] = useState<string[]>([]);
+  const [jobLinks, setJobLinks] = useState<string[]>([]);
+  const [jobLinkInput, setJobLinkInput] = useState("");
+  const [jobImageUploading, setJobImageUploading] = useState(false);
+  const [articleForm, setArticleForm] = useState({ title: "", content: "" });
+  const [articleImages, setArticleImages] = useState<string[]>([]);
+  const [articleLinks, setArticleLinks] = useState<string[]>([]);
+  const [articleLinkInput, setArticleLinkInput] = useState("");
+  const [articleImageUploading, setArticleImageUploading] = useState(false);
+  const [productForm, setProductForm] = useState({ title: "", description: "", price: "" });
+  const [productImages, setProductImages] = useState<string[]>([]);
+  const [productLinks, setProductLinks] = useState<string[]>([]);
+  const [productLinkInput, setProductLinkInput] = useState("");
+  const [productImageUploading, setProductImageUploading] = useState(false);
   const [editForm, setEditForm] = useState({
     name: "",
     description: "",
@@ -121,10 +139,16 @@ const CommunityAdminWorkspace = ({
 
   const [activityLoading, setActivityLoading] = useState(false);
   const [communityEvents, setCommunityEvents] = useState<any[]>([]);
+  const [communityJobs, setCommunityJobs] = useState<any[]>([]);
+  const [communityArticles, setCommunityArticles] = useState<any[]>([]);
+  const [communityProducts, setCommunityProducts] = useState<any[]>([]);
   const [discoverLoading, setDiscoverLoading] = useState(false);
   const [discoverCommunities, setDiscoverCommunities] = useState<Community[]>([]);
   const [submittingPost, setSubmittingPost] = useState(false);
   const [submittingEvent, setSubmittingEvent] = useState(false);
+  const [submittingJob, setSubmittingJob] = useState(false);
+  const [submittingArticle, setSubmittingArticle] = useState(false);
+  const [submittingProduct, setSubmittingProduct] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [mutating, setMutating] = useState<string | null>(null);
   const [deletePostConfirmOpen, setDeletePostConfirmOpen] = useState(false);
@@ -139,6 +163,9 @@ const CommunityAdminWorkspace = ({
   const [deletingPage, setDeletingPage] = useState(false);
   const [editingPost, setEditingPost] = useState<CommunityPostItem | null>(null);
   const [editingEvent, setEditingEvent] = useState<EditableEvent | null>(null);
+  const [editingJob, setEditingJob] = useState<any | null>(null);
+  const [editingArticle, setEditingArticle] = useState<any | null>(null);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [promoteDialogOpen, setPromoteDialogOpen] = useState(false);
   const [restrictDialogOpen, setRestrictDialogOpen] = useState(false);
 
@@ -373,7 +400,31 @@ const CommunityAdminWorkspace = ({
       event,
     }));
 
-    return [...postItems, ...eventItems].sort(
+    const jobItems = communityJobs.map((job: any) => ({
+      type: 'job' as const,
+      id: `job-${job._id}`,
+      timestamp: job.createdAt || job._id,
+      communityId: String(job.communityId || community._id || ''),
+      job,
+    }));
+
+    const articleItems = communityArticles.map((article: any) => ({
+      type: 'article' as const,
+      id: `article-${article._id}`,
+      timestamp: article.createdAt || article._id,
+      communityId: String(article.communityId || community._id || ''),
+      article,
+    }));
+
+    const productItems = communityProducts.map((product: any) => ({
+      type: 'product' as const,
+      id: `product-${product._id}`,
+      timestamp: product.createdAt || product._id,
+      communityId: String(product.communityId || community._id || ''),
+      product,
+    }));
+
+    return [...postItems, ...eventItems, ...jobItems, ...articleItems, ...productItems].sort(
       (a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime(),
     );
   }, [posts, communityEvents, community._id]);
@@ -426,6 +477,31 @@ const CommunityAdminWorkspace = ({
             (event: any) => normalizeCommunityId(event.communityId) === String(community._id),
           ),
         );
+        // load jobs/articles/products
+        try {
+          const jobsRes = await api.getCommunityJobs();
+          const jobsPayload: any = (jobsRes as any).data || jobsRes;
+          const jobs = jobsPayload.jobs || jobsPayload.data?.jobs || jobsPayload.data || [];
+          setCommunityJobs((Array.isArray(jobs) ? jobs : []).filter((j: any) => String(j.communityId) === String(community._id)));
+        } catch (err) {
+          setCommunityJobs([]);
+        }
+        try {
+          const articlesRes = await api.getCommunityArticles();
+          const artPayload: any = (articlesRes as any).data || articlesRes;
+          const arts = artPayload.articles || artPayload.data?.articles || artPayload.data || [];
+          setCommunityArticles((Array.isArray(arts) ? arts : []).filter((a: any) => String(a.communityId) === String(community._id)));
+        } catch (err) {
+          setCommunityArticles([]);
+        }
+        try {
+          const productsRes = await api.getCommunityProducts();
+          const prodPayload: any = (productsRes as any).data || productsRes;
+          const prods = prodPayload.products || prodPayload.data?.products || prodPayload.data || [];
+          setCommunityProducts((Array.isArray(prods) ? prods : []).filter((p: any) => String(p.communityId) === String(community._id)));
+        } catch (err) {
+          setCommunityProducts([]);
+        }
       } catch (error) {
         console.error("Failed to load community data", error);
         setCommunityEvents([]);
@@ -459,38 +535,57 @@ const CommunityAdminWorkspace = ({
   const openRestrictDialog = () => setRestrictDialogOpen(true);
   const closeRestrictDialog = () => setRestrictDialogOpen(false);
 
-  const uploadAttachmentImage = async (files: File[] = [], target: "post" | "event" = "post") => {
+  const uploadAttachmentImage = async (files: File[] = [], target: "post" | "event" | "job" | "article" | "product" = "post") => {
     if (files.length === 0) return;
     try {
       if (target === "post") setPostImageUploading(true);
-      else setEventImageUploading(true);
+      else if (target === 'event') setEventImageUploading(true);
+      else if (target === 'job') setJobImageUploading(true);
+      else if (target === 'article') setArticleImageUploading(true);
+      else if (target === 'product') setProductImageUploading(true);
 
+      const folder = target === 'post' ? 'community-posts' : target === 'event' ? 'community-events' : target === 'job' ? 'community-jobs' : target === 'article' ? 'community-articles' : 'community-products';
       const uploaded = await Promise.all(
-        files.map((file) => uploadToCloudinary(file, target === "post" ? "community-posts" : "community-events")),
+        files.map((file) => uploadToCloudinary(file, folder)),
       );
       const nextUrls = uploaded.map((item) => item.url);
       if (target === "post") setPostImages((c) => [...c, ...nextUrls]);
-      else setEventImages((c) => [...c, ...nextUrls]);
+      else if (target === 'event') setEventImages((c) => [...c, ...nextUrls]);
+      else if (target === 'job') setJobImages((c) => [...c, ...nextUrls]);
+      else if (target === 'article') setArticleImages((c) => [...c, ...nextUrls]);
+      else if (target === 'product') setProductImages((c) => [...c, ...nextUrls]);
     } catch (error) {
       console.error("Failed to upload attachment image", error);
       toast({ title: "Upload failed", variant: "destructive" });
     } finally {
       if (target === "post") setPostImageUploading(false);
-      else setEventImageUploading(false);
+      else if (target === 'event') setEventImageUploading(false);
+      else if (target === 'job') setJobImageUploading(false);
+      else if (target === 'article') setArticleImageUploading(false);
+      else if (target === 'product') setProductImageUploading(false);
     }
   };
 
-  const addAttachmentLink = (target: "post" | "event" = "post") => {
-    const rawValue = target === "post" ? postLinkInput : eventLinkInput;
+  const addAttachmentLink = (target: "post" | "event" | "job" | "article" | "product" = "post") => {
+    const rawValue = target === "post" ? postLinkInput : target === 'event' ? eventLinkInput : target === 'job' ? jobLinkInput : target === 'article' ? articleLinkInput : productLinkInput;
     const trimmedValue = rawValue.trim();
     if (!trimmedValue) return;
     const normalizedValue = /^https?:\/\//i.test(trimmedValue) ? trimmedValue : `https://${trimmedValue}`;
     if (target === "post") {
       setPostLinks((c) => (c.includes(normalizedValue) ? c : [...c, normalizedValue]));
       setPostLinkInput("");
-    } else {
+    } else if (target === 'event') {
       setEventLinks((c) => (c.includes(normalizedValue) ? c : [...c, normalizedValue]));
       setEventLinkInput("");
+    } else if (target === 'job') {
+      setJobLinks((c) => (c.includes(normalizedValue) ? c : [...c, normalizedValue]));
+      setJobLinkInput("");
+    } else if (target === 'article') {
+      setArticleLinks((c) => (c.includes(normalizedValue) ? c : [...c, normalizedValue]));
+      setArticleLinkInput("");
+    } else if (target === 'product') {
+      setProductLinks((c) => (c.includes(normalizedValue) ? c : [...c, normalizedValue]));
+      setProductLinkInput("");
     }
   };
 
@@ -587,6 +682,101 @@ const CommunityAdminWorkspace = ({
       toast({ title: editingEvent ? "Could not update event" : "Could not create event", variant: "destructive" });
     } finally {
       setSubmittingEvent(false);
+    }
+  };
+
+  const createJob = async () => {
+    if (!jobForm.title.trim()) return;
+    try {
+      setSubmittingJob(true);
+      const payload = {
+        title: jobForm.title.trim(),
+        description: jobForm.description.trim(),
+        location: jobForm.location.trim(),
+        salary: jobForm.salary.trim(),
+        type: jobForm.type,
+        images: jobImages,
+        links: jobLinks,
+        communityId: community._id,
+      };
+      const res = editingJob ? await api.updateCommunityJob(editingJob._id, payload) : await api.createCommunityJob(payload);
+      const saved = (res as any).data?.job || (res as any).data || res;
+      if (editingJob) {
+        toast({ title: 'Job updated' });
+      } else {
+        toast({ title: 'Job created' });
+      }
+      onRefreshPosts();
+      setActiveTab('posts');
+      closeCreateDialog();
+      setJobForm({ title: '', description: '', location: '', salary: '', type: 'full-time' });
+      setJobImages([]);
+      setJobLinks([]);
+      setEditingJob(null);
+    } catch (error) {
+      console.error(error);
+      toast({ title: editingJob ? 'Could not update job' : 'Could not create job', variant: 'destructive' });
+    } finally {
+      setSubmittingJob(false);
+    }
+  };
+
+  const createArticle = async () => {
+    if (!articleForm.title.trim() || !articleForm.content.trim()) return;
+    try {
+      setSubmittingArticle(true);
+      const payload = {
+        title: articleForm.title.trim(),
+        content: articleForm.content.trim(),
+        images: articleImages,
+        links: articleLinks,
+        communityId: community._id,
+      };
+      const res = editingArticle ? await api.updateCommunityArticle(editingArticle._id, payload) : await api.createCommunityArticle(payload);
+      if (editingArticle) toast({ title: 'Article updated' });
+      else toast({ title: 'Article created' });
+      onRefreshPosts();
+      setActiveTab('posts');
+      closeCreateDialog();
+      setArticleForm({ title: '', content: '' });
+      setArticleImages([]);
+      setArticleLinks([]);
+      setEditingArticle(null);
+    } catch (error) {
+      console.error(error);
+      toast({ title: editingArticle ? 'Could not update article' : 'Could not create article', variant: 'destructive' });
+    } finally {
+      setSubmittingArticle(false);
+    }
+  };
+
+  const createProduct = async () => {
+    if (!productForm.title.trim()) return;
+    try {
+      setSubmittingProduct(true);
+      const payload = {
+        title: productForm.title.trim(),
+        description: productForm.description.trim(),
+        price: productForm.price.trim(),
+        images: productImages,
+        links: productLinks,
+        communityId: community._id,
+      };
+      const res = editingProduct ? await api.updateCommunityProduct(editingProduct._id, payload) : await api.createCommunityProduct(payload);
+      if (editingProduct) toast({ title: 'Product updated' });
+      else toast({ title: 'Product created' });
+      onRefreshPosts();
+      setActiveTab('posts');
+      closeCreateDialog();
+      setProductForm({ title: '', description: '', price: '' });
+      setProductImages([]);
+      setProductLinks([]);
+      setEditingProduct(null);
+    } catch (error) {
+      console.error(error);
+      toast({ title: editingProduct ? 'Could not update product' : 'Could not create product', variant: 'destructive' });
+    } finally {
+      setSubmittingProduct(false);
     }
   };
 
@@ -1353,14 +1543,28 @@ const CommunityAdminWorkspace = ({
                 ? "Choose what you want to add to the page."
                 : createMode === "post"
                   ? "Publish a page post for your followers."
-                  : editingEvent
-                    ? "Update your page event details."
-                    : "Schedule a page event for your community."}
+                  : createMode === "event"
+                    ? editingEvent
+                      ? "Update your page event details."
+                      : "Schedule a page event for your community."
+                    : createMode === "job"
+                      ? editingJob
+                        ? "Update your job posting details."
+                        : "Post a job to reach candidates outside your network."
+                      : createMode === "article"
+                        ? editingArticle
+                          ? "Update your article details."
+                          : "Publish an article to connect with followers through long-form content."
+                        : createMode === "product"
+                          ? editingProduct
+                            ? "Update your product details."
+                            : "Add a product to spotlight your organization's products."
+                          : ""}
             </DialogDescription>
           </DialogHeader>
 
           {createMode === "menu" && (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3">
               <button type="button" onClick={() => setCreateMode("post")} className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left hover:border-slate-300 hover:bg-white">
                 <FiMessageSquare className="mb-2 text-slate-500" />
                 <p className="text-sm font-semibold text-slate-900">Create post</p>
@@ -1370,6 +1574,21 @@ const CommunityAdminWorkspace = ({
                 <FiCalendar className="mb-2 text-slate-500" />
                 <p className="text-sm font-semibold text-slate-900">Create event</p>
                 <p className="mt-1 text-xs text-slate-500">Host a session or meetup.</p>
+              </button>
+              <button type="button" onClick={() => setCreateMode("job")} className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left hover:border-slate-300 hover:bg-white">
+                <FiBriefcase className="mb-2 text-slate-500" />
+                <p className="text-sm font-semibold text-slate-900">Share that you're hiring</p>
+                <p className="mt-1 text-xs text-slate-500">Reach candidates outside your network with a job post.</p>
+              </button>
+              <button type="button" onClick={() => setCreateMode("article")} className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left hover:border-slate-300 hover:bg-white">
+                <FiFileText className="mb-2 text-slate-500" />
+                <p className="text-sm font-semibold text-slate-900">Publish an article</p>
+                <p className="mt-1 text-xs text-slate-500">Connect with followers through long-form content.</p>
+              </button>
+              <button type="button" onClick={() => setCreateMode("product")} className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left hover:border-slate-300 hover:bg-white">
+                <FiPackage className="mb-2 text-slate-500" />
+                <p className="text-sm font-semibold text-slate-900">Add a product</p>
+                <p className="mt-1 text-xs text-slate-500">Spotlight your organization's products.</p>
               </button>
             </div>
           )}
@@ -1461,13 +1680,174 @@ const CommunityAdminWorkspace = ({
             </div>
           )}
 
+          {createMode === "job" && (
+            <div className="space-y-3">
+              <Input placeholder="Job title" value={jobForm.title} onChange={(e) => setJobForm((p) => ({ ...p, title: e.target.value }))} className="text-sm" />
+              <Input placeholder="Location" value={jobForm.location} onChange={(e) => setJobForm((p) => ({ ...p, location: e.target.value }))} className="text-sm" />
+              <Input placeholder="Salary" value={jobForm.salary} onChange={(e) => setJobForm((p) => ({ ...p, salary: e.target.value }))} className="text-sm" />
+              <select value={jobForm.type} onChange={(e) => setJobForm((p) => ({ ...p, type: e.target.value }))} className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+                <option value="full-time">Full-time</option>
+                <option value="part-time">Part-time</option>
+                <option value="contract">Contract</option>
+                <option value="freelance">Freelance</option>
+              </select>
+              <Textarea placeholder="Job description" value={jobForm.description} onChange={(e) => setJobForm((p) => ({ ...p, description: e.target.value }))} className="text-sm" />
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-2.5 sm:p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900">
+                    {jobImageUploading ? <FiLoader size={12} className="animate-spin" /> : <FiPlus size={12} />}
+                    Add images
+                    <input type="file" accept="image/*" multiple className="hidden" disabled={jobImageUploading} onChange={(e) => void uploadAttachmentImage(Array.from(e.target.files || []), "job")} />
+                  </label>
+                  <div className="flex flex-1 min-w-0 gap-2">
+                    <Input value={jobLinkInput} onChange={(e) => setJobLinkInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addAttachmentLink("job"); } }} placeholder="Add a link" className="h-9 text-xs sm:text-sm" />
+                    <Button type="button" variant="outline" onClick={() => addAttachmentLink("job")} className="h-9 shrink-0 rounded-full px-3 text-xs">Add</Button>
+                  </div>
+                </div>
+                {jobImages.length > 0 && (
+                  <div className="mt-3 grid gap-2 grid-cols-2">
+                    {jobImages.map((url, i) => (
+                      <div key={`${url}-${i}`} className="relative overflow-hidden rounded-lg border border-slate-200 bg-white">
+                        <img src={url} alt="" className="h-28 sm:h-32 w-full object-cover" />
+                        <button type="button" onClick={() => setJobImages((c) => c.filter((_, idx) => idx !== i))} className="absolute right-2 top-2 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-black/55 text-white">
+                          <FiTrash2 size={11} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {jobLinks.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {jobLinks.map((link) => (
+                      <span key={link} className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 sm:px-3 py-1 text-xs text-slate-600">
+                        <FiLink size={11} />
+                        <span className="max-w-[120px] sm:max-w-[180px] truncate">{link}</span>
+                        <button type="button" onClick={() => setJobLinks((c) => c.filter((l) => l !== link))} className="text-slate-400 hover:text-slate-700"><FiTrash2 size={11} /></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {createMode === "article" && (
+            <div className="space-y-3">
+              <Input placeholder="Article title" value={articleForm.title} onChange={(e) => setArticleForm((p) => ({ ...p, title: e.target.value }))} className="text-sm" />
+              <Textarea placeholder="Article content" value={articleForm.content} onChange={(e) => setArticleForm((p) => ({ ...p, content: e.target.value }))} className="min-h-48 text-sm" />
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-2.5 sm:p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900">
+                    {articleImageUploading ? <FiLoader size={12} className="animate-spin" /> : <FiPlus size={12} />}
+                    Add images
+                    <input type="file" accept="image/*" multiple className="hidden" disabled={articleImageUploading} onChange={(e) => void uploadAttachmentImage(Array.from(e.target.files || []), "article")} />
+                  </label>
+                  <div className="flex flex-1 min-w-0 gap-2">
+                    <Input value={articleLinkInput} onChange={(e) => setArticleLinkInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addAttachmentLink("article"); } }} placeholder="Add a link" className="h-9 text-xs sm:text-sm" />
+                    <Button type="button" variant="outline" onClick={() => addAttachmentLink("article")} className="h-9 shrink-0 rounded-full px-3 text-xs">Add</Button>
+                  </div>
+                </div>
+                {articleImages.length > 0 && (
+                  <div className="mt-3 grid gap-2 grid-cols-2">
+                    {articleImages.map((url, i) => (
+                      <div key={`${url}-${i}`} className="relative overflow-hidden rounded-lg border border-slate-200 bg-white">
+                        <img src={url} alt="" className="h-28 sm:h-32 w-full object-cover" />
+                        <button type="button" onClick={() => setArticleImages((c) => c.filter((_, idx) => idx !== i))} className="absolute right-2 top-2 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-black/55 text-white">
+                          <FiTrash2 size={11} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {articleLinks.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {articleLinks.map((link) => (
+                      <span key={link} className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 sm:px-3 py-1 text-xs text-slate-600">
+                        <FiLink size={11} />
+                        <span className="max-w-[120px] sm:max-w-[180px] truncate">{link}</span>
+                        <button type="button" onClick={() => setArticleLinks((c) => c.filter((l) => l !== link))} className="text-slate-400 hover:text-slate-700"><FiTrash2 size={11} /></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {createMode === "product" && (
+            <div className="space-y-3">
+              <Input placeholder="Product title" value={productForm.title} onChange={(e) => setProductForm((p) => ({ ...p, title: e.target.value }))} className="text-sm" />
+              <Input placeholder="Price" value={productForm.price} onChange={(e) => setProductForm((p) => ({ ...p, price: e.target.value }))} className="text-sm" />
+              <Textarea placeholder="Product description" value={productForm.description} onChange={(e) => setProductForm((p) => ({ ...p, description: e.target.value }))} className="text-sm" />
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-2.5 sm:p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900">
+                    {productImageUploading ? <FiLoader size={12} className="animate-spin" /> : <FiPlus size={12} />}
+                    Add images
+                    <input type="file" accept="image/*" multiple className="hidden" disabled={productImageUploading} onChange={(e) => void uploadAttachmentImage(Array.from(e.target.files || []), "product")} />
+                  </label>
+                  <div className="flex flex-1 min-w-0 gap-2">
+                    <Input value={productLinkInput} onChange={(e) => setProductLinkInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addAttachmentLink("product"); } }} placeholder="Add a link" className="h-9 text-xs sm:text-sm" />
+                    <Button type="button" variant="outline" onClick={() => addAttachmentLink("product")} className="h-9 shrink-0 rounded-full px-3 text-xs">Add</Button>
+                  </div>
+                </div>
+                {productImages.length > 0 && (
+                  <div className="mt-3 grid gap-2 grid-cols-2">
+                    {productImages.map((url, i) => (
+                      <div key={`${url}-${i}`} className="relative overflow-hidden rounded-lg border border-slate-200 bg-white">
+                        <img src={url} alt="" className="h-28 sm:h-32 w-full object-cover" />
+                        <button type="button" onClick={() => setProductImages((c) => c.filter((_, idx) => idx !== i))} className="absolute right-2 top-2 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-black/55 text-white">
+                          <FiTrash2 size={11} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {productLinks.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {productLinks.map((link) => (
+                      <span key={link} className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 sm:px-3 py-1 text-xs text-slate-600">
+                        <FiLink size={11} />
+                        <span className="max-w-[120px] sm:max-w-[180px] truncate">{link}</span>
+                        <button type="button" onClick={() => setProductLinks((c) => c.filter((l) => l !== link))} className="text-slate-400 hover:text-slate-700"><FiTrash2 size={11} /></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <DialogFooter className="gap-2 sm:gap-0">
             {createMode !== "menu" && <Button type="button" variant="outline" onClick={() => setCreateMode("menu")}>Back</Button>}
             {createMode === "menu" ? (
               <Button type="button" variant="outline" onClick={closeCreateDialog}>Close</Button>
             ) : (
-              <Button type="button" onClick={createMode === "post" ? createPost : createEvent} disabled={createMode === "post" ? submittingPost : submittingEvent}>
-                {(createMode === "post" ? submittingPost : submittingEvent) ? "Saving..." : (editingPost || editingEvent) ? "Update" : "Publish"}
+              <Button
+                type="button"
+                onClick={() => {
+                  if (createMode === 'post') return createPost();
+                  if (createMode === 'event') return createEvent();
+                  if (createMode === 'job') return createJob();
+                  if (createMode === 'article') return createArticle();
+                  if (createMode === 'product') return createProduct();
+                  return undefined;
+                }}
+                disabled={
+                  createMode === 'post' ? submittingPost :
+                  createMode === 'event' ? submittingEvent :
+                  createMode === 'job' ? submittingJob :
+                  createMode === 'article' ? submittingArticle :
+                  createMode === 'product' ? submittingProduct : false
+                }
+              >
+                {createMode === 'post' ? (submittingPost ? 'Saving...' : (editingPost ? 'Update' : 'Publish')) :
+                  createMode === 'event' ? (submittingEvent ? 'Saving...' : (editingEvent ? 'Update' : 'Publish')) :
+                  createMode === 'job' ? (submittingJob ? 'Saving...' : (editingJob ? 'Update' : 'Publish')) :
+                  createMode === 'article' ? (submittingArticle ? 'Saving...' : (editingArticle ? 'Update' : 'Publish')) :
+                  createMode === 'product' ? (submittingProduct ? 'Saving...' : (editingProduct ? 'Update' : 'Publish')) :
+                  'Publish'
+                }
               </Button>
             )}
           </DialogFooter>

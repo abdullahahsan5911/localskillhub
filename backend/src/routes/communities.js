@@ -28,6 +28,30 @@ import {
   addEventComment,
   replyEventComment,
   reactToEvent,
+  getJobs,
+  createJob,
+  updateJob,
+  deleteJob,
+  toggleLikeJob,
+  addJobComment,
+  replyJobComment,
+  reactToJob,
+  getArticles,
+  createArticle,
+  updateArticle,
+  deleteArticle,
+  toggleLikeArticle,
+  addArticleComment,
+  replyArticleComment,
+  reactToArticle,
+  getProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  toggleLikeProduct,
+  addProductComment,
+  replyProductComment,
+  reactToProduct,
   getUserRank
 } from '../controllers/communities.js';
 import {
@@ -60,6 +84,37 @@ router.post('/events/:id/like', protect, toggleLikeEvent);
 router.post('/events/:id/comments', protect, addEventComment);
 router.post('/events/:id/comments/:commentId/replies', protect, replyEventComment);
 router.post('/events/:id/reactions', protect, reactToEvent);
+
+// Job routes
+router.get('/jobs', optionalAuth, getJobs);
+router.post('/jobs', protect, createJob);
+router.put('/jobs/:id', protect, updateJob);
+router.delete('/jobs/:id', protect, deleteJob);
+router.post('/jobs/:id/like', protect, toggleLikeJob);
+router.post('/jobs/:id/comments', protect, addJobComment);
+router.post('/jobs/:id/comments/:commentId/replies', protect, replyJobComment);
+router.post('/jobs/:id/reactions', protect, reactToJob);
+
+// Article routes
+router.get('/articles', optionalAuth, getArticles);
+router.post('/articles', protect, createArticle);
+router.put('/articles/:id', protect, updateArticle);
+router.delete('/articles/:id', protect, deleteArticle);
+router.post('/articles/:id/like', protect, toggleLikeArticle);
+router.post('/articles/:id/comments', protect, addArticleComment);
+router.post('/articles/:id/comments/:commentId/replies', protect, replyArticleComment);
+router.post('/articles/:id/reactions', protect, reactToArticle);
+
+// Product routes
+router.get('/products', optionalAuth, getProducts);
+router.post('/products', protect, createProduct);
+router.put('/products/:id', protect, updateProduct);
+router.delete('/products/:id', protect, deleteProduct);
+router.post('/products/:id/like', protect, toggleLikeProduct);
+router.post('/products/:id/comments', protect, addProductComment);
+router.post('/products/:id/comments/:commentId/replies', protect, replyProductComment);
+router.post('/products/:id/reactions', protect, reactToProduct);
+
 router.get('/rank', protect, getUserRank);
 
 router.get('/:id', optionalAuth, getCommunity);

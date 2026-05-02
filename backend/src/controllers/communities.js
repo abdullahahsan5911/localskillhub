@@ -1,6 +1,9 @@
 import Community from '../models/Community.js';
 import CommunityPost from '../models/CommunityPost.js';
 import Event from '../models/Event.js';
+import CommunityJob from '../models/CommunityJob.js';
+import CommunityArticle from '../models/CommunityArticle.js';
+import CommunityProduct from '../models/CommunityProduct.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { canManageCommunity } from '../utils/communityHelpers.js';
 
@@ -234,6 +237,668 @@ export const deleteEvent = async (req, res, next) => {
 
     await Event.findByIdAndDelete(id);
     res.json({ status: 'success', message: 'Event deleted' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Job-related handlers
+export const getJobs = async (req, res, next) => {
+  try {
+    const jobs = await CommunityJob.find()
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .populate('createdBy', 'name avatar role accountType')
+      .populate('communityId', 'name logo');
+
+    res.json({ status: 'success', data: { jobs } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createJob = async (req, res, next) => {
+  try {
+    const { title, description, location, salary, type, communityId, images, links } = req.body;
+
+    if (!title) {
+      return next(new AppError('Title is required for jobs', 400));
+    }
+
+    const job = await CommunityJob.create({
+      title,
+      description,
+      location,
+      salary,
+      type,
+      images: Array.isArray(images) ? images : [],
+      links: Array.isArray(links) ? links : [],
+      communityId: communityId || undefined,
+      createdBy: req.user.id
+    });
+
+    await job.populate('createdBy', 'name avatar role accountType');
+    await job.populate('communityId', 'name logo');
+
+    res.status(201).json({ status: 'success', data: { job } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateJob = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const job = await CommunityJob.findById(id);
+    if (!job) return next(new AppError('Job not found', 404));
+
+    const userId = String(req.user?.id || req.user?._id || '');
+    const isCreator = String(job.createdBy || '') === userId;
+
+    let canManageLinkedCommunity = false;
+    if (job.communityId) {
+      const linkedCommunity = await Community.findById(job.communityId).select('ownerId admins');
+      canManageLinkedCommunity = Boolean(linkedCommunity && canManageCommunity(linkedCommunity, req.user));
+    }
+
+    if (!isCreator && !canManageLinkedCommunity && req.user?.role !== 'admin') {
+      return next(new AppError('Not authorized to update this job', 403));
+    }
+
+    const { title, description, location, salary, type, images, links } = req.body || {};
+
+    if (title !== undefined) job.title = title;
+    if (description !== undefined) job.description = description;
+    if (location !== undefined) job.location = location;
+    if (salary !== undefined) job.salary = salary;
+    if (type !== undefined) job.type = type;
+    if (images !== undefined) job.images = Array.isArray(images) ? images : [];
+    if (links !== undefined) job.links = Array.isArray(links) ? links : [];
+
+    await job.save();
+    await job.populate('createdBy', 'name avatar role accountType');
+    await job.populate('communityId', 'name logo');
+
+    res.json({ status: 'success', data: { job } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteJob = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const job = await CommunityJob.findById(id);
+    if (!job) return next(new AppError('Job not found', 404));
+
+    const userId = String(req.user?.id || req.user?._id || '');
+    const isCreator = String(job.createdBy || '') === userId;
+
+    let canManageLinkedCommunity = false;
+    if (job.communityId) {
+      const linkedCommunity = await Community.findById(job.communityId).select('ownerId admins');
+      canManageLinkedCommunity = Boolean(linkedCommunity && canManageCommunity(linkedCommunity, req.user));
+    }
+
+    if (!isCreator && !canManageLinkedCommunity && req.user?.role !== 'admin') {
+      return next(new AppError('Not authorized to delete this job', 403));
+    }
+
+    await CommunityJob.findByIdAndDelete(id);
+    res.json({ status: 'success', message: 'Job deleted' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const toggleLikeJob = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const job = await CommunityJob.findById(id);
+    if (!job) return next(new AppError('Job not found', 404));
+
+    const userId = req.user.id;
+    const likeIndex = job.likes.indexOf(userId);
+
+    if (likeIndex > -1) {
+      job.likes.splice(likeIndex, 1);
+    } else {
+      job.likes.push(userId);
+    }
+
+    await job.save();
+    res.json({ status: 'success', data: { job } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addJobComment = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+
+    if (!content?.trim()) {
+      return next(new AppError('Comment content is required', 400));
+    }
+
+    const job = await CommunityJob.findById(id);
+    if (!job) return next(new AppError('Job not found', 404));
+
+    job.comments.push({
+      userId: req.user.id,
+      content: content.trim(),
+    });
+
+    job.commentsCount = job.comments.length;
+    await job.save();
+
+    await job.populate({
+      path: 'comments.userId',
+      select: 'name avatar role accountType'
+    });
+
+    res.status(201).json({ status: 'success', data: { job } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const replyJobComment = async (req, res, next) => {
+  try {
+    const { id, commentId } = req.params;
+    const { content } = req.body;
+
+    if (!content?.trim()) {
+      return next(new AppError('Reply content is required', 400));
+    }
+
+    const job = await CommunityJob.findById(id);
+    if (!job) return next(new AppError('Job not found', 404));
+
+    const comment = job.comments.id(commentId);
+    if (!comment) return next(new AppError('Comment not found', 404));
+
+    comment.replies.push({
+      userId: req.user.id,
+      content: content.trim(),
+    });
+
+    await job.save();
+
+    await job.populate({
+      path: 'comments.userId',
+      select: 'name avatar role accountType'
+    });
+    await job.populate({
+      path: 'comments.replies.userId',
+      select: 'name avatar role accountType'
+    });
+
+    res.status(201).json({ status: 'success', data: { job } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const reactToJob = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.body;
+    const allowed = ['like', 'celebrate', 'support', 'insightful'];
+    const reactionType = allowed.includes(type) ? type : 'like';
+
+    const job = await CommunityJob.findById(id);
+    if (!job) return next(new AppError('Job not found', 404));
+
+    const userId = req.user.id.toString();
+    const existing = job.reactions.find((r) => r.userId?.toString() === userId);
+    if (existing) {
+      existing.type = reactionType;
+    } else {
+      job.reactions.push({ userId: req.user.id, type: reactionType });
+    }
+
+    await job.save();
+    res.json({ status: 'success', data: { job } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Article-related handlers
+export const getArticles = async (req, res, next) => {
+  try {
+    const articles = await CommunityArticle.find()
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .populate('createdBy', 'name avatar role accountType')
+      .populate('communityId', 'name logo');
+
+    res.json({ status: 'success', data: { articles } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createArticle = async (req, res, next) => {
+  try {
+    const { title, content, communityId, images, links } = req.body;
+
+    if (!title || !content) {
+      return next(new AppError('Title and content are required for articles', 400));
+    }
+
+    const article = await CommunityArticle.create({
+      title,
+      content,
+      images: Array.isArray(images) ? images : [],
+      links: Array.isArray(links) ? links : [],
+      communityId: communityId || undefined,
+      createdBy: req.user.id
+    });
+
+    await article.populate('createdBy', 'name avatar role accountType');
+    await article.populate('communityId', 'name logo');
+
+    res.status(201).json({ status: 'success', data: { article } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateArticle = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const article = await CommunityArticle.findById(id);
+    if (!article) return next(new AppError('Article not found', 404));
+
+    const userId = String(req.user?.id || req.user?._id || '');
+    const isCreator = String(article.createdBy || '') === userId;
+
+    let canManageLinkedCommunity = false;
+    if (article.communityId) {
+      const linkedCommunity = await Community.findById(article.communityId).select('ownerId admins');
+      canManageLinkedCommunity = Boolean(linkedCommunity && canManageCommunity(linkedCommunity, req.user));
+    }
+
+    if (!isCreator && !canManageLinkedCommunity && req.user?.role !== 'admin') {
+      return next(new AppError('Not authorized to update this article', 403));
+    }
+
+    const { title, content, images, links } = req.body || {};
+
+    if (title !== undefined) article.title = title;
+    if (content !== undefined) article.content = content;
+    if (images !== undefined) article.images = Array.isArray(images) ? images : [];
+    if (links !== undefined) article.links = Array.isArray(links) ? links : [];
+
+    await article.save();
+    await article.populate('createdBy', 'name avatar role accountType');
+    await article.populate('communityId', 'name logo');
+
+    res.json({ status: 'success', data: { article } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteArticle = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const article = await CommunityArticle.findById(id);
+    if (!article) return next(new AppError('Article not found', 404));
+
+    const userId = String(req.user?.id || req.user?._id || '');
+    const isCreator = String(article.createdBy || '') === userId;
+
+    let canManageLinkedCommunity = false;
+    if (article.communityId) {
+      const linkedCommunity = await Community.findById(article.communityId).select('ownerId admins');
+      canManageLinkedCommunity = Boolean(linkedCommunity && canManageCommunity(linkedCommunity, req.user));
+    }
+
+    if (!isCreator && !canManageLinkedCommunity && req.user?.role !== 'admin') {
+      return next(new AppError('Not authorized to delete this article', 403));
+    }
+
+    await CommunityArticle.findByIdAndDelete(id);
+    res.json({ status: 'success', message: 'Article deleted' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const toggleLikeArticle = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const article = await CommunityArticle.findById(id);
+    if (!article) return next(new AppError('Article not found', 404));
+
+    const userId = req.user.id;
+    const likeIndex = article.likes.indexOf(userId);
+
+    if (likeIndex > -1) {
+      article.likes.splice(likeIndex, 1);
+    } else {
+      article.likes.push(userId);
+    }
+
+    await article.save();
+    res.json({ status: 'success', data: { article } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addArticleComment = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+
+    if (!content?.trim()) {
+      return next(new AppError('Comment content is required', 400));
+    }
+
+    const article = await CommunityArticle.findById(id);
+    if (!article) return next(new AppError('Article not found', 404));
+
+    article.comments.push({
+      userId: req.user.id,
+      content: content.trim(),
+    });
+
+    article.commentsCount = article.comments.length;
+    await article.save();
+
+    await article.populate({
+      path: 'comments.userId',
+      select: 'name avatar role accountType'
+    });
+
+    res.status(201).json({ status: 'success', data: { article } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const replyArticleComment = async (req, res, next) => {
+  try {
+    const { id, commentId } = req.params;
+    const { content } = req.body;
+
+    if (!content?.trim()) {
+      return next(new AppError('Reply content is required', 400));
+    }
+
+    const article = await CommunityArticle.findById(id);
+    if (!article) return next(new AppError('Article not found', 404));
+
+    const comment = article.comments.id(commentId);
+    if (!comment) return next(new AppError('Comment not found', 404));
+
+    comment.replies.push({
+      userId: req.user.id,
+      content: content.trim(),
+    });
+
+    await article.save();
+
+    await article.populate({
+      path: 'comments.userId',
+      select: 'name avatar role accountType'
+    });
+    await article.populate({
+      path: 'comments.replies.userId',
+      select: 'name avatar role accountType'
+    });
+
+    res.status(201).json({ status: 'success', data: { article } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const reactToArticle = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.body;
+    const allowed = ['like', 'celebrate', 'support', 'insightful'];
+    const reactionType = allowed.includes(type) ? type : 'like';
+
+    const article = await CommunityArticle.findById(id);
+    if (!article) return next(new AppError('Article not found', 404));
+
+    const userId = req.user.id.toString();
+    const existing = article.reactions.find((r) => r.userId?.toString() === userId);
+    if (existing) {
+      existing.type = reactionType;
+    } else {
+      article.reactions.push({ userId: req.user.id, type: reactionType });
+    }
+
+    await article.save();
+    res.json({ status: 'success', data: { article } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Product-related handlers
+export const getProducts = async (req, res, next) => {
+  try {
+    const products = await CommunityProduct.find()
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .populate('createdBy', 'name avatar role accountType')
+      .populate('communityId', 'name logo');
+
+    res.json({ status: 'success', data: { products } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createProduct = async (req, res, next) => {
+  try {
+    const { title, description, price, communityId, images, links } = req.body;
+
+    if (!title) {
+      return next(new AppError('Title is required for products', 400));
+    }
+
+    const product = await CommunityProduct.create({
+      title,
+      description,
+      price,
+      images: Array.isArray(images) ? images : [],
+      links: Array.isArray(links) ? links : [],
+      communityId: communityId || undefined,
+      createdBy: req.user.id
+    });
+
+    await product.populate('createdBy', 'name avatar role accountType');
+    await product.populate('communityId', 'name logo');
+
+    res.status(201).json({ status: 'success', data: { product } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const product = await CommunityProduct.findById(id);
+    if (!product) return next(new AppError('Product not found', 404));
+
+    const userId = String(req.user?.id || req.user?._id || '');
+    const isCreator = String(product.createdBy || '') === userId;
+
+    let canManageLinkedCommunity = false;
+    if (product.communityId) {
+      const linkedCommunity = await Community.findById(product.communityId).select('ownerId admins');
+      canManageLinkedCommunity = Boolean(linkedCommunity && canManageCommunity(linkedCommunity, req.user));
+    }
+
+    if (!isCreator && !canManageLinkedCommunity && req.user?.role !== 'admin') {
+      return next(new AppError('Not authorized to update this product', 403));
+    }
+
+    const { title, description, price, images, links } = req.body || {};
+
+    if (title !== undefined) product.title = title;
+    if (description !== undefined) product.description = description;
+    if (price !== undefined) product.price = price;
+    if (images !== undefined) product.images = Array.isArray(images) ? images : [];
+    if (links !== undefined) product.links = Array.isArray(links) ? links : [];
+
+    await product.save();
+    await product.populate('createdBy', 'name avatar role accountType');
+    await product.populate('communityId', 'name logo');
+
+    res.json({ status: 'success', data: { product } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const product = await CommunityProduct.findById(id);
+    if (!product) return next(new AppError('Product not found', 404));
+
+    const userId = String(req.user?.id || req.user?._id || '');
+    const isCreator = String(product.createdBy || '') === userId;
+
+    let canManageLinkedCommunity = false;
+    if (product.communityId) {
+      const linkedCommunity = await Community.findById(product.communityId).select('ownerId admins');
+      canManageLinkedCommunity = Boolean(linkedCommunity && canManageCommunity(linkedCommunity, req.user));
+    }
+
+    if (!isCreator && !canManageLinkedCommunity && req.user?.role !== 'admin') {
+      return next(new AppError('Not authorized to delete this product', 403));
+    }
+
+    await CommunityProduct.findByIdAndDelete(id);
+    res.json({ status: 'success', message: 'Product deleted' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const toggleLikeProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const product = await CommunityProduct.findById(id);
+    if (!product) return next(new AppError('Product not found', 404));
+
+    const userId = req.user.id;
+    const likeIndex = product.likes.indexOf(userId);
+
+    if (likeIndex > -1) {
+      product.likes.splice(likeIndex, 1);
+    } else {
+      product.likes.push(userId);
+    }
+
+    await product.save();
+    res.json({ status: 'success', data: { product } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addProductComment = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+
+    if (!content?.trim()) {
+      return next(new AppError('Comment content is required', 400));
+    }
+
+    const product = await CommunityProduct.findById(id);
+    if (!product) return next(new AppError('Product not found', 404));
+
+    product.comments.push({
+      userId: req.user.id,
+      content: content.trim(),
+    });
+
+    product.commentsCount = product.comments.length;
+    await product.save();
+
+    await product.populate({
+      path: 'comments.userId',
+      select: 'name avatar role accountType'
+    });
+
+    res.status(201).json({ status: 'success', data: { product } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const replyProductComment = async (req, res, next) => {
+  try {
+    const { id, commentId } = req.params;
+    const { content } = req.body;
+
+    if (!content?.trim()) {
+      return next(new AppError('Reply content is required', 400));
+    }
+
+    const product = await CommunityProduct.findById(id);
+    if (!product) return next(new AppError('Product not found', 404));
+
+    const comment = product.comments.id(commentId);
+    if (!comment) return next(new AppError('Comment not found', 404));
+
+    comment.replies.push({
+      userId: req.user.id,
+      content: content.trim(),
+    });
+
+    await product.save();
+
+    await product.populate({
+      path: 'comments.userId',
+      select: 'name avatar role accountType'
+    });
+    await product.populate({
+      path: 'comments.replies.userId',
+      select: 'name avatar role accountType'
+    });
+
+    res.status(201).json({ status: 'success', data: { product } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const reactToProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.body;
+    const allowed = ['like', 'celebrate', 'support', 'insightful'];
+    const reactionType = allowed.includes(type) ? type : 'like';
+
+    const product = await CommunityProduct.findById(id);
+    if (!product) return next(new AppError('Product not found', 404));
+
+    const userId = req.user.id.toString();
+    const existing = product.reactions.find((r) => r.userId?.toString() === userId);
+    if (existing) {
+      existing.type = reactionType;
+    } else {
+      product.reactions.push({ userId: req.user.id, type: reactionType });
+    }
+
+    await product.save();
+    res.json({ status: 'success', data: { product } });
   } catch (error) {
     next(error);
   }
