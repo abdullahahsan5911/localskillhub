@@ -753,6 +753,45 @@ class ApiService {
     return this.request(`/communities/products/${id}`, { method: 'DELETE' });
   }
 
+  // Job interactions
+  async toggleCommunityJobLike(jobId: string) {
+    return this.request(`/communities/jobs/${jobId}/like`, { method: 'POST' });
+  }
+
+  async commentCommunityJob(jobId: string, content: string) {
+    return this.request(`/communities/jobs/${jobId}/comments`, { method: 'POST', body: JSON.stringify({ content }) });
+  }
+
+  async replyCommunityJobComment(jobId: string, commentId: string, content: string) {
+    return this.request(`/communities/jobs/${jobId}/comments/${commentId}/replies`, { method: 'POST', body: JSON.stringify({ content }) });
+  }
+
+  // Article interactions
+  async toggleCommunityArticleLike(articleId: string) {
+    return this.request(`/communities/articles/${articleId}/like`, { method: 'POST' });
+  }
+
+  async commentCommunityArticle(articleId: string, content: string) {
+    return this.request(`/communities/articles/${articleId}/comments`, { method: 'POST', body: JSON.stringify({ content }) });
+  }
+
+  async replyCommunityArticleComment(articleId: string, commentId: string, content: string) {
+    return this.request(`/communities/articles/${articleId}/comments/${commentId}/replies`, { method: 'POST', body: JSON.stringify({ content }) });
+  }
+
+  // Product interactions
+  async toggleCommunityProductLike(productId: string) {
+    return this.request(`/communities/products/${productId}/like`, { method: 'POST' });
+  }
+
+  async commentCommunityProduct(productId: string, content: string) {
+    return this.request(`/communities/products/${productId}/comments`, { method: 'POST', body: JSON.stringify({ content }) });
+  }
+
+  async replyCommunityProductComment(productId: string, commentId: string, content: string) {
+    return this.request(`/communities/products/${productId}/comments/${commentId}/replies`, { method: 'POST', body: JSON.stringify({ content }) });
+  }
+
   async createEvent(data: { title: string; description?: string; location?: string; date: string; communityId?: string; images?: string[]; links?: string[] }) {
     return this.request('/communities/events', {
       method: 'POST',

@@ -400,6 +400,86 @@ const CommunityMemberView = ({
     }
   };
 
+  // Handlers for jobs, articles, products likes and comments
+  const handleLikeItem = async (type: string, item: any) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    try {
+      if (type === 'job') {
+        await api.toggleCommunityJobLike(item._id);
+      } else if (type === 'article') {
+        await api.toggleCommunityArticleLike(item._id);
+      } else if (type === 'product') {
+        await api.toggleCommunityProductLike(item._id);
+      }
+      if (onRefreshPosts) await onRefreshPosts();
+      toast({ title: 'Updated like' });
+    } catch (error) {
+      console.error('Like failed', error);
+      toast({ title: 'Could not like item', variant: 'destructive' });
+    }
+  };
+
+  const handleAddCommentItem = async (type: string, itemId: string, communityId: string, content: string) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    try {
+      if (type === 'job') {
+        await api.commentCommunityJob(itemId, content);
+      } else if (type === 'article') {
+        await api.commentCommunityArticle(itemId, content);
+      } else if (type === 'product') {
+        await api.commentCommunityProduct(itemId, content);
+      }
+      if (onRefreshPosts) await onRefreshPosts();
+      toast({ title: 'Comment posted' });
+    } catch (error) {
+      console.error('Comment failed', error);
+      toast({ title: 'Could not post comment', variant: 'destructive' });
+      throw error;
+    }
+  };
+
+  const handleAddReplyItem = async (type: string, itemId: string, communityId: string, commentId: string, content: string) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    try {
+      if (type === 'job') {
+        await api.replyCommunityJobComment(itemId, commentId, content);
+      } else if (type === 'article') {
+        await api.replyCommunityArticleComment(itemId, commentId, content);
+      } else if (type === 'product') {
+        await api.replyCommunityProductComment(itemId, commentId, content);
+      }
+      if (onRefreshPosts) await onRefreshPosts();
+      toast({ title: 'Reply posted' });
+    } catch (error) {
+      console.error('Reply failed', error);
+      toast({ title: 'Could not post reply', variant: 'destructive' });
+      throw error;
+    }
+  };
+
+  const handleRepostItem = async (type: string, item: any) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    if (!ownedCommunity) {
+      toast({ title: 'Create a page to repost', variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: 'Repost feature for items coming soon', variant: 'default' });
+  };
+
   const handleMessageOwner = () => {
     if (!isAuthenticated) {
       navigate("/login");
@@ -591,6 +671,10 @@ const CommunityMemberView = ({
           onOpenComments={openComments}
           onAddComment={handleAddComment}
           onAddReply={handleAddReply}
+          onLikeItem={handleLikeItem}
+          onRepostItem={handleRepostItem}
+          onAddCommentItem={handleAddCommentItem}
+          onAddReplyItem={handleAddReplyItem}
         />
 
         {/* Show more button */}
@@ -775,6 +859,10 @@ const CommunityMemberView = ({
               onOpenComments={openComments}
               onAddComment={handleAddComment}
               onAddReply={handleAddReply}
+              onLikeItem={handleLikeItem}
+              onRepostItem={handleRepostItem}
+              onAddCommentItem={handleAddCommentItem}
+              onAddReplyItem={handleAddReplyItem}
             />
           )}
 
