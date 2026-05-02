@@ -612,26 +612,50 @@ const CommunityAdminWorkspace = ({
         );
         // load jobs/articles/products
         try {
-          const jobsRes = await api.getCommunityJobs();
+          const jobsRes = await api.getCommunityJobs({ includeImages: true, includeLinks: true });
           const jobsPayload: any = (jobsRes as any).data || jobsRes;
           const jobs = jobsPayload.jobs || jobsPayload.data?.jobs || jobsPayload.data || [];
-          setCommunityJobs((Array.isArray(jobs) ? jobs : []).filter((j: any) => normalizeCommunityId(j.communityId) === String(community._id)));
+          setCommunityJobs(
+            (Array.isArray(jobs) ? jobs : [])
+              .map((j: any) => ({
+                ...j,
+                images: Array.isArray(j.images) ? j.images : [],
+                links: Array.isArray(j.links) ? j.links : [],
+              }))
+              .filter((j: any) => normalizeCommunityId(j.communityId) === String(community._id))
+          );
         } catch (err) {
           setCommunityJobs([]);
         }
         try {
-          const articlesRes = await api.getCommunityArticles();
+          const articlesRes = await api.getCommunityArticles({ includeImages: true, includeLinks: true });
           const artPayload: any = (articlesRes as any).data || articlesRes;
           const arts = artPayload.articles || artPayload.data?.articles || artPayload.data || [];
-          setCommunityArticles((Array.isArray(arts) ? arts : []).filter((a: any) => normalizeCommunityId(a.communityId) === String(community._id)));
+          setCommunityArticles(
+            (Array.isArray(arts) ? arts : [])
+              .map((a: any) => ({
+                ...a,
+                images: Array.isArray(a.images) ? a.images : [],
+                links: Array.isArray(a.links) ? a.links : [],
+              }))
+              .filter((a: any) => normalizeCommunityId(a.communityId) === String(community._id))
+          );
         } catch (err) {
           setCommunityArticles([]);
         }
         try {
-          const productsRes = await api.getCommunityProducts();
+          const productsRes = await api.getCommunityProducts({ includeImages: true, includeLinks: true });
           const prodPayload: any = (productsRes as any).data || productsRes;
           const prods = prodPayload.products || prodPayload.data?.products || prodPayload.data || [];
-          setCommunityProducts((Array.isArray(prods) ? prods : []).filter((p: any) => normalizeCommunityId(p.communityId) === String(community._id)));
+          setCommunityProducts(
+            (Array.isArray(prods) ? prods : [])
+              .map((p: any) => ({
+                ...p,
+                images: Array.isArray(p.images) ? p.images : [],
+                links: Array.isArray(p.links) ? p.links : [],
+              }))
+              .filter((p: any) => normalizeCommunityId(p.communityId) === String(community._id))
+          );
         } catch (err) {
           setCommunityProducts([]);
         }

@@ -735,9 +735,9 @@ const CommunityMemberView = ({
         setProductsLoading(true);
 
         const [jobsRes, articlesRes, productsRes] = await Promise.allSettled([
-          api.getCommunityJobs({ communityId: community._id, limit: 50 }),
-          api.getCommunityArticles({ communityId: community._id, limit: 50 }),
-          api.getCommunityProducts({ communityId: community._id, limit: 50 }),
+          api.getCommunityJobs({ communityId: community._id, limit: 50, includeImages: true, includeLinks: true }),
+          api.getCommunityArticles({ communityId: community._id, limit: 50, includeImages: true, includeLinks: true }),
+          api.getCommunityProducts({ communityId: community._id, limit: 50, includeImages: true, includeLinks: true }),
         ]);
 
         const jobsPayload: any = jobsRes.status === "fulfilled" ? (jobsRes.value as any).data || jobsRes.value || {} : {};
@@ -749,9 +749,39 @@ const CommunityMemberView = ({
         const products = productsPayload.products || productsPayload.data?.products || productsPayload.data || [];
 
         const communityId = String(community._id);
-        setCommunityJobs(Array.isArray(jobs) ? jobs.filter((item: any) => normalizeCommunityId(item.communityId) === communityId || String(item.communityId || "") === communityId) : []);
-        setCommunityArticles(Array.isArray(articles) ? articles.filter((item: any) => normalizeCommunityId(item.communityId) === communityId || String(item.communityId || "") === communityId) : []);
-        setCommunityProducts(Array.isArray(products) ? products.filter((item: any) => normalizeCommunityId(item.communityId) === communityId || String(item.communityId || "") === communityId) : []);
+        setCommunityJobs(
+          Array.isArray(jobs)
+            ? jobs
+                .map((item: any) => ({
+                  ...item,
+                  images: Array.isArray(item.images) ? item.images : [],
+                  links: Array.isArray(item.links) ? item.links : [],
+                }))
+                .filter((item: any) => normalizeCommunityId(item.communityId) === communityId || String(item.communityId || "") === communityId)
+            : []
+        );
+        setCommunityArticles(
+          Array.isArray(articles)
+            ? articles
+                .map((item: any) => ({
+                  ...item,
+                  images: Array.isArray(item.images) ? item.images : [],
+                  links: Array.isArray(item.links) ? item.links : [],
+                }))
+                .filter((item: any) => normalizeCommunityId(item.communityId) === communityId || String(item.communityId || "") === communityId)
+            : []
+        );
+        setCommunityProducts(
+          Array.isArray(products)
+            ? products
+                .map((item: any) => ({
+                  ...item,
+                  images: Array.isArray(item.images) ? item.images : [],
+                  links: Array.isArray(item.links) ? item.links : [],
+                }))
+                .filter((item: any) => normalizeCommunityId(item.communityId) === communityId || String(item.communityId || "") === communityId)
+            : []
+        );
       } catch (error) {
         console.error("Failed to load community content", error);
         setCommunityJobs([]);
