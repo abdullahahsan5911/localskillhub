@@ -1382,12 +1382,26 @@ export const deleteCommunity = async (req, res, next) => {
       return next(new AppError('Community not found', 404));
     }
 
-    const userId = req.user.id.toString();
-    const isOwner = community.ownerId?.toString() === userId;
+    // Normalize userId for comparison - handle both ObjectId and string formats
+    const userId = req.user._id ? req.user._id.toString() : String(req.user.id);
+    const ownerId = community.ownerId ? community.ownerId.toString() : null;
+    
+    // Debug logging (remove in production)
+    console.log('Delete Authorization Check:', {
+      userId,
+      ownerId,
+      communityName: community.name,
+      userRole: req.user.role,
+      adminsCount: Array.isArray(community.admins) ? community.admins.length : 0
+    });
+
+    const isOwner = ownerId === userId;
     const isCommunityAdmin = Array.isArray(community.admins)
       ? community.admins.some((adminId) => adminId?.toString() === userId)
       : false;
     const isPlatformAdmin = req.user.role === 'admin';
+
+    console.log('Authorization Results:', { isOwner, isCommunityAdmin, isPlatformAdmin });
 
     if (!isOwner && !isCommunityAdmin && !isPlatformAdmin) {
       return next(new AppError('Not authorized to delete this community', 403));
@@ -1397,6 +1411,9 @@ export const deleteCommunity = async (req, res, next) => {
     await Promise.all([
       CommunityPost.deleteMany({ communityId }),
       Event.deleteMany({ communityId }),
+      CommunityJob.deleteMany({ communityId }),
+      CommunityArticle.deleteMany({ communityId }),
+      CommunityProduct.deleteMany({ communityId }),
       Community.updateMany(
         { _id: { $ne: communityId } },
         {

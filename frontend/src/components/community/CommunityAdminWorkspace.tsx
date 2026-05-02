@@ -463,6 +463,7 @@ const CommunityAdminWorkspace = ({
 
   const currentUserId = user?._id ? String(user._id) : null;
   const adminIds = admins.map((a: any) => String(a?._id || a));
+  const restrictedMemberIds = restrictedMembers.map((r: any) => String(r?._id || r));
   const canEdit = Boolean(currentUserId && (user?.role === "admin" || currentUserId === ownerId || adminIds.includes(currentUserId)));
   const memberNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -475,6 +476,11 @@ const CommunityAdminWorkspace = ({
     });
     return map;
   }, [members]);
+
+  const resolveMemberUserId = (member: any) => {
+    // member can be a plain id, a membership object with userId, or a populated user
+    return String(member?.userId?._id || member?.userId || member?._id || member?.id || member || "");
+  };
 
   const latestPost = useMemo(() => {
     if (posts.length === 0) return null;
@@ -1656,13 +1662,13 @@ const CommunityAdminWorkspace = ({
             <DialogDescription>Select a member to grant admin access.</DialogDescription>
           </DialogHeader>
           <div className="mt-3 max-h-72 overflow-y-auto space-y-2">
-            {memberCandidates.filter((m: any) => !adminIds.includes(String(m?._id || m))).length > 0 ? (
+            {memberCandidates.filter((m: any) => !adminIds.includes(resolveMemberUserId(m))).length > 0 ? (
               memberCandidates
-                .filter((m: any) => !adminIds.includes(String(m?._id || m)))
+                .filter((m: any) => !adminIds.includes(resolveMemberUserId(m)))
                 .map((member: any) => {
-                  const memberId = String(member?._id || member?.id || member);
-                  const memberName = member?.name || 'Member';
-                  const memberRole = getMemberRoleLabel(member);
+                  const memberId = resolveMemberUserId(member);
+                  const memberName = member?.name || member?.userId?.name || 'Member';
+                  const memberRole = getMemberRoleLabel(member?.userId || member);
                   return (
                     <div key={memberId} className="flex items-center justify-between rounded-md bg-white px-3 py-2">
                       <div className="min-w-0 flex items-center gap-2.5">
@@ -1682,8 +1688,16 @@ const CommunityAdminWorkspace = ({
                         size="sm"
                         variant="outline"
                         onClick={async () => {
-                          await updateCommunityState(api.addCommunityAdmin(community._id, memberId), 'Admin added');
-                          setPromoteDialogOpen(false);
+                          try {
+                            await api.addCommunityAdmin(community._id, memberId);
+                            const updatedCommunity = { ...community, admins: [...(community.admins || []), member] };
+                            onCommunityUpdated(updatedCommunity);
+                            setPromoteDialogOpen(false);
+                            toast({ title: 'Admin added' });
+                          } catch (error) {
+                            console.error('Add admin failed', error);
+                            toast({ title: 'Could not add admin', variant: 'destructive' });
+                          }
                         }}
                       >
                         Promote
@@ -1709,11 +1723,13 @@ const CommunityAdminWorkspace = ({
             <DialogDescription>Select a member to restrict from participating.</DialogDescription>
           </DialogHeader>
           <div className="mt-3 max-h-72 overflow-y-auto space-y-2">
-            {memberCandidates.length > 0 ? (
-              memberCandidates.map((member: any) => {
-                const memberId = String(member?._id || member?.id || member);
-                const memberName = member?.name || 'Member';
-                const memberRole = getMemberRoleLabel(member);
+            {memberCandidates.filter((m: any) => !adminIds.includes(resolveMemberUserId(m)) && !restrictedMemberIds.includes(resolveMemberUserId(m))).length > 0 ? (
+              memberCandidates
+                .filter((m: any) => !adminIds.includes(resolveMemberUserId(m)) && !restrictedMemberIds.includes(resolveMemberUserId(m)))
+                .map((member: any) => {
+                const memberId = resolveMemberUserId(member);
+                const memberName = member?.name || member?.userId?.name || 'Member';
+                const memberRole = getMemberRoleLabel(member?.userId || member);
                 return (
                   <div key={memberId} className="flex items-center justify-between rounded-md bg-white px-3 py-2">
                     <div className="min-w-0 flex items-center gap-2.5">
@@ -1733,8 +1749,16 @@ const CommunityAdminWorkspace = ({
                       size="sm"
                       variant="outline"
                       onClick={async () => {
-                        await updateCommunityState(api.addRestrictedCommunityMember(community._id, memberId), 'Member restricted');
-                        setRestrictDialogOpen(false);
+                        try {
+                          await api.addRestrictedCommunityMember(community._id, memberId);
+                          const updatedCommunity = { ...community, restrictedMembers: [...(community.restrictedMembers || []), member] };
+                          onCommunityUpdated(updatedCommunity);
+                          setRestrictDialogOpen(false);
+                          toast({ title: 'Member restricted' });
+                        } catch (error) {
+                          console.error('Restrict member failed', error);
+                          toast({ title: 'Could not restrict member', variant: 'destructive' });
+                        }
                       }}
                     >
                       Restrict
@@ -2246,6 +2270,24 @@ const CommunityAdminWorkspace = ({
                       <div key={id} className="flex items-center gap-2 rounded-full bg-white px-2 py-1 border border-slate-100">
                         <Avatar src={resolveAvatarSrc(a?.avatar)} name={name} size={28} />
                         <span className="text-xs font-medium text-slate-800">{name}</span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              await api.removeCommunityAdmin(community._id, id);
+                              const updatedCommunity = { ...community, admins: (community.admins || []).filter((a: any) => String(a?._id || a) !== id) };
+                              onCommunityUpdated(updatedCommunity);
+                              toast({ title: 'Admin removed' });
+                            } catch (error) {
+                              console.error('Remove admin failed', error);
+                              toast({ title: 'Could not remove admin', variant: 'destructive' });
+                            }
+                          }}
+                        >
+                          Remove
+                        </Button>
                       </div>
                     );
                   })
@@ -2272,6 +2314,24 @@ const CommunityAdminWorkspace = ({
                       <div key={id} className="flex items-center gap-2 rounded-full bg-white px-2 py-1 border border-slate-100">
                         <Avatar src={resolveAvatarSrc(m?.avatar)} name={name} size={28} />
                         <span className="text-xs font-medium text-slate-800">{name}</span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              await api.removeRestrictedCommunityMember(community._id, id);
+                              const updatedCommunity = { ...community, restrictedMembers: (community.restrictedMembers || []).filter((r: any) => String(r?._id || r) !== id) };
+                              onCommunityUpdated(updatedCommunity);
+                              toast({ title: 'Restriction removed' });
+                            } catch (error) {
+                              console.error('Remove restriction failed', error);
+                              toast({ title: 'Could not remove restriction', variant: 'destructive' });
+                            }
+                          }}
+                        >
+                          Remove
+                        </Button>
                       </div>
                     );
                   })
