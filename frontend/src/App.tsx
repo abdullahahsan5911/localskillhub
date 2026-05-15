@@ -7,13 +7,12 @@ import {
   Routes,
   Route,
   Navigate,
-  useLocation,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { usePresenceTracking, useUpdatePresence } from "@/hooks/usePresence";
 import { useSocketNotifications } from "@/hooks/useSocketNotifications";
 import { AccountStatusAlert } from "@/components/AccountStatusAlert";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { io, Socket } from "socket.io-client";
 import Index from "./pages/Index";
 import BrowseFreelancers from "./pages/BrowseFreelancers";
@@ -41,6 +40,8 @@ import Assets from "./pages/Assets";
 import Images from "./pages/Images";
 import People from "./pages/People";
 import ArticleEditor from "./pages/ArticleEditor";
+import JobEditor from "./pages/JobEditor";
+import ProductEditor from "./pages/ProductEditor";
 // Admin Panel
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -69,7 +70,6 @@ import ClientSelfProfile from "./pages/ClientSelfProfile";
 import FreelancerSelfProfile from "./pages/FreelancerSelfProfile";
 import AccountSettings from "./pages/AccountSettings";
 import PayoutOnboardingComplete from "./pages/freelancer-dashboard/PayoutOnboardingComplete";
-import api from "@/lib/api";
 
 const queryClient = new QueryClient();
 
@@ -513,6 +513,38 @@ const App = () => {
                         element={
                           <RoleRoute allowedRoles={["client", "freelancer"]}>
                             <ArticleEditor />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="/communities/:communityId/post-job"
+                        element={
+                          <RoleRoute allowedRoles={["client", "freelancer"]}>
+                            <JobEditor />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="/communities/:communityId/edit-job/:jobId"
+                        element={
+                          <RoleRoute allowedRoles={["client", "freelancer"]}>
+                            <JobEditor />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="/communities/:communityId/add-product"
+                        element={
+                          <RoleRoute allowedRoles={["client", "freelancer"]}>
+                            <ProductEditor />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="/communities/:communityId/edit-product/:productId"
+                        element={
+                          <RoleRoute allowedRoles={["client", "freelancer"]}>
+                            <ProductEditor />
                           </RoleRoute>
                         }
                       />

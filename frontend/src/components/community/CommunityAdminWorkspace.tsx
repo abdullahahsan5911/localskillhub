@@ -131,6 +131,8 @@ const CommunityAdminWorkspace = ({
   const [eventLinks, setEventLinks] = useState<string[]>([]);
   const [eventLinkInput, setEventLinkInput] = useState("");
   const [eventImageUploading, setEventImageUploading] = useState(false);
+  
+  // Job form state
   const [jobForm, setJobForm] = useState({
     title: "",
     description: "",
@@ -142,11 +144,18 @@ const CommunityAdminWorkspace = ({
   const [jobLinks, setJobLinks] = useState<string[]>([]);
   const [jobLinkInput, setJobLinkInput] = useState("");
   const [jobImageUploading, setJobImageUploading] = useState(false);
-  const [articleForm, setArticleForm] = useState({ title: "", content: "" });
+  
+  // Article form state
+  const [articleForm, setArticleForm] = useState({
+    title: "",
+    content: "",
+  });
   const [articleImages, setArticleImages] = useState<string[]>([]);
   const [articleLinks, setArticleLinks] = useState<string[]>([]);
   const [articleLinkInput, setArticleLinkInput] = useState("");
   const [articleImageUploading, setArticleImageUploading] = useState(false);
+  
+  // Product form state
   const [productForm, setProductForm] = useState({
     title: "",
     description: "",
@@ -156,6 +165,7 @@ const CommunityAdminWorkspace = ({
   const [productLinks, setProductLinks] = useState<string[]>([]);
   const [productLinkInput, setProductLinkInput] = useState("");
   const [productImageUploading, setProductImageUploading] = useState(false);
+  
   const [editForm, setEditForm] = useState({
     name: "",
     description: "",
@@ -432,19 +442,7 @@ const CommunityAdminWorkspace = ({
   };
 
   const openEditJob = (job: any) => {
-    setEditingJob(job);
-    setJobForm({
-      title: job.title || "",
-      description: job.description || "",
-      location: job.location || "",
-      salary: job.salary || "",
-      type: job.type || "full-time",
-    });
-    setJobImages(Array.isArray(job.images) ? job.images : []);
-    setJobLinks(Array.isArray(job.links) ? job.links : []);
-    setCreateOpen(true);
-    setCreateMode("job");
-    setActiveTab("posts");
+    navigate(`/communities/${community._id}/edit-job/${job._id}`);
   };
 
   const openEditArticle = (article: any) => {
@@ -452,17 +450,7 @@ const CommunityAdminWorkspace = ({
   };
 
   const openEditProduct = (product: any) => {
-    setEditingProduct(product);
-    setProductForm({
-      title: product.title || "",
-      description: product.description || "",
-      price: product.price ? String(product.price) : "",
-    });
-    setProductImages(Array.isArray(product.images) ? product.images : []);
-    setProductLinks(Array.isArray(product.links) ? product.links : []);
-    setCreateOpen(true);
-    setCreateMode("product");
-    setActiveTab("posts");
+    navigate(`/communities/${community._id}/edit-product/${product._id}`);
   };
 
   // ─── delete page ───────────────────────────────────────────────────────────
@@ -728,6 +716,7 @@ const CommunityAdminWorkspace = ({
         // load jobs/articles/products
         try {
           const jobsRes = await api.getCommunityJobs({
+            communityId: community._id,
             includeImages: true,
             includeLinks: true,
           });
@@ -743,17 +732,14 @@ const CommunityAdminWorkspace = ({
                 ...j,
                 images: Array.isArray(j.images) ? j.images : [],
                 links: Array.isArray(j.links) ? j.links : [],
-              }))
-              .filter(
-                (j: any) =>
-                  normalizeCommunityId(j.communityId) === String(community._id),
-              ),
+              })),
           );
         } catch (err) {
           setCommunityJobs([]);
         }
         try {
           const articlesRes = await api.getCommunityArticles({
+            communityId: community._id,
             includeImages: true,
             includeLinks: true,
           });
@@ -769,17 +755,14 @@ const CommunityAdminWorkspace = ({
                 ...a,
                 images: Array.isArray(a.images) ? a.images : [],
                 links: Array.isArray(a.links) ? a.links : [],
-              }))
-              .filter(
-                (a: any) =>
-                  normalizeCommunityId(a.communityId) === String(community._id),
-              ),
+              })),
           );
         } catch (err) {
           setCommunityArticles([]);
         }
         try {
           const productsRes = await api.getCommunityProducts({
+            communityId: community._id,
             includeImages: true,
             includeLinks: true,
           });
@@ -795,11 +778,7 @@ const CommunityAdminWorkspace = ({
                 ...p,
                 images: Array.isArray(p.images) ? p.images : [],
                 links: Array.isArray(p.links) ? p.links : [],
-              }))
-              .filter(
-                (p: any) =>
-                  normalizeCommunityId(p.communityId) === String(community._id),
-              ),
+              })),
           );
         } catch (err) {
           setCommunityProducts([]);
@@ -827,8 +806,26 @@ const CommunityAdminWorkspace = ({
     setEventLinks([]);
     setEventLinkInput("");
     setEventImageUploading(false);
+    setJobForm({ title: "", description: "", location: "", salary: "", type: "full-time" });
+    setJobImages([]);
+    setJobLinks([]);
+    setJobLinkInput("");
+    setJobImageUploading(false);
+    setArticleForm({ title: "", content: "" });
+    setArticleImages([]);
+    setArticleLinks([]);
+    setArticleLinkInput("");
+    setArticleImageUploading(false);
+    setProductForm({ title: "", description: "", price: "" });
+    setProductImages([]);
+    setProductLinks([]);
+    setProductLinkInput("");
+    setProductImageUploading(false);
     setEditingPost(null);
     setEditingEvent(null);
+    setEditingJob(null);
+    setEditingArticle(null);
+    setEditingProduct(null);
   };
 
   const openPromoteDialog = () => setPromoteDialogOpen(true);
@@ -853,12 +850,12 @@ const CommunityAdminWorkspace = ({
         target === "post"
           ? "community-posts"
           : target === "event"
-            ? "community-events"
-            : target === "job"
-              ? "community-jobs"
-              : target === "article"
-                ? "community-articles"
-                : "community-products";
+          ? "community-events"
+          : target === "job"
+          ? "community-jobs"
+          : target === "article"
+          ? "community-articles"
+          : "community-products";
       const uploaded = await Promise.all(
         files.map((file) => uploadToCloudinary(file, folder)),
       );
@@ -866,10 +863,8 @@ const CommunityAdminWorkspace = ({
       if (target === "post") setPostImages((c) => [...c, ...nextUrls]);
       else if (target === "event") setEventImages((c) => [...c, ...nextUrls]);
       else if (target === "job") setJobImages((c) => [...c, ...nextUrls]);
-      else if (target === "article")
-        setArticleImages((c) => [...c, ...nextUrls]);
-      else if (target === "product")
-        setProductImages((c) => [...c, ...nextUrls]);
+      else if (target === "article") setArticleImages((c) => [...c, ...nextUrls]);
+      else if (target === "product") setProductImages((c) => [...c, ...nextUrls]);
     } catch (error) {
       console.error("Failed to upload attachment image", error);
       toast({ title: "Upload failed", variant: "destructive" });
@@ -889,12 +884,12 @@ const CommunityAdminWorkspace = ({
       target === "post"
         ? postLinkInput
         : target === "event"
-          ? eventLinkInput
-          : target === "job"
-            ? jobLinkInput
-            : target === "article"
-              ? articleLinkInput
-              : productLinkInput;
+        ? eventLinkInput
+        : target === "job"
+        ? jobLinkInput
+        : target === "article"
+        ? articleLinkInput
+        : productLinkInput;
     const trimmedValue = rawValue.trim();
     if (!trimmedValue) return;
     const normalizedValue = /^https?:\/\//i.test(trimmedValue)
@@ -1064,38 +1059,41 @@ const CommunityAdminWorkspace = ({
     if (!jobForm.title.trim()) return;
     try {
       setSubmittingJob(true);
-      const payload = {
+      const jobPayload = {
         title: jobForm.title.trim(),
         description: jobForm.description.trim(),
         location: jobForm.location.trim(),
         salary: jobForm.salary.trim(),
         type: jobForm.type,
+        communityId: community._id,
         images: jobImages,
         links: jobLinks,
-        communityId: community._id,
       };
+
       const res = editingJob
-        ? await api.updateCommunityJob(editingJob._id, payload)
-        : await api.createCommunityJob(payload);
-      const saved = (res as any).data?.job || (res as any).data || res;
+        ? await api.updateCommunityJob(editingJob._id, jobPayload)
+        : await api.createCommunityJob(jobPayload);
+      const payload: any = (res as any).data || res;
+      const savedJob =
+        payload.job || payload.data?.job || payload.data || payload;
+
       if (editingJob) {
+        setCommunityJobs((current) =>
+          (Array.isArray(current) ? current : []).map((item: any) =>
+            String(item?._id) === String(editingJob._id) ? savedJob : item,
+          ),
+        );
         toast({ title: "Job updated" });
       } else {
+        setCommunityJobs((current) => [
+          savedJob,
+          ...(Array.isArray(current) ? current : []),
+        ]);
         toast({ title: "Job created" });
       }
-      onRefreshPosts();
+
       setActiveTab("posts");
       closeCreateDialog();
-      setJobForm({
-        title: "",
-        description: "",
-        location: "",
-        salary: "",
-        type: "full-time",
-      });
-      setJobImages([]);
-      setJobLinks([]);
-      setEditingJob(null);
     } catch (error) {
       console.error(error);
       toast({
@@ -1111,25 +1109,38 @@ const CommunityAdminWorkspace = ({
     if (!articleForm.title.trim() || !articleForm.content.trim()) return;
     try {
       setSubmittingArticle(true);
-      const payload = {
+      const articlePayload = {
         title: articleForm.title.trim(),
         content: articleForm.content.trim(),
+        communityId: community._id,
         images: articleImages,
         links: articleLinks,
-        communityId: community._id,
       };
+
       const res = editingArticle
-        ? await api.updateCommunityArticle(editingArticle._id, payload)
-        : await api.createCommunityArticle(payload);
-      if (editingArticle) toast({ title: "Article updated" });
-      else toast({ title: "Article created" });
-      onRefreshPosts();
+        ? await api.updateCommunityArticle(editingArticle._id, articlePayload)
+        : await api.createCommunityArticle(articlePayload);
+      const payload: any = (res as any).data || res;
+      const savedArticle =
+        payload.article || payload.data?.article || payload.data || payload;
+
+      if (editingArticle) {
+        setCommunityArticles((current) =>
+          (Array.isArray(current) ? current : []).map((item: any) =>
+            String(item?._id) === String(editingArticle._id) ? savedArticle : item,
+          ),
+        );
+        toast({ title: "Article updated" });
+      } else {
+        setCommunityArticles((current) => [
+          savedArticle,
+          ...(Array.isArray(current) ? current : []),
+        ]);
+        toast({ title: "Article created" });
+      }
+
       setActiveTab("posts");
       closeCreateDialog();
-      setArticleForm({ title: "", content: "" });
-      setArticleImages([]);
-      setArticleLinks([]);
-      setEditingArticle(null);
     } catch (error) {
       console.error(error);
       toast({
@@ -1147,26 +1158,39 @@ const CommunityAdminWorkspace = ({
     if (!productForm.title.trim()) return;
     try {
       setSubmittingProduct(true);
-      const payload = {
+      const productPayload = {
         title: productForm.title.trim(),
         description: productForm.description.trim(),
         price: productForm.price.trim(),
+        communityId: community._id,
         images: productImages,
         links: productLinks,
-        communityId: community._id,
       };
+
       const res = editingProduct
-        ? await api.updateCommunityProduct(editingProduct._id, payload)
-        : await api.createCommunityProduct(payload);
-      if (editingProduct) toast({ title: "Product updated" });
-      else toast({ title: "Product created" });
-      onRefreshPosts();
+        ? await api.updateCommunityProduct(editingProduct._id, productPayload)
+        : await api.createCommunityProduct(productPayload);
+      const payload: any = (res as any).data || res;
+      const savedProduct =
+        payload.product || payload.data?.product || payload.data || payload;
+
+      if (editingProduct) {
+        setCommunityProducts((current) =>
+          (Array.isArray(current) ? current : []).map((item: any) =>
+            String(item?._id) === String(editingProduct._id) ? savedProduct : item,
+          ),
+        );
+        toast({ title: "Product updated" });
+      } else {
+        setCommunityProducts((current) => [
+          savedProduct,
+          ...(Array.isArray(current) ? current : []),
+        ]);
+        toast({ title: "Product created" });
+      }
+
       setActiveTab("posts");
       closeCreateDialog();
-      setProductForm({ title: "", description: "", price: "" });
-      setProductImages([]);
-      setProductLinks([]);
-      setEditingProduct(null);
     } catch (error) {
       console.error(error);
       toast({
@@ -2529,7 +2553,9 @@ const CommunityAdminWorkspace = ({
               </button>
               <button
                 type="button"
-                onClick={() => setCreateMode("job")}
+                onClick={() =>
+                  navigate(`/communities/${community._id}/post-job`)
+                }
                 className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left hover:border-slate-300 hover:bg-white"
               >
                 <div className="flex items-center gap-3">
@@ -2561,7 +2587,9 @@ const CommunityAdminWorkspace = ({
               </button>
               <button
                 type="button"
-                onClick={() => setCreateMode("product")}
+                onClick={() =>
+                  navigate(`/communities/${community._id}/add-product`)
+                }
                 className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left hover:border-slate-300 hover:bg-white"
               >
                 <div className="flex items-center gap-3">

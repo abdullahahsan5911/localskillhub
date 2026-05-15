@@ -1,10 +1,10 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const jobReplySchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
     content: {
@@ -13,14 +13,14 @@ const jobReplySchema = new mongoose.Schema(
       trim: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const jobCommentSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
     content: {
@@ -30,30 +30,30 @@ const jobCommentSchema = new mongoose.Schema(
     },
     replies: [jobReplySchema],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const jobReactionSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
     type: {
       type: String,
-      enum: ['like', 'celebrate', 'support', 'insightful'],
-      default: 'like',
+      enum: ["like", "celebrate", "support", "insightful"],
+      default: "like",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const communityJobSchema = new mongoose.Schema(
   {
     communityId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Community',
+      ref: "Community",
     },
     title: String,
     description: String,
@@ -61,21 +61,21 @@ const communityJobSchema = new mongoose.Schema(
     salary: String,
     type: {
       type: String,
-      enum: ['full-time', 'part-time', 'contract', 'freelance'],
-      default: 'full-time',
+      enum: ["full-time", "part-time", "contract", "freelance"],
+      default: "full-time",
     },
     images: [String],
     links: [String],
     applicants: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: "User",
       },
     ],
     likes: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: "User",
       },
     ],
     reactions: [jobReactionSchema],
@@ -86,12 +86,12 @@ const communityJobSchema = new mongoose.Schema(
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const CommunityJob = mongoose.model('CommunityJob', communityJobSchema);
+const CommunityJob = mongoose.model("CommunityJob", communityJobSchema);
 
 export default CommunityJob;
