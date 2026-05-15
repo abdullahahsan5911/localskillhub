@@ -724,6 +724,10 @@ class ApiService {
     return this.request(`/communities/articles${queryString}`, { method: 'GET' });
   }
 
+  async getCommunityArticle(id: string) {
+    return this.request(`/communities/articles/${id}`, { method: 'GET' });
+  }
+
   async createCommunityArticle(data: any) {
     return this.request('/communities/articles', { method: 'POST', body: JSON.stringify(data) });
   }

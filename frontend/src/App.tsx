@@ -2,7 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { usePresenceTracking, useUpdatePresence } from "@/hooks/usePresence";
 import { useSocketNotifications } from "@/hooks/useSocketNotifications";
@@ -34,6 +40,7 @@ import NotFound from "./pages/NotFound";
 import Assets from "./pages/Assets";
 import Images from "./pages/Images";
 import People from "./pages/People";
+import ArticleEditor from "./pages/ArticleEditor";
 // Admin Panel
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -190,9 +197,11 @@ const SocketIOInitializer = ({ children }: { children: JSX.Element }) => {
     try {
       // Socket.IO is not available on the current Vercel backend runtime.
       // Keep it enabled locally, or explicitly enable via env for a dedicated realtime server.
-      const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+      const isLocalhost = ["localhost", "127.0.0.1"].includes(
+        window.location.hostname,
+      );
       const shouldEnableSocket =
-        import.meta.env.VITE_ENABLE_SOCKET === 'true' || isLocalhost;
+        import.meta.env.VITE_ENABLE_SOCKET === "true" || isLocalhost;
 
       if (!shouldEnableSocket) {
         return;
@@ -201,28 +210,28 @@ const SocketIOInitializer = ({ children }: { children: JSX.Element }) => {
       // Use dedicated socket URL when provided; otherwise derive from API URL.
       const socketUrl = import.meta.env.VITE_SOCKET_URL
         ? import.meta.env.VITE_SOCKET_URL
-        : (import.meta.env.VITE_API_URL
-            ? import.meta.env.VITE_API_URL.replace('/api', '')
-            : `${window.location.protocol}//${window.location.hostname}:5000`);
+        : import.meta.env.VITE_API_URL
+          ? import.meta.env.VITE_API_URL.replace("/api", "")
+          : `${window.location.protocol}//${window.location.hostname}:5000`;
 
       // Initialize Socket.IO connection
       const socket: Socket = io(socketUrl, {
         auth: {
-          token: localStorage.getItem('token')
+          token: localStorage.getItem("token"),
         },
         reconnection: true,
         reconnectionAttempts: 5,
-        reconnectionDelay: 1000
+        reconnectionDelay: 1000,
       });
 
-      socket.on('connect', () => {
-        console.log('Socket.IO connected');
+      socket.on("connect", () => {
+        console.log("Socket.IO connected");
         // Emit user online after connection
-        socket.emit('userOnline', user._id);
+        socket.emit("userOnline", user._id);
       });
 
-      socket.on('connect_error', (error) => {
-        console.error('Socket.IO connection error:', error);
+      socket.on("connect_error", (error) => {
+        console.error("Socket.IO connection error:", error);
       });
 
       // Store socket instance globally for use in hooks and components
@@ -230,28 +239,28 @@ const SocketIOInitializer = ({ children }: { children: JSX.Element }) => {
 
       // Handle page unload - explicitly notify server about offline status
       const handlePageUnload = () => {
-        console.log('Page unloading - notifying server of offline status');
+        console.log("Page unloading - notifying server of offline status");
         // Emit explicit offline event using socket's authenticated ID
-        socket.emit('userOffline', socket.id);
+        socket.emit("userOffline", socket.id);
         // Disconnect socket
         socket.disconnect();
       };
 
       // Listen for page unload events (tab close, navigation, refresh)
-      window.addEventListener('beforeunload', handlePageUnload);
-      window.addEventListener('unload', handlePageUnload);
+      window.addEventListener("beforeunload", handlePageUnload);
+      window.addEventListener("unload", handlePageUnload);
 
       return () => {
         // Remove unload listeners
-        window.removeEventListener('beforeunload', handlePageUnload);
-        window.removeEventListener('unload', handlePageUnload);
-        
+        window.removeEventListener("beforeunload", handlePageUnload);
+        window.removeEventListener("unload", handlePageUnload);
+
         if (socket) {
           socket.disconnect();
         }
       };
     } catch (error) {
-      console.error('Error initializing Socket.IO:', error);
+      console.error("Error initializing Socket.IO:", error);
     }
   }, [user, isAuthenticated]);
 
@@ -299,11 +308,19 @@ const ProfileRoute = () => {
     <>
       <Navbar />
       <div className="py-8 min-h-screen bg-slate-50">
-        <div className={isFreelancerProfile ? "w-full" : "max-w-5xl mx-auto px-4 sm:px-6 lg:px-8"}>
+        <div
+          className={
+            isFreelancerProfile
+              ? "w-full"
+              : "max-w-5xl mx-auto px-4 sm:px-6 lg:px-8"
+          }
+        >
           {!isFreelancerProfile && (
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">Profile</h1>
+                <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">
+                  Profile
+                </h1>
                 <p className="text-xs sm:text-sm text-slate-500 mt-1">
                   Manage your public profile, portfolio, and digital assets.
                 </p>
@@ -347,204 +364,264 @@ const App = () => {
                   <BrowserRouter>
                     <AccountStatusAlert />
                     <Routes>
-                          {/* Public marketing and browsing routes */}
-                          <Route path="/" element={<Index />} />
-                          <Route path="/browse" element={<BrowseFreelancers />} />
-                          <Route path="/freelancers/:id" element={<FreelancerProfile />} />
-                          <Route path="/clients/:id" element={<ClientProfile />} />
-                          <Route path="/jobs" element={<Jobs />} />
-                          <Route path="/jobs/:id" element={<JobDetail />} />
-                          <Route path="/assets" element={<Assets />} />
-                          <Route path="/images" element={<Images />} />
-                          <Route path="/people" element={<People />} />
+                      {/* Public marketing and browsing routes */}
+                      <Route path="/" element={<Index />} />
+                      <Route path="/browse" element={<BrowseFreelancers />} />
+                      <Route
+                        path="/freelancers/:id"
+                        element={<FreelancerProfile />}
+                      />
+                      <Route path="/clients/:id" element={<ClientProfile />} />
+                      <Route path="/jobs" element={<Jobs />} />
+                      <Route path="/jobs/:id" element={<JobDetail />} />
+                      <Route path="/assets" element={<Assets />} />
+                      <Route path="/images" element={<Images />} />
+                      <Route path="/people" element={<People />} />
 
-                          {/* Auth routes */}
-                          <Route
-                            path="/signup"
-                            element={
-                              <PublicOnlyRoute>
-                                <SignUp />
-                              </PublicOnlyRoute>
-                            }
-                          />
-                          <Route
-                            path="/login"
-                            element={
-                              <PublicOnlyRoute>
-                                <Login />
-                              </PublicOnlyRoute>
-                            }
-                          />
-                          <Route
-                            path="/forgot-password"
-                            element={
-                              <PublicOnlyRoute>
-                                <ForgotPassword />
-                              </PublicOnlyRoute>
-                            }
-                          />
+                      {/* Auth routes */}
+                      <Route
+                        path="/signup"
+                        element={
+                          <PublicOnlyRoute>
+                            <SignUp />
+                          </PublicOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/login"
+                        element={
+                          <PublicOnlyRoute>
+                            <Login />
+                          </PublicOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/forgot-password"
+                        element={
+                          <PublicOnlyRoute>
+                            <ForgotPassword />
+                          </PublicOnlyRoute>
+                        }
+                      />
 
-                          {/* Onboarding and dashboards */}
-                          <Route
-                            path="/onboarding"
-                            element={
-                              <ProtectedRoute>
-                                <Onboarding />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/dashboard/freelancer"
-                            element={
-                              <RoleRoute allowedRoles={["freelancer"]}>
-                                <FreelancerDashboard />
-                              </RoleRoute>
-                            }
-                          />
-                          <Route
-                            path="/dashboard/client"
-                            element={
-                              <RoleRoute allowedRoles={["client"]}>
-                                <ClientDashboard />
-                              </RoleRoute>
-                            }
-                          />
-                          <Route
-                            path="/company-dashboard"
-                            element={
-                              <CompanyProtectedRoute>
-                                <CompanyDashboard />
-                              </CompanyProtectedRoute>
-                            }
-                          />
+                      {/* Onboarding and dashboards */}
+                      <Route
+                        path="/onboarding"
+                        element={
+                          <ProtectedRoute>
+                            <Onboarding />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/dashboard/freelancer"
+                        element={
+                          <RoleRoute allowedRoles={["freelancer"]}>
+                            <FreelancerDashboard />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="/dashboard/client"
+                        element={
+                          <RoleRoute allowedRoles={["client"]}>
+                            <ClientDashboard />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="/company-dashboard"
+                        element={
+                          <CompanyProtectedRoute>
+                            <CompanyDashboard />
+                          </CompanyProtectedRoute>
+                        }
+                      />
 
-                          {/* Job posting (clients only) */}
-                          <Route
-                            path="/post-job"
-                            element={
-                              <RoleRoute allowedRoles={["client"]}>
-                                <PostJob />
-                              </RoleRoute>
-                            }
-                          />
+                      {/* Job posting (clients only) */}
+                      <Route
+                        path="/post-job"
+                        element={
+                          <RoleRoute allowedRoles={["client"]}>
+                            <PostJob />
+                          </RoleRoute>
+                        }
+                      />
 
-                          {/* Profile */}
-                          <Route
-                            path="/profile"
-                            element={
-                              <ProtectedRoute>
-                                <ProfileRoute />
-                              </ProtectedRoute>
-                            }
-                          />
+                      {/* Profile */}
+                      <Route
+                        path="/profile"
+                        element={
+                          <ProtectedRoute>
+                            <ProfileRoute />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                          {/* Settings */}
-                          <Route
-                            path="/settings"
-                            element={
-                              <ProtectedRoute>
-                                <SettingsRoute />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/messages"
-                            element={
-                              <ProtectedRoute>
-                                <MessagesPage />
-                              </ProtectedRoute>
-                            }
-                          />
+                      {/* Settings */}
+                      <Route
+                        path="/settings"
+                        element={
+                          <ProtectedRoute>
+                            <SettingsRoute />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/messages"
+                        element={
+                          <ProtectedRoute>
+                            <MessagesPage />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                          {/* Stripe payout onboarding return URLs */}
-                          <Route
-                            path="/freelancer/payouts/onboarding-complete"
-                            element={
-                              <RoleRoute allowedRoles={["freelancer"]}>
-                                <PayoutOnboardingComplete />
-                              </RoleRoute>
-                            }
-                          />
-                          <Route
-                            path="/freelancer/payouts/onboarding"
-                            element={
-                              <RoleRoute allowedRoles={["freelancer"]}>
-                                <PayoutOnboardingComplete />
-                              </RoleRoute>
-                            }
-                          />
+                      {/* Stripe payout onboarding return URLs */}
+                      <Route
+                        path="/freelancer/payouts/onboarding-complete"
+                        element={
+                          <RoleRoute allowedRoles={["freelancer"]}>
+                            <PayoutOnboardingComplete />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="/freelancer/payouts/onboarding"
+                        element={
+                          <RoleRoute allowedRoles={["freelancer"]}>
+                            <PayoutOnboardingComplete />
+                          </RoleRoute>
+                        }
+                      />
 
-                          {/* Community and map */}
-                          <Route path="/communities" element={<Communities />} />
-                          <Route
-                            path="/communities/manage"
-                            element={
-                              <RoleRoute allowedRoles={["client", "freelancer"]}>
-                                <CommunitiesManage />
-                              </RoleRoute>
-                            }
-                          />
-                          <Route path="/communities/:id" element={<CommunityDetail />} />
-                          <Route path="/map" element={<MapPage />} />
+                      {/* Community and map */}
+                      <Route path="/communities" element={<Communities />} />
+                      <Route
+                        path="/communities/manage"
+                        element={
+                          <RoleRoute allowedRoles={["client", "freelancer"]}>
+                            <CommunitiesManage />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="/communities/:id"
+                        element={<CommunityDetail />}
+                      />
+                      <Route
+                        path="/communities/:communityId/write-article"
+                        element={
+                          <RoleRoute allowedRoles={["client", "freelancer"]}>
+                            <ArticleEditor />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="/communities/:communityId/edit-article/:articleId"
+                        element={
+                          <RoleRoute
+                            allowedRoles={["admin", "client", "freelancer"]}
+                          >
+                            <ArticleEditor />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route path="/map" element={<MapPage />} />
 
-                          {/* Footer content pages */}
-                          {footerPages.map((page) => (
-                            <Route
-                              key={page.path}
-                              path={page.path}
-                              element={<FooterContentPage page={page} />}
-                            />
-                          ))}
+                      {/* Footer content pages */}
+                      {footerPages.map((page) => (
+                        <Route
+                          key={page.path}
+                          path={page.path}
+                          element={<FooterContentPage page={page} />}
+                        />
+                      ))}
 
-                          {/* Admin Panel */}
-                          <Route path="/admin" element={<AdminLayout />}>
-                            <Route index element={<AdminDashboard />} />
-                            {/* Users */}
-                            <Route path="users" element={<AllUsers />} />
-                            <Route path="users/banned" element={<AllUsers />} />
-                            <Route path="users/:id" element={<UserDetail />} />
-                            <Route path="verifications" element={<VerificationRequests />} />
-                            <Route path="companies" element={<AdminCompanyVerifications />} />
-                            <Route path="appeals" element={<AppealsList />} />
-                            {/* Jobs */}
-                            <Route path="jobs" element={<AllJobs />} />
-                            <Route path="jobs/flagged" element={<AllJobs flaggedOnly />} />
-                            {/* Contracts */}
-                            <Route path="contracts" element={<AdminContracts />} />
-                            <Route path="hiring-requests" element={<AdminHiringRequests />} />
-                            <Route path="contracts/:id" element={<ContractDetail />} />
-                            <Route path="disputes" element={<DisputeResolution />} />
-                            <Route path="disputes/:id" element={<DisputeDetail />} />
-                            {/* Payments */}
-                            <Route path="payments/escrow" element={<EscrowMonitor />} />
-                            <Route path="payments/transactions" element={<Transactions />} />
-                            <Route path="payments/withdrawals" element={<WithdrawalRequests />} />
-                            {/* Reviews & Reputation */}
-                            <Route path="reviews" element={<ReviewModeration />} />
-                            <Route path="reputation" element={<ReputationScores />} />
-                            {/* Communities */}
-                            <Route path="communities" element={<AdminCommunities />} />
-                            {/* Analytics */}
-                            <Route path="analytics" element={<AdminDashboard />} />
-                            {/* Logs & Settings */}
-                            <Route path="logs" element={<AuditLogs />} />
-                            <Route path="settings" element={<AdminSettings />} />
-                          </Route>
+                      {/* Admin Panel */}
+                      <Route path="/admin" element={<AdminLayout />}>
+                        <Route index element={<AdminDashboard />} />
+                        {/* Users */}
+                        <Route path="users" element={<AllUsers />} />
+                        <Route path="users/banned" element={<AllUsers />} />
+                        <Route path="users/:id" element={<UserDetail />} />
+                        <Route
+                          path="verifications"
+                          element={<VerificationRequests />}
+                        />
+                        <Route
+                          path="companies"
+                          element={<AdminCompanyVerifications />}
+                        />
+                        <Route path="appeals" element={<AppealsList />} />
+                        {/* Jobs */}
+                        <Route path="jobs" element={<AllJobs />} />
+                        <Route
+                          path="jobs/flagged"
+                          element={<AllJobs flaggedOnly />}
+                        />
+                        {/* Contracts */}
+                        <Route path="contracts" element={<AdminContracts />} />
+                        <Route
+                          path="hiring-requests"
+                          element={<AdminHiringRequests />}
+                        />
+                        <Route
+                          path="contracts/:id"
+                          element={<ContractDetail />}
+                        />
+                        <Route
+                          path="disputes"
+                          element={<DisputeResolution />}
+                        />
+                        <Route
+                          path="disputes/:id"
+                          element={<DisputeDetail />}
+                        />
+                        {/* Payments */}
+                        <Route
+                          path="payments/escrow"
+                          element={<EscrowMonitor />}
+                        />
+                        <Route
+                          path="payments/transactions"
+                          element={<Transactions />}
+                        />
+                        <Route
+                          path="payments/withdrawals"
+                          element={<WithdrawalRequests />}
+                        />
+                        {/* Reviews & Reputation */}
+                        <Route path="reviews" element={<ReviewModeration />} />
+                        <Route
+                          path="reputation"
+                          element={<ReputationScores />}
+                        />
+                        {/* Communities */}
+                        <Route
+                          path="communities"
+                          element={<AdminCommunities />}
+                        />
+                        {/* Analytics */}
+                        <Route path="analytics" element={<AdminDashboard />} />
+                        {/* Logs & Settings */}
+                        <Route path="logs" element={<AuditLogs />} />
+                        <Route path="settings" element={<AdminSettings />} />
+                      </Route>
 
-                          {/* 404 */}
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
-                        <Toaster />
-                        <Sonner />
-                      </BrowserRouter>
-                    </TooltipProvider>
-                  </BannedAccountCheck>
-                </SocketNotificationHandler>
-              </PresenceTracker>
-            </SocketIOInitializer>
-          </AuthProvider>
-        </QueryClientProvider>
-      );
-    };
+                      {/* 404 */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                    <Toaster />
+                    <Sonner />
+                  </BrowserRouter>
+                </TooltipProvider>
+              </BannedAccountCheck>
+            </SocketNotificationHandler>
+          </PresenceTracker>
+        </SocketIOInitializer>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
-    export default App;
+export default App;

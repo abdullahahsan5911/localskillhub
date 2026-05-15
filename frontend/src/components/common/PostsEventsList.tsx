@@ -1,6 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { FiHeart, FiMessageSquare, FiRepeat, FiCalendar, FiMapPin, FiChevronLeft, FiChevronRight, FiEdit2, FiTrash2 } from "react-icons/fi";
+import {
+  FiHeart,
+  FiMessageSquare,
+  FiRepeat,
+  FiCalendar,
+  FiMapPin,
+  FiChevronLeft,
+  FiChevronRight,
+  FiEdit2,
+  FiTrash2,
+} from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { resolveAvatarSrc } from "@/lib/avatar";
 import api from "@/lib/api";
@@ -115,8 +125,17 @@ interface Props {
   onLikePost?: (post: CommunityPostItem) => void;
   onRepost?: (post: CommunityPostItem) => void;
   onOpenComments?: (post: CommunityPostItem) => void;
-  onAddComment?: (postId: string, communityId: string, content: string) => Promise<void>;
-  onAddReply?: (postId: string, communityId: string, commentId: string, content: string) => Promise<void>;
+  onAddComment?: (
+    postId: string,
+    communityId: string,
+    content: string,
+  ) => Promise<void>;
+  onAddReply?: (
+    postId: string,
+    communityId: string,
+    commentId: string,
+    content: string,
+  ) => Promise<void>;
   onJoinEvent?: (eventId: string, attending: boolean) => void;
   // Admin / moderation callbacks
   onEditPost?: (post: CommunityPostItem) => void;
@@ -133,8 +152,19 @@ interface Props {
   // Generic item handlers for jobs/articles/products
   onLikeItem?: (type: string, item: any) => void;
   onRepostItem?: (type: string, item: any) => void;
-  onAddCommentItem?: (type: string, itemId: string, communityId: string, content: string) => Promise<void>;
-  onAddReplyItem?: (type: string, itemId: string, communityId: string, commentId: string, content: string) => Promise<void>;
+  onAddCommentItem?: (
+    type: string,
+    itemId: string,
+    communityId: string,
+    content: string,
+  ) => Promise<void>;
+  onAddReplyItem?: (
+    type: string,
+    itemId: string,
+    communityId: string,
+    commentId: string,
+    content: string,
+  ) => Promise<void>;
   onOpenCommentsItem?: (type: string, item: any) => void;
   isAdminView?: boolean;
 }
@@ -183,16 +213,20 @@ const PostsEventsList = ({
   onDeleteComment,
   isAdminView = false,
 }: Props) => {
-  const [activeFilter, setActiveFilter] = useState<"all" | "posts" | "events" | "jobs" | "articles" | "products">("all");
+  const [activeFilter, setActiveFilter] = useState<
+    "all" | "posts" | "events" | "jobs" | "articles" | "products"
+  >("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [imageCarouselIndex, setImageCarouselIndex] = useState<Record<string, number>>({});
+  const [imageCarouselIndex, setImageCarouselIndex] = useState<
+    Record<string, number>
+  >({});
   const [commentInput, setCommentInput] = useState<Record<string, string>>({});
   const [replyInputs, setReplyInputs] = useState<Record<string, string>>({});
   const [loadingComment, setLoadingComment] = useState<string | null>(null);
   const [fallbackFeed, setFallbackFeed] = useState<FeedItem[]>([]);
   const [loadingFallbackFeed, setLoadingFallbackFeed] = useState(false);
 
-  const shouldLoadFallbackFeed = (!feed || feed.length === 0);
+  const shouldLoadFallbackFeed = !feed || feed.length === 0;
 
   useEffect(() => {
     if (!shouldLoadFallbackFeed) {
@@ -206,24 +240,50 @@ const PostsEventsList = ({
     const loadFallbackFeed = async () => {
       setLoadingFallbackFeed(true);
       try {
-        const [eventsRes, jobsRes, articlesRes, productsRes] = await Promise.allSettled([
-          api.getEvents(),
-          api.getCommunityJobs({ limit: 50 }),
-          api.getCommunityArticles({ limit: 50 }),
-          api.getCommunityProducts({ limit: 50 }),
-        ]);
+        const [eventsRes, jobsRes, articlesRes, productsRes] =
+          await Promise.allSettled([
+            api.getEvents(),
+            api.getCommunityJobs({ limit: 50 }),
+            api.getCommunityArticles({ limit: 50 }),
+            api.getCommunityProducts({ limit: 50 }),
+          ]);
 
         if (cancelled) return;
 
-        const eventPayload: any = eventsRes.status === "fulfilled" ? (eventsRes.value as any).data || eventsRes.value || {} : {};
-        const jobsPayload: any = jobsRes.status === "fulfilled" ? (jobsRes.value as any).data || jobsRes.value || {} : {};
-        const articlesPayload: any = articlesRes.status === "fulfilled" ? (articlesRes.value as any).data || articlesRes.value || {} : {};
-        const productsPayload: any = productsRes.status === "fulfilled" ? (productsRes.value as any).data || productsRes.value || {} : {};
+        const eventPayload: any =
+          eventsRes.status === "fulfilled"
+            ? (eventsRes.value as any).data || eventsRes.value || {}
+            : {};
+        const jobsPayload: any =
+          jobsRes.status === "fulfilled"
+            ? (jobsRes.value as any).data || jobsRes.value || {}
+            : {};
+        const articlesPayload: any =
+          articlesRes.status === "fulfilled"
+            ? (articlesRes.value as any).data || articlesRes.value || {}
+            : {};
+        const productsPayload: any =
+          productsRes.status === "fulfilled"
+            ? (productsRes.value as any).data || productsRes.value || {}
+            : {};
 
-        const rawEvents = eventPayload.events || eventPayload.data?.events || eventPayload.data || [];
-        const rawJobs = jobsPayload.jobs || jobsPayload.data?.jobs || jobsPayload.data || [];
-        const rawArticles = articlesPayload.articles || articlesPayload.data?.articles || articlesPayload.data || [];
-        const rawProducts = productsPayload.products || productsPayload.data?.products || productsPayload.data || [];
+        const rawEvents =
+          eventPayload.events ||
+          eventPayload.data?.events ||
+          eventPayload.data ||
+          [];
+        const rawJobs =
+          jobsPayload.jobs || jobsPayload.data?.jobs || jobsPayload.data || [];
+        const rawArticles =
+          articlesPayload.articles ||
+          articlesPayload.data?.articles ||
+          articlesPayload.data ||
+          [];
+        const rawProducts =
+          productsPayload.products ||
+          productsPayload.data?.products ||
+          productsPayload.data ||
+          [];
 
         const visibleCommunityIds = new Set(
           (posts || [])
@@ -245,7 +305,9 @@ const PostsEventsList = ({
           post,
         }));
 
-        const eventItems: FeedItem[] = (Array.isArray(rawEvents) ? rawEvents : [])
+        const eventItems: FeedItem[] = (
+          Array.isArray(rawEvents) ? rawEvents : []
+        )
           .map((event: EventItem) => {
             const communityId = normalizeCommunityId(event.communityId);
             return {
@@ -271,7 +333,9 @@ const PostsEventsList = ({
           })
           .filter((item) => includeItem(item.communityId));
 
-        const articleItems: FeedItem[] = (Array.isArray(rawArticles) ? rawArticles : [])
+        const articleItems: FeedItem[] = (
+          Array.isArray(rawArticles) ? rawArticles : []
+        )
           .map((article: ArticleItem) => {
             const communityId = normalizeCommunityId(article.communityId);
             return {
@@ -284,7 +348,9 @@ const PostsEventsList = ({
           })
           .filter((item) => includeItem(item.communityId));
 
-        const productItems: FeedItem[] = (Array.isArray(rawProducts) ? rawProducts : [])
+        const productItems: FeedItem[] = (
+          Array.isArray(rawProducts) ? rawProducts : []
+        )
           .map((product: ProductItem) => {
             const communityId = normalizeCommunityId(product.communityId);
             return {
@@ -297,7 +363,13 @@ const PostsEventsList = ({
           })
           .filter((item) => includeItem(item.communityId));
 
-        const merged = [...postItems, ...eventItems, ...jobItems, ...articleItems, ...productItems].sort((a, b) => {
+        const merged = [
+          ...postItems,
+          ...eventItems,
+          ...jobItems,
+          ...articleItems,
+          ...productItems,
+        ].sort((a, b) => {
           const at = new Date(a.timestamp).getTime() || 0;
           const bt = new Date(b.timestamp).getTime() || 0;
           return bt - at;
@@ -306,13 +378,15 @@ const PostsEventsList = ({
         setFallbackFeed(merged);
       } catch {
         if (!cancelled) {
-          setFallbackFeed((posts || []).map((post) => ({
-            type: "post",
-            id: `post-${post._id}`,
-            timestamp: post.createdAt,
-            communityId: normalizeCommunityId(post.communityId),
-            post,
-          })));
+          setFallbackFeed(
+            (posts || []).map((post) => ({
+              type: "post",
+              id: `post-${post._id}`,
+              timestamp: post.createdAt,
+              communityId: normalizeCommunityId(post.communityId),
+              post,
+            })),
+          );
         }
       } finally {
         if (!cancelled) setLoadingFallbackFeed(false);
@@ -330,23 +404,40 @@ const PostsEventsList = ({
     if (feed && feed.length > 0) return feed;
     if (fallbackFeed.length > 0) return fallbackFeed;
     if (posts && posts.length > 0) {
-      return posts.map((p) => ({ type: "post" as const, id: `post-${p._id}`, timestamp: p.createdAt, communityId: p.communityId || "", post: p }));
+      return posts.map((p) => ({
+        type: "post" as const,
+        id: `post-${p._id}`,
+        timestamp: p.createdAt,
+        communityId: p.communityId || "",
+        post: p,
+      }));
     }
     return [];
   }, [feed, fallbackFeed, posts]);
 
-  const isLoading = Boolean(loading || (shouldLoadFallbackFeed && loadingFallbackFeed));
+  const isLoading = Boolean(
+    loading || (shouldLoadFallbackFeed && loadingFallbackFeed),
+  );
 
   const visible = useMemo(() => {
     if (activeFilter === "all") return derivedFeed;
-    if (activeFilter === "posts") return derivedFeed.filter((i) => i.type === "post");
-    if (activeFilter === "events") return derivedFeed.filter((i) => i.type === "event");
-    if (activeFilter === "jobs") return derivedFeed.filter((i) => i.type === "job");
-    if (activeFilter === "articles") return derivedFeed.filter((i) => i.type === "article");
+    if (activeFilter === "posts")
+      return derivedFeed.filter((i) => i.type === "post");
+    if (activeFilter === "events")
+      return derivedFeed.filter((i) => i.type === "event");
+    if (activeFilter === "jobs")
+      return derivedFeed.filter((i) => i.type === "job");
+    if (activeFilter === "articles")
+      return derivedFeed.filter((i) => i.type === "article");
     return derivedFeed.filter((i) => i.type === "product");
   }, [derivedFeed, activeFilter]);
 
-  const handleCommentSubmit = async (itemKey: string, communityId: string, itemType: string, itemIdRaw?: string) => {
+  const handleCommentSubmit = async (
+    itemKey: string,
+    communityId: string,
+    itemType: string,
+    itemIdRaw?: string,
+  ) => {
     const content = (commentInput[itemKey] || "").trim();
     if (!content) return;
     try {
@@ -356,7 +447,12 @@ const PostsEventsList = ({
         await onAddComment(itemIdRaw || itemKey, communityId, content);
       } else {
         if (!onAddCommentItem) return;
-        await onAddCommentItem(itemType, itemIdRaw || itemKey, communityId, content);
+        await onAddCommentItem(
+          itemType,
+          itemIdRaw || itemKey,
+          communityId,
+          content,
+        );
       }
       setCommentInput((prev) => ({ ...prev, [itemKey]: "" }));
     } finally {
@@ -364,7 +460,12 @@ const PostsEventsList = ({
     }
   };
 
-  const handleReplySubmit = async (itemType: string, itemId: string, communityId: string, commentId: string) => {
+  const handleReplySubmit = async (
+    itemType: string,
+    itemId: string,
+    communityId: string,
+    commentId: string,
+  ) => {
     const content = (replyInputs[commentId] || "").trim();
     if (!content) return;
     try {
@@ -393,7 +494,13 @@ const PostsEventsList = ({
 
   const getEntityAvatar = (entity: any) => {
     if (!entity) return { src: "", name: "" };
-    const candidate = entity.author || entity.creator || entity.createdBy || entity.authorId || entity.user || entity;
+    const candidate =
+      entity.author ||
+      entity.creator ||
+      entity.createdBy ||
+      entity.authorId ||
+      entity.user ||
+      entity;
     const avatar = candidate?.avatar || candidate?.avatarUrl || "";
     const name = candidate?.name || candidate?.fullName || "Member";
     return { src: avatar, name };
@@ -401,34 +508,66 @@ const PostsEventsList = ({
 
   const getEngagement = (obj: any) => {
     const likesArr = Array.isArray(obj?.likes) ? obj.likes : undefined;
-    const likesCount = likesArr ? likesArr.length : Number(obj?.likesCount ?? obj?.likeCount ?? 0);
+    const likesCount = likesArr
+      ? likesArr.length
+      : Number(obj?.likesCount ?? obj?.likeCount ?? 0);
     const commentsArr = Array.isArray(obj?.comments) ? obj.comments : undefined;
-    const commentsCount = commentsArr ? commentsArr.length : Number(obj?.commentsCount ?? obj?.commentCount ?? 0);
+    const commentsCount = commentsArr
+      ? commentsArr.length
+      : Number(obj?.commentsCount ?? obj?.commentCount ?? 0);
     const repostsArr = Array.isArray(obj?.reposts) ? obj.reposts : undefined;
-    const repostsCount = repostsArr ? repostsArr.length : Number(obj?.repostsCount ?? obj?.repostCount ?? 0);
-    const isLiked = Boolean(currentUserId && Array.isArray(likesArr) && likesArr.some((id: any) => String(id) === String(currentUserId)));
-    const isReposted = Boolean(currentUserId && Array.isArray(repostsArr) && repostsArr.some((id: any) => String(id) === String(currentUserId)));
+    const repostsCount = repostsArr
+      ? repostsArr.length
+      : Number(obj?.repostsCount ?? obj?.repostCount ?? 0);
+    const isLiked = Boolean(
+      currentUserId &&
+      Array.isArray(likesArr) &&
+      likesArr.some((id: any) => String(id) === String(currentUserId)),
+    );
+    const isReposted = Boolean(
+      currentUserId &&
+      Array.isArray(repostsArr) &&
+      repostsArr.some((id: any) => String(id) === String(currentUserId)),
+    );
     return { likesCount, commentsCount, repostsCount, isLiked, isReposted };
   };
 
-  const renderAttachmentGallery = (itemId: string, images?: string[], altPrefix = "Attachment") => {
+  const renderAttachmentGallery = (
+    itemId: string,
+    images?: string[],
+    altPrefix = "Attachment",
+  ) => {
     if (!Array.isArray(images) || images.length === 0) return null;
     const index = imageCarouselIndex[itemId] || 0;
 
     if (images.length === 1) {
       return (
         <div className="mt-3 overflow-hidden rounded-xl border border-slate-200">
-          <img src={images[0]} alt={`${altPrefix}`} className="w-full object-cover" />
+          <img
+            src={images[0]}
+            alt={`${altPrefix}`}
+            className="w-full object-cover"
+          />
         </div>
       );
     }
 
     return (
       <div className="mt-3 relative overflow-hidden rounded-xl border border-slate-200 bg-slate-900">
-        <img src={images[index]} alt={`${altPrefix}`} className="w-full object-cover" />
+        <img
+          src={images[index]}
+          alt={`${altPrefix}`}
+          className="w-full object-cover"
+        />
         <button
           type="button"
-          onClick={() => setImageCarouselIndex((prev) => ({ ...prev, [itemId]: ((prev[itemId] || 0) - 1 + images.length) % images.length }))}
+          onClick={() =>
+            setImageCarouselIndex((prev) => ({
+              ...prev,
+              [itemId]:
+                ((prev[itemId] || 0) - 1 + images.length) % images.length,
+            }))
+          }
           className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
           aria-label="Previous image"
         >
@@ -436,7 +575,12 @@ const PostsEventsList = ({
         </button>
         <button
           type="button"
-          onClick={() => setImageCarouselIndex((prev) => ({ ...prev, [itemId]: ((prev[itemId] || 0) + 1) % images.length }))}
+          onClick={() =>
+            setImageCarouselIndex((prev) => ({
+              ...prev,
+              [itemId]: ((prev[itemId] || 0) + 1) % images.length,
+            }))
+          }
           className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
           aria-label="Next image"
         >
@@ -447,7 +591,9 @@ const PostsEventsList = ({
             <button
               key={idx}
               type="button"
-              onClick={() => setImageCarouselIndex((prev) => ({ ...prev, [itemId]: idx }))}
+              onClick={() =>
+                setImageCarouselIndex((prev) => ({ ...prev, [itemId]: idx }))
+              }
               className={`h-1.5 rounded-full transition-colors ${idx === index ? "bg-white w-6" : "bg-white/50 w-1.5"}`}
               aria-label={`Go to image ${idx + 1}`}
             />
@@ -461,17 +607,49 @@ const PostsEventsList = ({
     <div className="space-y-3">
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-slate-600">
-          <button className={`rounded-full px-2 py-1 ${activeFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-white border'}`} onClick={() => setActiveFilter('all')}>All</button>
-          <button className={`rounded-full px-2 py-1 ${activeFilter === 'posts' ? 'bg-slate-900 text-white' : 'bg-white border'}`} onClick={() => setActiveFilter('posts')}>Posts</button>
-          <button className={`rounded-full px-2 py-1 ${activeFilter === 'events' ? 'bg-slate-900 text-white' : 'bg-white border'}`} onClick={() => setActiveFilter('events')}>Events</button>
-          <button className={`rounded-full px-2 py-1 ${activeFilter === 'jobs' ? 'bg-slate-900 text-white' : 'bg-white border'}`} onClick={() => setActiveFilter('jobs')}>Jobs</button>
-          <button className={`rounded-full px-2 py-1 ${activeFilter === 'articles' ? 'bg-slate-900 text-white' : 'bg-white border'}`} onClick={() => setActiveFilter('articles')}>Articles</button>
-          <button className={`rounded-full px-2 py-1 ${activeFilter === 'products' ? 'bg-slate-900 text-white' : 'bg-white border'}`} onClick={() => setActiveFilter('products')}>Products</button>
+          <button
+            className={`rounded-full px-2 py-1 ${activeFilter === "all" ? "bg-slate-900 text-white" : "bg-white border"}`}
+            onClick={() => setActiveFilter("all")}
+          >
+            All
+          </button>
+          <button
+            className={`rounded-full px-2 py-1 ${activeFilter === "posts" ? "bg-slate-900 text-white" : "bg-white border"}`}
+            onClick={() => setActiveFilter("posts")}
+          >
+            Posts
+          </button>
+          <button
+            className={`rounded-full px-2 py-1 ${activeFilter === "events" ? "bg-slate-900 text-white" : "bg-white border"}`}
+            onClick={() => setActiveFilter("events")}
+          >
+            Events
+          </button>
+          <button
+            className={`rounded-full px-2 py-1 ${activeFilter === "jobs" ? "bg-slate-900 text-white" : "bg-white border"}`}
+            onClick={() => setActiveFilter("jobs")}
+          >
+            Jobs
+          </button>
+          <button
+            className={`rounded-full px-2 py-1 ${activeFilter === "articles" ? "bg-slate-900 text-white" : "bg-white border"}`}
+            onClick={() => setActiveFilter("articles")}
+          >
+            Articles
+          </button>
+          <button
+            className={`rounded-full px-2 py-1 ${activeFilter === "products" ? "bg-slate-900 text-white" : "bg-white border"}`}
+            onClick={() => setActiveFilter("products")}
+          >
+            Products
+          </button>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-8 text-slate-400">Loading...</div>
+        <div className="flex items-center justify-center py-8 text-slate-400">
+          Loading...
+        </div>
       ) : visible.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
           <p className="text-sm font-medium text-slate-500">No items</p>
@@ -483,28 +661,65 @@ const PostsEventsList = ({
             if (item.type === "post") {
               const post = item.post;
               const latest = feedPosts.find((p) => p._id === post._id) || post;
-              const likesCount = Array.isArray((latest as any).likes) ? (latest as any).likes.length : Number((latest as any).likesCount ?? 0);
-              const commentsCount = Array.isArray((latest as any).comments) ? (latest as any).comments.length : Number((latest as any).commentsCount ?? 0);
-              const repostsCount = Array.isArray((latest as any).reposts) ? (latest as any).reposts.length : Number((latest as any).repostsCount ?? 0);
-              const isLiked = Boolean(currentUserId && Array.isArray((latest as any).likes) && (latest as any).likes.some((id: any) => String(id) === String(currentUserId)));
-              const isReposted = Boolean(currentUserId && Array.isArray((latest as any).reposts) && (latest as any).reposts.some((id: any) => String(id) === String(currentUserId)));
+              const likesCount = Array.isArray((latest as any).likes)
+                ? (latest as any).likes.length
+                : Number((latest as any).likesCount ?? 0);
+              const commentsCount = Array.isArray((latest as any).comments)
+                ? (latest as any).comments.length
+                : Number((latest as any).commentsCount ?? 0);
+              const repostsCount = Array.isArray((latest as any).reposts)
+                ? (latest as any).reposts.length
+                : Number((latest as any).repostsCount ?? 0);
+              const isLiked = Boolean(
+                currentUserId &&
+                Array.isArray((latest as any).likes) &&
+                (latest as any).likes.some(
+                  (id: any) => String(id) === String(currentUserId),
+                ),
+              );
+              const isReposted = Boolean(
+                currentUserId &&
+                Array.isArray((latest as any).reposts) &&
+                (latest as any).reposts.some(
+                  (id: any) => String(id) === String(currentUserId),
+                ),
+              );
 
               return (
-                <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5">
+                <article
+                  key={item.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5"
+                >
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-                    <Link to={`/communities/${item.communityId}`} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100">
-                      {communityNameById?.get(item.communityId) || 'Community'}
+                    <Link
+                      to={`/communities/${item.communityId}`}
+                      className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100"
+                    >
+                      {communityNameById?.get(item.communityId) || "Community"}
                     </Link>
                     <span>•</span>
-                    <span>{formatRelative ? formatRelative(post.createdAt) : post.createdAt}</span>
+                    <span>
+                      {formatRelative
+                        ? formatRelative(post.createdAt)
+                        : post.createdAt}
+                    </span>
                   </div>
 
                   <div className="mb-2.5 flex items-center gap-2.5">
                     <div className="flex h-9 w-9 items-center justify-center">
-                      <Avatar src={resolveAvatarSrc((post.authorId as any)?.avatar)} name={(post.authorId as any)?.name || 'User'} size={36} />
+                      <Avatar
+                        src={resolveAvatarSrc((post.authorId as any)?.avatar)}
+                        name={(post.authorId as any)?.name || "User"}
+                        size={36}
+                      />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <Link to={getProfileLink(post.authorId)} className="truncate text-sm font-semibold text-slate-900 hover:underline">{(post.authorId as any)?.name || 'Member'}</Link>
+                      <Link
+                        to={getProfileLink(post.authorId)}
+                        className="truncate text-sm font-semibold text-slate-900 hover:underline"
+                      >
+                        {(post.authorId as any)?.name || "Member"}
+                      </Link>
                       <p className="text-[11px] text-slate-400">Posted</p>
                     </div>
                     {isAdminView && (onEditPost || onDeletePost) ? (
@@ -533,26 +748,41 @@ const PostsEventsList = ({
                     ) : null}
                   </div>
 
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{post.content}</p>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+                    {post.content}
+                  </p>
 
                   {Array.isArray(post.images) && post.images.length > 0 && (
                     <div className="mt-3 w-full">
                       {post.images.length === 1 ? (
                         <div className="overflow-hidden rounded-xl border border-slate-200">
-                          <img src={post.images[0]} alt="Post attachment" className="w-full object-cover" />
+                          <img
+                            src={post.images[0]}
+                            alt="Post attachment"
+                            className="w-full object-cover"
+                          />
                         </div>
                       ) : (
                         <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-900">
-                          <img 
-                            src={post.images[imageCarouselIndex[post._id] || 0]} 
-                            alt="Post attachment" 
+                          <img
+                            src={post.images[imageCarouselIndex[post._id] || 0]}
+                            alt="Post attachment"
                             className="w-full object-cover"
                           />
                           {post.images.length > 1 && (
                             <>
                               <button
                                 type="button"
-                                onClick={() => setImageCarouselIndex((prev) => ({ ...prev, [post._id]: ((prev[post._id] || 0) - 1 + post.images!.length) % post.images!.length }))}
+                                onClick={() =>
+                                  setImageCarouselIndex((prev) => ({
+                                    ...prev,
+                                    [post._id]:
+                                      ((prev[post._id] || 0) -
+                                        1 +
+                                        post.images!.length) %
+                                      post.images!.length,
+                                  }))
+                                }
                                 className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
                                 aria-label="Previous image"
                               >
@@ -560,7 +790,14 @@ const PostsEventsList = ({
                               </button>
                               <button
                                 type="button"
-                                onClick={() => setImageCarouselIndex((prev) => ({ ...prev, [post._id]: ((prev[post._id] || 0) + 1) % post.images!.length }))}
+                                onClick={() =>
+                                  setImageCarouselIndex((prev) => ({
+                                    ...prev,
+                                    [post._id]:
+                                      ((prev[post._id] || 0) + 1) %
+                                      post.images!.length,
+                                  }))
+                                }
                                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
                                 aria-label="Next image"
                               >
@@ -571,9 +808,17 @@ const PostsEventsList = ({
                                   <button
                                     key={idx}
                                     type="button"
-                                    onClick={() => setImageCarouselIndex((prev) => ({ ...prev, [post._id]: idx }))}
+                                    onClick={() =>
+                                      setImageCarouselIndex((prev) => ({
+                                        ...prev,
+                                        [post._id]: idx,
+                                      }))
+                                    }
                                     className={`h-1.5 rounded-full transition-colors ${
-                                      idx === (imageCarouselIndex[post._id] || 0) ? "bg-white w-6" : "bg-white/50 w-1.5"
+                                      idx ===
+                                      (imageCarouselIndex[post._id] || 0)
+                                        ? "bg-white w-6"
+                                        : "bg-white/50 w-1.5"
                                     }`}
                                     aria-label={`Go to image ${idx + 1}`}
                                   />
@@ -589,7 +834,13 @@ const PostsEventsList = ({
                   {Array.isArray(post.links) && post.links.length > 0 && (
                     <div className="mt-3 flex flex-col gap-2">
                       {post.links.map((ln, idx) => (
-                        <a key={idx} href={ln} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
+                        <a
+                          key={idx}
+                          href={ln}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:underline"
+                        >
                           {ln}
                         </a>
                       ))}
@@ -597,12 +848,26 @@ const PostsEventsList = ({
                   )}
 
                   <div className="mt-3 flex items-center gap-4 border-t border-slate-100 pt-2 text-xs text-slate-500">
-                    <button type="button" onClick={() => onLikePost && onLikePost(post)} className={`inline-flex items-center gap-2 ${isLiked ? 'text-red-600' : 'hover:text-slate-700'}`}>
+                    <button
+                      type="button"
+                      onClick={() => onLikePost && onLikePost(post)}
+                      className={`inline-flex items-center gap-2 ${isLiked ? "text-red-600" : "hover:text-slate-700"}`}
+                    >
                       <FiHeart />
                       <span className="tabular-nums">{likesCount}</span>
                     </button>
 
-                    <button type="button" onClick={() => setExpandedId(expandedId === `post-${post._id}` ? null : `post-${post._id}`)} className="inline-flex items-center gap-2 hover:text-slate-700">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedId(
+                          expandedId === `post-${post._id}`
+                            ? null
+                            : `post-${post._id}`,
+                        )
+                      }
+                      className="inline-flex items-center gap-2 hover:text-slate-700"
+                    >
                       <FiMessageSquare />
                       <span className="tabular-nums">{commentsCount}</span>
                     </button>
@@ -611,7 +876,7 @@ const PostsEventsList = ({
                       type="button"
                       onClick={() => onRepost && onRepost(post)}
                       aria-pressed={isReposted}
-                      className={`inline-flex items-center gap-2 ${isReposted ? 'text-emerald-600' : 'hover:text-slate-700'}`}
+                      className={`inline-flex items-center gap-2 ${isReposted ? "text-emerald-600" : "hover:text-slate-700"}`}
                     >
                       <FiRepeat />
                       <span className="tabular-nums">{repostsCount}</span>
@@ -621,23 +886,51 @@ const PostsEventsList = ({
                   {expandedId === `post-${post._id}` && (
                     <div className="mt-4 border-t border-slate-100 pt-3 space-y-3">
                       <div className="space-y-3 max-h-64 overflow-y-auto">
-                        {Array.isArray((latest as any).comments) && (latest as any).comments.length > 0 ? (
+                        {Array.isArray((latest as any).comments) &&
+                        (latest as any).comments.length > 0 ? (
                           (latest as any).comments.map((c: any) => (
-                            <div key={c._id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                            <div
+                              key={c._id}
+                              className="rounded-lg border border-slate-100 bg-slate-50 p-3"
+                            >
                               <div className="flex items-start gap-2">
                                 <div className="h-7 w-7 flex-shrink-0">
-                                  <Avatar src={resolveAvatarSrc(c.author?.avatar)} name={c.author?.name || 'User'} size={28} />
+                                  <Avatar
+                                    src={resolveAvatarSrc(c.author?.avatar)}
+                                    name={c.author?.name || "User"}
+                                    size={28}
+                                  />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <Link to={getProfileLink(c.author)} className="text-xs font-semibold text-slate-900 hover:underline">{c.author?.name || 'User'}</Link>
-                                  <p className="mt-1 text-xs text-slate-700 whitespace-pre-wrap break-words">{c.content}</p>
+                                  <Link
+                                    to={getProfileLink(c.author)}
+                                    className="text-xs font-semibold text-slate-900 hover:underline"
+                                  >
+                                    {c.author?.name || "User"}
+                                  </Link>
+                                  <p className="mt-1 text-xs text-slate-700 whitespace-pre-wrap break-words">
+                                    {c.content}
+                                  </p>
                                   <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500">
-                                    <button type="button" className="hover:text-slate-700" onClick={() => setReplyInputs((s) => ({ ...s, [c._id]: s[c._id] || '' }))}>Reply</button>
+                                    <button
+                                      type="button"
+                                      className="hover:text-slate-700"
+                                      onClick={() =>
+                                        setReplyInputs((s) => ({
+                                          ...s,
+                                          [c._id]: s[c._id] || "",
+                                        }))
+                                      }
+                                    >
+                                      Reply
+                                    </button>
                                     {isAdminView && onDeleteComment ? (
                                       <button
                                         type="button"
                                         className="text-slate-500 hover:text-red-600"
-                                        onClick={() => onDeleteComment(post._id, c._id)}
+                                        onClick={() =>
+                                          onDeleteComment(post._id, c._id)
+                                        }
                                       >
                                         Delete
                                       </button>
@@ -645,20 +938,34 @@ const PostsEventsList = ({
                                   </div>
                                   {replyInputs[c._id] !== undefined && (
                                     <div className="mt-2 flex gap-2">
-                                      <input 
-                                        value={replyInputs[c._id]} 
-                                        onChange={(e) => setReplyInputs((s) => ({ ...s, [c._id]: e.target.value }))} 
-                                        className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-xs" 
+                                      <input
+                                        value={replyInputs[c._id]}
+                                        onChange={(e) =>
+                                          setReplyInputs((s) => ({
+                                            ...s,
+                                            [c._id]: e.target.value,
+                                          }))
+                                        }
+                                        className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-xs"
                                         placeholder="Write a reply"
                                       />
-                                      <Button 
-                                        type="button" 
-                                        size="sm" 
-                                        onClick={() => handleReplySubmit('post', post._id, post.communityId, c._id)} 
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleReplySubmit(
+                                            "post",
+                                            post._id,
+                                            post.communityId,
+                                            c._id,
+                                          )
+                                        }
                                         disabled={loadingComment === c._id}
                                         className="h-7 text-xs"
                                       >
-                                        {loadingComment === c._id ? 'Posting...' : 'Reply'}
+                                        {loadingComment === c._id
+                                          ? "Posting..."
+                                          : "Reply"}
                                       </Button>
                                     </div>
                                   )}
@@ -667,28 +974,51 @@ const PostsEventsList = ({
                             </div>
                           ))
                         ) : (
-                          <p className="text-xs text-slate-500">No comments yet</p>
+                          <p className="text-xs text-slate-500">
+                            No comments yet
+                          </p>
                         )}
                       </div>
 
                       <div className="flex gap-2 border-t border-slate-100 pt-3">
                         <div className="h-7 w-7 flex-shrink-0">
-                          <Avatar src={resolveAvatarSrc("")} name={""} size={28} />
+                          <Avatar
+                            src={resolveAvatarSrc("")}
+                            name={""}
+                            size={28}
+                          />
                         </div>
                         <div className="flex-1 flex gap-2 min-w-0">
-                          <input 
-                            value={commentInput[post._id] || ""} 
-                            onChange={(e) => setCommentInput((prev) => ({ ...prev, [post._id]: e.target.value }))} 
-                            placeholder="Write a comment..." 
+                          <input
+                            value={commentInput[post._id] || ""}
+                            onChange={(e) =>
+                              setCommentInput((prev) => ({
+                                ...prev,
+                                [post._id]: e.target.value,
+                              }))
+                            }
+                            placeholder="Write a comment..."
                             className="flex-1 rounded-full border border-slate-200 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0"
                           />
-                          <Button 
-                            type="button" 
-                            onClick={() => handleCommentSubmit(post._id, post.communityId, 'post', post._id)} 
-                            disabled={loadingComment === post._id || !commentInput[post._id]?.trim()}
+                          <Button
+                            type="button"
+                            onClick={() =>
+                              handleCommentSubmit(
+                                post._id,
+                                post.communityId,
+                                "post",
+                                post._id,
+                              )
+                            }
+                            disabled={
+                              loadingComment === post._id ||
+                              !commentInput[post._id]?.trim()
+                            }
                             className="h-8 px-3 text-xs flex-shrink-0"
                           >
-                            {loadingComment === post._id ? 'Posting...' : 'Post'}
+                            {loadingComment === post._id
+                              ? "Posting..."
+                              : "Post"}
                           </Button>
                         </div>
                       </div>
@@ -701,30 +1031,51 @@ const PostsEventsList = ({
             // Events
             if (item.type === "event") {
               const event = item.event;
-              const communityName = communityNameById?.get(item.communityId) || 'Community';
-              const attending = Array.isArray(event.attendees) && event.attendees.some((a: any) => {
-                const aid = a?._id || a?.userId || a || null;
-                return !!aid && String(aid) === String(currentUserId);
-              });
+              const communityName =
+                communityNameById?.get(item.communityId) || "Community";
+              const attending =
+                Array.isArray(event.attendees) &&
+                event.attendees.some((a: any) => {
+                  const aid = a?._id || a?.userId || a || null;
+                  return !!aid && String(aid) === String(currentUserId);
+                });
 
               return (
-                <article key={item.id} className="rounded-2xl border border-slate-200 bg-[linear-gradient(145deg,#fff7ed,#ffffff)] p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5">
+                <article
+                  key={item.id}
+                  className="rounded-2xl border border-slate-200 bg-[linear-gradient(145deg,#fff7ed,#ffffff)] p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5"
+                >
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
                     {item.communityId ? (
-                      <Link to={`/communities/${item.communityId}`} className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 font-semibold text-orange-700 hover:bg-orange-100">
+                      <Link
+                        to={`/communities/${item.communityId}`}
+                        className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 font-semibold text-orange-700 hover:bg-orange-100"
+                      >
                         {communityName}
                       </Link>
                     ) : (
-                      <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 font-semibold text-orange-700">Community event</span>
+                      <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 font-semibold text-orange-700">
+                        Community event
+                      </span>
                     )}
                     <span>•</span>
-                    <span>{formatDate ? formatDate(event.date) : event.date}</span>
+                    <span>
+                      {formatDate ? formatDate(event.date) : event.date}
+                    </span>
                   </div>
 
                   <div className="flex items-start gap-3">
                     <div className="rounded-xl border border-orange-200 bg-white px-2.5 py-2 text-center">
-                      <p className="text-[10px] uppercase tracking-wide text-slate-500">{new Date(event.date).toLocaleDateString("en-US", { month: "short" })}</p>
-                      <p className="text-sm font-semibold text-slate-900">{new Date(event.date).toLocaleDateString("en-US", { day: "numeric" })}</p>
+                      <p className="text-[10px] uppercase tracking-wide text-slate-500">
+                        {new Date(event.date).toLocaleDateString("en-US", {
+                          month: "short",
+                        })}
+                      </p>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {new Date(event.date).toLocaleDateString("en-US", {
+                          day: "numeric",
+                        })}
+                      </p>
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -754,79 +1105,178 @@ const PostsEventsList = ({
                       ) : null}
 
                       {/* Event author (if present) */}
-                      {((event as any).author || (event as any).creator || (event as any).createdBy || (event as any).authorId || (event as any).user) ? (
+                      {(event as any).author ||
+                      (event as any).creator ||
+                      (event as any).createdBy ||
+                      (event as any).authorId ||
+                      (event as any).user ? (
                         <div className="mb-2.5 flex items-center gap-2.5">
                           <div className="flex h-8 w-8 items-center justify-center">
-                            <Avatar src={resolveAvatarSrc(((event as any).author || (event as any).creator || (event as any).createdBy || (event as any).authorId || (event as any).user)?.avatar)} name={(((event as any).author || (event as any).creator || (event as any).createdBy || (event as any).authorId || (event as any).user)?.name) || 'User'} size={32} />
+                            <Avatar
+                              src={resolveAvatarSrc(
+                                (
+                                  (event as any).author ||
+                                  (event as any).creator ||
+                                  (event as any).createdBy ||
+                                  (event as any).authorId ||
+                                  (event as any).user
+                                )?.avatar,
+                              )}
+                              name={
+                                (
+                                  (event as any).author ||
+                                  (event as any).creator ||
+                                  (event as any).createdBy ||
+                                  (event as any).authorId ||
+                                  (event as any).user
+                                )?.name || "User"
+                              }
+                              size={32}
+                            />
                           </div>
                           <div className="min-w-0">
-                            <Link to={getProfileLink((event as any).author || (event as any).creator || (event as any).createdBy || (event as any).authorId || (event as any).user)} className="truncate text-sm font-semibold text-slate-900 hover:underline">{(((event as any).author || (event as any).creator || (event as any).createdBy || (event as any).authorId || (event as any).user)?.name) || 'Member'}</Link>
+                            <Link
+                              to={getProfileLink(
+                                (event as any).author ||
+                                  (event as any).creator ||
+                                  (event as any).createdBy ||
+                                  (event as any).authorId ||
+                                  (event as any).user,
+                              )}
+                              className="truncate text-sm font-semibold text-slate-900 hover:underline"
+                            >
+                              {(
+                                (event as any).author ||
+                                (event as any).creator ||
+                                (event as any).createdBy ||
+                                (event as any).authorId ||
+                                (event as any).user
+                              )?.name || "Member"}
+                            </Link>
                             <p className="text-[11px] text-slate-400">Posted</p>
                           </div>
                         </div>
                       ) : null}
 
-                      <p className="text-sm font-semibold text-slate-900">{event.title}</p>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {event.title}
+                      </p>
                       <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
-                        <span className="inline-flex items-center gap-1"><FiCalendar size={11} />{formatDate ? formatDate(event.date) : event.date}</span>
-                        {event.location ? (<span className="inline-flex items-center gap-1"><FiMapPin size={11} />{event.location}</span>) : null}
-                        {Array.isArray(event.attendees) ? (<span className="inline-flex items-center gap-1"><FiHeart size={11} />{event.attendees.length} attending</span>) : null}
+                        <span className="inline-flex items-center gap-1">
+                          <FiCalendar size={11} />
+                          {formatDate ? formatDate(event.date) : event.date}
+                        </span>
+                        {event.location ? (
+                          <span className="inline-flex items-center gap-1">
+                            <FiMapPin size={11} />
+                            {event.location}
+                          </span>
+                        ) : null}
+                        {Array.isArray(event.attendees) ? (
+                          <span className="inline-flex items-center gap-1">
+                            <FiHeart size={11} />
+                            {event.attendees.length} attending
+                          </span>
+                        ) : null}
                       </div>
-                      {event.description ? (<p className="mt-2 text-xs leading-relaxed text-slate-600">{event.description}</p>) : null}
-                      {Array.isArray(event.images) && event.images.length > 0 && (
-                        <div className="mt-3 w-full">
-                          {event.images.length === 1 ? (
-                            <div className="overflow-hidden rounded-xl border border-slate-200">
-                              <img src={event.images[0]} alt="Event attachment" className="w-full object-cover" />
-                            </div>
-                          ) : (
-                            <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-900">
-                              <img
-                                src={event.images[imageCarouselIndex[event._id] || 0]}
-                                alt="Event attachment"
-                                className="w-full object-cover"
-                              />
-                              {event.images.length > 1 && (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => setImageCarouselIndex((prev) => ({ ...prev, [event._id]: ((prev[event._id] || 0) - 1 + event.images!.length) % event.images!.length }))}
-                                    className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
-                                    aria-label="Previous image"
-                                  >
-                                    <FiChevronLeft size={18} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setImageCarouselIndex((prev) => ({ ...prev, [event._id]: ((prev[event._id] || 0) + 1) % event.images!.length }))}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
-                                    aria-label="Next image"
-                                  >
-                                    <FiChevronRight size={18} />
-                                  </button>
-                                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/60 rounded-full px-2.5 py-1">
-                                    {event.images.map((_, idx) => (
-                                      <button
-                                        key={idx}
-                                        type="button"
-                                        onClick={() => setImageCarouselIndex((prev) => ({ ...prev, [event._id]: idx }))}
-                                        className={`h-1.5 rounded-full transition-colors ${
-                                          idx === (imageCarouselIndex[event._id] || 0) ? "bg-white w-6" : "bg-white/50 w-1.5"
-                                        }`}
-                                        aria-label={`Go to image ${idx + 1}`}
-                                      />
-                                    ))}
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      {event.description ? (
+                        <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                          {event.description}
+                        </p>
+                      ) : null}
+                      {Array.isArray(event.images) &&
+                        event.images.length > 0 && (
+                          <div className="mt-3 w-full">
+                            {event.images.length === 1 ? (
+                              <div className="overflow-hidden rounded-xl border border-slate-200">
+                                <img
+                                  src={event.images[0]}
+                                  alt="Event attachment"
+                                  className="w-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-900">
+                                <img
+                                  src={
+                                    event.images[
+                                      imageCarouselIndex[event._id] || 0
+                                    ]
+                                  }
+                                  alt="Event attachment"
+                                  className="w-full object-cover"
+                                />
+                                {event.images.length > 1 && (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setImageCarouselIndex((prev) => ({
+                                          ...prev,
+                                          [event._id]:
+                                            ((prev[event._id] || 0) -
+                                              1 +
+                                              event.images!.length) %
+                                            event.images!.length,
+                                        }))
+                                      }
+                                      className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
+                                      aria-label="Previous image"
+                                    >
+                                      <FiChevronLeft size={18} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setImageCarouselIndex((prev) => ({
+                                          ...prev,
+                                          [event._id]:
+                                            ((prev[event._id] || 0) + 1) %
+                                            event.images!.length,
+                                        }))
+                                      }
+                                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
+                                      aria-label="Next image"
+                                    >
+                                      <FiChevronRight size={18} />
+                                    </button>
+                                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/60 rounded-full px-2.5 py-1">
+                                      {event.images.map((_, idx) => (
+                                        <button
+                                          key={idx}
+                                          type="button"
+                                          onClick={() =>
+                                            setImageCarouselIndex((prev) => ({
+                                              ...prev,
+                                              [event._id]: idx,
+                                            }))
+                                          }
+                                          className={`h-1.5 rounded-full transition-colors ${
+                                            idx ===
+                                            (imageCarouselIndex[event._id] || 0)
+                                              ? "bg-white w-6"
+                                              : "bg-white/50 w-1.5"
+                                          }`}
+                                          aria-label={`Go to image ${idx + 1}`}
+                                        />
+                                      ))}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       {Array.isArray(event.links) && event.links.length > 0 && (
                         <div className="mt-3 flex flex-col gap-2">
                           {event.links.map((ln: string, idx: number) => (
-                            <a key={idx} href={ln} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
+                            <a
+                              key={idx}
+                              href={ln}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:underline"
+                            >
                               {ln}
                             </a>
                           ))}
@@ -834,8 +1284,18 @@ const PostsEventsList = ({
                       )}
 
                       {onJoinEvent ? (
-                        <Button variant={attending ? undefined : "outline"} size={"sm"} disabled={togglingEvents.includes(event._id)} className={`mt-3 h-8 rounded-full px-3 text-[11px] ${attending ? 'bg-slate-900 text-white' : ''}`} onClick={() => onJoinEvent(event._id, attending)}>
-                          {togglingEvents.includes(event._id) ? 'Updating...' : (attending ? 'Leave event' : 'Join event')}
+                        <Button
+                          variant={attending ? undefined : "outline"}
+                          size={"sm"}
+                          disabled={togglingEvents.includes(event._id)}
+                          className={`mt-3 h-8 rounded-full px-3 text-[11px] ${attending ? "bg-slate-900 text-white" : ""}`}
+                          onClick={() => onJoinEvent(event._id, attending)}
+                        >
+                          {togglingEvents.includes(event._id)
+                            ? "Updating..."
+                            : attending
+                              ? "Leave event"
+                              : "Join event"}
                         </Button>
                       ) : null}
                     </div>
@@ -845,85 +1305,139 @@ const PostsEventsList = ({
             }
 
             // Jobs
-            if (item.type === 'job') {
+            if (item.type === "job") {
               const job = item.job;
               // Admin action buttons for jobs
-              const jobActions = isAdminView && (onEditJob || onDeleteJob) ? (
-                <div className="mb-2 flex justify-end gap-1">
-                  {onEditJob ? (
-                    <button
-                      type="button"
-                      onClick={() => onEditJob(job)}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                      title="Edit job"
-                    >
-                      <FiEdit2 size={12} />
-                    </button>
-                  ) : null}
-                  {onDeleteJob ? (
-                    <button
-                      type="button"
-                      onClick={() => onDeleteJob(job)}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:text-red-600"
-                      title="Delete job"
-                    >
-                      <FiTrash2 size={12} />
-                    </button>
-                  ) : null}
-                </div>
-              ) : null;
+              const jobActions =
+                isAdminView && (onEditJob || onDeleteJob) ? (
+                  <div className="mb-2 flex justify-end gap-1">
+                    {onEditJob ? (
+                      <button
+                        type="button"
+                        onClick={() => onEditJob(job)}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                        title="Edit job"
+                      >
+                        <FiEdit2 size={12} />
+                      </button>
+                    ) : null}
+                    {onDeleteJob ? (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteJob(job)}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:text-red-600"
+                        title="Delete job"
+                      >
+                        <FiTrash2 size={12} />
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null;
               return (
-                <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5">
+                <article
+                  key={item.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5"
+                >
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-                    <Link to={`/communities/${item.communityId}`} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100">
-                      {communityNameById?.get(item.communityId) || 'Community'}
+                    <Link
+                      to={`/communities/${item.communityId}`}
+                      className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100"
+                    >
+                      {communityNameById?.get(item.communityId) || "Community"}
                     </Link>
                     <span>•</span>
-                    <span>{formatDate ? formatDate(job?.createdAt || '') : (job?.createdAt || '')}</span>
+                    <span>
+                      {formatDate
+                        ? formatDate(job?.createdAt || "")
+                        : job?.createdAt || ""}
+                    </span>
                   </div>
 
                   <div className="mb-2.5 flex items-center gap-2.5">
                     <div className="flex h-9 w-9 items-center justify-center">
-                      <Avatar src={resolveAvatarSrc(getEntityAvatar(job).src)} name={getEntityAvatar(job).name} size={36} />
+                      <Avatar
+                        src={resolveAvatarSrc(getEntityAvatar(job).src)}
+                        name={getEntityAvatar(job).name}
+                        size={36}
+                      />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <Link to={getProfileLink(job)} className="truncate text-sm font-semibold text-slate-900 hover:underline">{getEntityAvatar(job).name}</Link>
+                      <Link
+                        to={getProfileLink(job)}
+                        className="truncate text-sm font-semibold text-slate-900 hover:underline"
+                      >
+                        {getEntityAvatar(job).name}
+                      </Link>
                       <p className="text-[11px] text-slate-400">Job</p>
                     </div>
                     {jobActions}
                   </div>
 
-                  <h3 className="text-sm font-semibold text-slate-900">{job?.title}</h3>
-                  <p className="mt-1 text-xs text-slate-700">{job?.location || ''} • {job?.type || ''} • {job?.salary || ''}</p>
-                  {job?.description && <p className="mt-2 text-sm text-slate-700 line-clamp-3">{job.description}</p>}
-                  {renderAttachmentGallery(item.id, job.images, 'Job attachment')}
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    {job?.title}
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-700">
+                    {job?.location || ""} • {job?.type || ""} •{" "}
+                    {job?.salary || ""}
+                  </p>
+                  {job?.description && (
+                    <p className="mt-2 text-sm text-slate-700 line-clamp-3">
+                      {job.description}
+                    </p>
+                  )}
+                  {renderAttachmentGallery(
+                    item.id,
+                    job.images,
+                    "Job attachment",
+                  )}
 
                   <div className="mt-3 flex items-center gap-4 border-t border-slate-100 pt-2 text-xs text-slate-500">
                     {(() => {
                       const eng = getEngagement(job);
                       return (
                         <>
-                          <button type="button" onClick={() => onLikeItem && onLikeItem('job', job)} className={`inline-flex items-center gap-2 ${eng.isLiked ? 'text-red-600' : 'hover:text-slate-700'}`}>
+                          <button
+                            type="button"
+                            onClick={() => onLikeItem && onLikeItem("job", job)}
+                            className={`inline-flex items-center gap-2 ${eng.isLiked ? "text-red-600" : "hover:text-slate-700"}`}
+                          >
                             <FiHeart />
-                            <span className="tabular-nums">{eng.likesCount}</span>
-                          </button>
-
-                          <button type="button" onClick={() => {
-                            setExpandedId(expandedId === `job-${job._id}` ? null : `job-${job._id}`);
-                            if (onOpenCommentsItem) onOpenCommentsItem('job', job);
-                          }} className="inline-flex items-center gap-2 hover:text-slate-700">
-                            <FiMessageSquare />
-                            <span className="tabular-nums">{eng.commentsCount}</span>
+                            <span className="tabular-nums">
+                              {eng.likesCount}
+                            </span>
                           </button>
 
                           <button
                             type="button"
-                            onClick={() => onRepostItem && onRepostItem('job', job)}
+                            onClick={() => {
+                              setExpandedId(
+                                expandedId === `job-${job._id}`
+                                  ? null
+                                  : `job-${job._id}`,
+                              );
+                              if (onOpenCommentsItem)
+                                onOpenCommentsItem("job", job);
+                            }}
+                            className="inline-flex items-center gap-2 hover:text-slate-700"
+                          >
+                            <FiMessageSquare />
+                            <span className="tabular-nums">
+                              {eng.commentsCount}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onRepostItem && onRepostItem("job", job)
+                            }
                             aria-pressed={eng.isReposted}
-                            className={`inline-flex items-center gap-2 ${eng.isReposted ? 'text-emerald-600' : 'hover:text-slate-700'}`}
+                            className={`inline-flex items-center gap-2 ${eng.isReposted ? "text-emerald-600" : "hover:text-slate-700"}`}
                           >
                             <FiRepeat />
-                            <span className="tabular-nums">{eng.repostsCount}</span>
+                            <span className="tabular-nums">
+                              {eng.repostsCount}
+                            </span>
                           </button>
                         </>
                       );
@@ -933,35 +1447,75 @@ const PostsEventsList = ({
                   {expandedId === `job-${job._id}` && (
                     <div className="mt-4 border-t border-slate-100 pt-3 space-y-3">
                       <div className="space-y-3 max-h-64 overflow-y-auto">
-                        {Array.isArray((job as any).comments) && (job as any).comments.length > 0 ? (
+                        {Array.isArray((job as any).comments) &&
+                        (job as any).comments.length > 0 ? (
                           (job as any).comments.map((c: any) => (
-                            <div key={c._id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                            <div
+                              key={c._id}
+                              className="rounded-lg border border-slate-100 bg-slate-50 p-3"
+                            >
                               <div className="flex items-start gap-2">
                                 <div className="h-7 w-7 flex-shrink-0">
-                                  <Avatar src={resolveAvatarSrc(c.author?.avatar)} name={c.author?.name || 'User'} size={28} />
+                                  <Avatar
+                                    src={resolveAvatarSrc(c.author?.avatar)}
+                                    name={c.author?.name || "User"}
+                                    size={28}
+                                  />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <Link to={getProfileLink(c.author)} className="text-xs font-semibold text-slate-900 hover:underline">{c.author?.name || 'User'}</Link>
-                                  <p className="mt-1 text-xs text-slate-700 whitespace-pre-wrap break-words">{c.content}</p>
+                                  <Link
+                                    to={getProfileLink(c.author)}
+                                    className="text-xs font-semibold text-slate-900 hover:underline"
+                                  >
+                                    {c.author?.name || "User"}
+                                  </Link>
+                                  <p className="mt-1 text-xs text-slate-700 whitespace-pre-wrap break-words">
+                                    {c.content}
+                                  </p>
                                   <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500">
-                                    <button type="button" className="hover:text-slate-700" onClick={() => setReplyInputs((s) => ({ ...s, [c._id]: s[c._id] || '' }))}>Reply</button>
+                                    <button
+                                      type="button"
+                                      className="hover:text-slate-700"
+                                      onClick={() =>
+                                        setReplyInputs((s) => ({
+                                          ...s,
+                                          [c._id]: s[c._id] || "",
+                                        }))
+                                      }
+                                    >
+                                      Reply
+                                    </button>
                                   </div>
                                   {replyInputs[c._id] !== undefined && (
                                     <div className="mt-2 flex gap-2">
-                                      <input 
-                                        value={replyInputs[c._id]} 
-                                        onChange={(e) => setReplyInputs((s) => ({ ...s, [c._id]: e.target.value }))} 
-                                        className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-xs" 
+                                      <input
+                                        value={replyInputs[c._id]}
+                                        onChange={(e) =>
+                                          setReplyInputs((s) => ({
+                                            ...s,
+                                            [c._id]: e.target.value,
+                                          }))
+                                        }
+                                        className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-xs"
                                         placeholder="Write a reply"
                                       />
-                                      <Button 
-                                        type="button" 
-                                        size="sm" 
-                                        onClick={() => handleReplySubmit('job', job._id, item.communityId, c._id)} 
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleReplySubmit(
+                                            "job",
+                                            job._id,
+                                            item.communityId,
+                                            c._id,
+                                          )
+                                        }
                                         disabled={loadingComment === c._id}
                                         className="h-7 text-xs"
                                       >
-                                        {loadingComment === c._id ? 'Posting...' : 'Reply'}
+                                        {loadingComment === c._id
+                                          ? "Posting..."
+                                          : "Reply"}
                                       </Button>
                                     </div>
                                   )}
@@ -970,28 +1524,51 @@ const PostsEventsList = ({
                             </div>
                           ))
                         ) : (
-                          <p className="text-xs text-slate-500">No comments yet</p>
+                          <p className="text-xs text-slate-500">
+                            No comments yet
+                          </p>
                         )}
                       </div>
 
                       <div className="flex gap-2 border-t border-slate-100 pt-3">
                         <div className="h-7 w-7 flex-shrink-0">
-                          <Avatar src={resolveAvatarSrc(getEntityAvatar(null).src)} name={getEntityAvatar(null).name} size={28} />
+                          <Avatar
+                            src={resolveAvatarSrc(getEntityAvatar(null).src)}
+                            name={getEntityAvatar(null).name}
+                            size={28}
+                          />
                         </div>
                         <div className="flex-1 flex gap-2 min-w-0">
-                          <input 
-                            value={commentInput[`job-${job._id}`] || ""} 
-                            onChange={(e) => setCommentInput((prev) => ({ ...prev, [`job-${job._id}`]: e.target.value }))} 
-                            placeholder="Write a comment..." 
+                          <input
+                            value={commentInput[`job-${job._id}`] || ""}
+                            onChange={(e) =>
+                              setCommentInput((prev) => ({
+                                ...prev,
+                                [`job-${job._id}`]: e.target.value,
+                              }))
+                            }
+                            placeholder="Write a comment..."
                             className="flex-1 rounded-full border border-slate-200 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0"
                           />
-                          <Button 
-                            type="button" 
-                            onClick={() => handleCommentSubmit(`job-${job._id}`, item.communityId, 'job', job._id)} 
-                            disabled={loadingComment === `job-${job._id}` || !commentInput[`job-${job._id}`]?.trim()}
+                          <Button
+                            type="button"
+                            onClick={() =>
+                              handleCommentSubmit(
+                                `job-${job._id}`,
+                                item.communityId,
+                                "job",
+                                job._id,
+                              )
+                            }
+                            disabled={
+                              loadingComment === `job-${job._id}` ||
+                              !commentInput[`job-${job._id}`]?.trim()
+                            }
                             className="h-8 px-3 text-xs flex-shrink-0"
                           >
-                            {loadingComment === `job-${job._id}` ? 'Posting...' : 'Post'}
+                            {loadingComment === `job-${job._id}`
+                              ? "Posting..."
+                              : "Post"}
                           </Button>
                         </div>
                       </div>
@@ -1002,83 +1579,150 @@ const PostsEventsList = ({
             }
 
             // Articles
-            if (item.type === 'article') {
+            if (item.type === "article") {
               const article = item.article;
-              const articleActions = isAdminView && (onEditArticle || onDeleteArticle) ? (
-                <div className="mb-2 flex justify-end gap-1">
-                  {onEditArticle ? (
-                    <button
-                      type="button"
-                      onClick={() => onEditArticle(article)}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                      title="Edit article"
-                    >
-                      <FiEdit2 size={12} />
-                    </button>
-                  ) : null}
-                  {onDeleteArticle ? (
-                    <button
-                      type="button"
-                      onClick={() => onDeleteArticle(article)}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:text-red-600"
-                      title="Delete article"
-                    >
-                      <FiTrash2 size={12} />
-                    </button>
-                  ) : null}
-                </div>
-              ) : null;
+              const articleActions =
+                isAdminView && (onEditArticle || onDeleteArticle) ? (
+                  <div className="mb-2 flex justify-end gap-1">
+                    {onEditArticle ? (
+                      <button
+                        type="button"
+                        onClick={() => onEditArticle(article)}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                        title="Edit article"
+                      >
+                        <FiEdit2 size={12} />
+                      </button>
+                    ) : null}
+                    {onDeleteArticle ? (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteArticle(article)}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:text-red-600"
+                        title="Delete article"
+                      >
+                        <FiTrash2 size={12} />
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null;
               return (
-                <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5">
+                <article
+                  key={item.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5"
+                >
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-                    <Link to={`/communities/${item.communityId}`} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100">
-                      {communityNameById?.get(item.communityId) || 'Community'}
+                    <Link
+                      to={`/communities/${item.communityId}`}
+                      className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100"
+                    >
+                      {communityNameById?.get(item.communityId) || "Community"}
                     </Link>
                     <span>•</span>
-                    <span>{formatDate ? formatDate(article?.createdAt || '') : (article?.createdAt || '')}</span>
+                    <span>
+                      {formatDate
+                        ? formatDate(article?.createdAt || "")
+                        : article?.createdAt || ""}
+                    </span>
                   </div>
 
                   <div className="mb-2.5 flex items-center gap-2.5">
                     <div className="flex h-9 w-9 items-center justify-center">
-                      <Avatar src={resolveAvatarSrc(getEntityAvatar(article).src)} name={getEntityAvatar(article).name} size={36} />
+                      <Avatar
+                        src={resolveAvatarSrc(getEntityAvatar(article).src)}
+                        name={getEntityAvatar(article).name}
+                        size={36}
+                      />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <Link to={getProfileLink(article)} className="truncate text-sm font-semibold text-slate-900 hover:underline">{getEntityAvatar(article).name}</Link>
+                      <Link
+                        to={getProfileLink(article)}
+                        className="truncate text-sm font-semibold text-slate-900 hover:underline"
+                      >
+                        {getEntityAvatar(article).name}
+                      </Link>
                       <p className="text-[11px] text-slate-400">Article</p>
                     </div>
                     {articleActions}
                   </div>
 
-                  <h3 className="text-sm font-semibold text-slate-900">{article?.title}</h3>
-                  {article?.content && <p className="mt-2 text-sm text-slate-700 line-clamp-4">{article.content}</p>}
-                  {renderAttachmentGallery(item.id, article.images, 'Article attachment')}
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    {article?.title}
+                  </h3>
+                  {article?.content && (
+                    <div
+                      className="mt-2 text-sm text-slate-700 prose prose-sm max-w-none
+                        [&_h1]:text-lg [&_h1]:font-bold [&_h1]:text-slate-900 [&_h1]:mt-2 [&_h1]:mb-1
+                        [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-slate-900 [&_h2]:mt-2 [&_h2]:mb-1
+                        [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-slate-800 [&_h3]:mt-2 [&_h3]:mb-1
+                        [&_p]:m-0 [&_p]:text-sm
+                        [&_ul]:list-disc [&_ul]:pl-4 [&_ul]:my-1 [&_ul_li]:text-sm [&_ul_li]:mb-0.5
+                        [&_ol]:list-decimal [&_ol]:pl-4 [&_ol]:my-1 [&_ol_li]:text-sm [&_ol_li]:mb-0.5
+                        [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-slate-600 [&_blockquote]:my-1
+                        [&_code]:bg-slate-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono
+                        [&_pre]:bg-slate-900 [&_pre]:text-emerald-400 [&_pre]:rounded [&_pre]:p-2 [&_pre]:my-1 [&_pre]:text-xs [&_pre]:overflow-auto
+                        [&_strong]:font-semibold
+                        [&_em]:italic
+                        [&_hr]:border-slate-200 [&_hr]:my-2
+                      "
+                      dangerouslySetInnerHTML={{ __html: article.content }}
+                    />
+                  )}
+                  {renderAttachmentGallery(
+                    item.id,
+                    article.images,
+                    "Article attachment",
+                  )}
 
                   <div className="mt-3 flex items-center gap-4 border-t border-slate-100 pt-2 text-xs text-slate-500">
                     {(() => {
                       const eng = getEngagement(article);
                       return (
                         <>
-                          <button type="button" onClick={() => onLikeItem && onLikeItem('article', article)} className={`inline-flex items-center gap-2 ${eng.isLiked ? 'text-red-600' : 'hover:text-slate-700'}`}>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onLikeItem && onLikeItem("article", article)
+                            }
+                            className={`inline-flex items-center gap-2 ${eng.isLiked ? "text-red-600" : "hover:text-slate-700"}`}
+                          >
                             <FiHeart />
-                            <span className="tabular-nums">{eng.likesCount}</span>
-                          </button>
-
-                          <button type="button" onClick={() => {
-                            setExpandedId(expandedId === `article-${article._id}` ? null : `article-${article._id}`);
-                            if (onOpenCommentsItem) onOpenCommentsItem('article', article);
-                          }} className="inline-flex items-center gap-2 hover:text-slate-700">
-                            <FiMessageSquare />
-                            <span className="tabular-nums">{eng.commentsCount}</span>
+                            <span className="tabular-nums">
+                              {eng.likesCount}
+                            </span>
                           </button>
 
                           <button
                             type="button"
-                            onClick={() => onRepostItem && onRepostItem('article', article)}
+                            onClick={() => {
+                              setExpandedId(
+                                expandedId === `article-${article._id}`
+                                  ? null
+                                  : `article-${article._id}`,
+                              );
+                              if (onOpenCommentsItem)
+                                onOpenCommentsItem("article", article);
+                            }}
+                            className="inline-flex items-center gap-2 hover:text-slate-700"
+                          >
+                            <FiMessageSquare />
+                            <span className="tabular-nums">
+                              {eng.commentsCount}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onRepostItem && onRepostItem("article", article)
+                            }
                             aria-pressed={eng.isReposted}
-                            className={`inline-flex items-center gap-2 ${eng.isReposted ? 'text-emerald-600' : 'hover:text-slate-700'}`}
+                            className={`inline-flex items-center gap-2 ${eng.isReposted ? "text-emerald-600" : "hover:text-slate-700"}`}
                           >
                             <FiRepeat />
-                            <span className="tabular-nums">{eng.repostsCount}</span>
+                            <span className="tabular-nums">
+                              {eng.repostsCount}
+                            </span>
                           </button>
                         </>
                       );
@@ -1087,36 +1731,95 @@ const PostsEventsList = ({
 
                   {expandedId === `article-${article._id}` && (
                     <div className="mt-4 border-t border-slate-100 pt-3 space-y-3">
-                      <div className="space-y-3 max-h-64 overflow-y-auto">
-                        {Array.isArray((article as any).comments) && (article as any).comments.length > 0 ? (
+                      {article?.content && (
+                        <div
+                          className="mb-4 prose prose-sm max-w-none text-slate-700
+                            [&_h1]:text-lg [&_h1]:font-bold [&_h1]:text-slate-900 [&_h1]:mt-3 [&_h1]:mb-2
+                            [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-slate-900 [&_h2]:mt-3 [&_h2]:mb-2
+                            [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-slate-800 [&_h3]:mt-2 [&_h3]:mb-1
+                            [&_p]:mb-2 [&_p]:text-sm
+                            [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ul_li]:text-sm [&_ul_li]:mb-1
+                            [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_ol_li]:text-sm [&_ol_li]:mb-1
+                            [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-slate-600 [&_blockquote]:my-3
+                            [&_code]:bg-slate-100 [&_code]:px-2 [&_code]:py-1 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono
+                            [&_pre]:bg-slate-900 [&_pre]:text-emerald-400 [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:my-3 [&_pre]:text-xs [&_pre]:overflow-auto
+                            [&_strong]:font-semibold
+                            [&_em]:italic
+                            [&_hr]:border-slate-200 [&_hr]:my-3
+                          "
+                          dangerouslySetInnerHTML={{ __html: article.content }}
+                        />
+                      )}
+                      <div className="space-y-3 max-h-64 overflow-y-auto border-t border-slate-100 pt-3">
+                        {Array.isArray((article as any).comments) &&
+                        (article as any).comments.length > 0 ? (
                           (article as any).comments.map((c: any) => (
-                            <div key={c._id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                            <div
+                              key={c._id}
+                              className="rounded-lg border border-slate-100 bg-slate-50 p-3"
+                            >
                               <div className="flex items-start gap-2">
                                 <div className="h-7 w-7 flex-shrink-0">
-                                  <Avatar src={resolveAvatarSrc(c.author?.avatar)} name={c.author?.name || 'User'} size={28} />
+                                  <Avatar
+                                    src={resolveAvatarSrc(c.author?.avatar)}
+                                    name={c.author?.name || "User"}
+                                    size={28}
+                                  />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <Link to={getProfileLink(c.author)} className="text-xs font-semibold text-slate-900 hover:underline">{c.author?.name || 'User'}</Link>
-                                  <p className="mt-1 text-xs text-slate-700 whitespace-pre-wrap break-words">{c.content}</p>
+                                  <Link
+                                    to={getProfileLink(c.author)}
+                                    className="text-xs font-semibold text-slate-900 hover:underline"
+                                  >
+                                    {c.author?.name || "User"}
+                                  </Link>
+                                  <p className="mt-1 text-xs text-slate-700 whitespace-pre-wrap break-words">
+                                    {c.content}
+                                  </p>
                                   <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500">
-                                    <button type="button" className="hover:text-slate-700" onClick={() => setReplyInputs((s) => ({ ...s, [c._id]: s[c._id] || '' }))}>Reply</button>
+                                    <button
+                                      type="button"
+                                      className="hover:text-slate-700"
+                                      onClick={() =>
+                                        setReplyInputs((s) => ({
+                                          ...s,
+                                          [c._id]: s[c._id] || "",
+                                        }))
+                                      }
+                                    >
+                                      Reply
+                                    </button>
                                   </div>
                                   {replyInputs[c._id] !== undefined && (
                                     <div className="mt-2 flex gap-2">
-                                      <input 
-                                        value={replyInputs[c._id]} 
-                                        onChange={(e) => setReplyInputs((s) => ({ ...s, [c._id]: e.target.value }))} 
-                                        className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-xs" 
+                                      <input
+                                        value={replyInputs[c._id]}
+                                        onChange={(e) =>
+                                          setReplyInputs((s) => ({
+                                            ...s,
+                                            [c._id]: e.target.value,
+                                          }))
+                                        }
+                                        className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-xs"
                                         placeholder="Write a reply"
                                       />
-                                      <Button 
-                                        type="button" 
-                                        size="sm" 
-                                        onClick={() => handleReplySubmit('article', article._id, item.communityId, c._id)} 
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleReplySubmit(
+                                            "article",
+                                            article._id,
+                                            item.communityId,
+                                            c._id,
+                                          )
+                                        }
                                         disabled={loadingComment === c._id}
                                         className="h-7 text-xs"
                                       >
-                                        {loadingComment === c._id ? 'Posting...' : 'Reply'}
+                                        {loadingComment === c._id
+                                          ? "Posting..."
+                                          : "Reply"}
                                       </Button>
                                     </div>
                                   )}
@@ -1125,28 +1828,51 @@ const PostsEventsList = ({
                             </div>
                           ))
                         ) : (
-                          <p className="text-xs text-slate-500">No comments yet</p>
+                          <p className="text-xs text-slate-500">
+                            No comments yet
+                          </p>
                         )}
                       </div>
 
                       <div className="flex gap-2 border-t border-slate-100 pt-3">
                         <div className="h-7 w-7 flex-shrink-0">
-                          <Avatar src={resolveAvatarSrc(getEntityAvatar(null).src)} name={getEntityAvatar(null).name} size={28} />
+                          <Avatar
+                            src={resolveAvatarSrc(getEntityAvatar(null).src)}
+                            name={getEntityAvatar(null).name}
+                            size={28}
+                          />
                         </div>
                         <div className="flex-1 flex gap-2 min-w-0">
-                          <input 
-                            value={commentInput[`article-${article._id}`] || ""} 
-                            onChange={(e) => setCommentInput((prev) => ({ ...prev, [`article-${article._id}`]: e.target.value }))} 
-                            placeholder="Write a comment..." 
+                          <input
+                            value={commentInput[`article-${article._id}`] || ""}
+                            onChange={(e) =>
+                              setCommentInput((prev) => ({
+                                ...prev,
+                                [`article-${article._id}`]: e.target.value,
+                              }))
+                            }
+                            placeholder="Write a comment..."
                             className="flex-1 rounded-full border border-slate-200 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0"
                           />
-                          <Button 
-                            type="button" 
-                            onClick={() => handleCommentSubmit(`article-${article._id}`, item.communityId, 'article', article._id)} 
-                            disabled={loadingComment === `article-${article._id}` || !commentInput[`article-${article._id}`]?.trim()}
+                          <Button
+                            type="button"
+                            onClick={() =>
+                              handleCommentSubmit(
+                                `article-${article._id}`,
+                                item.communityId,
+                                "article",
+                                article._id,
+                              )
+                            }
+                            disabled={
+                              loadingComment === `article-${article._id}` ||
+                              !commentInput[`article-${article._id}`]?.trim()
+                            }
                             className="h-8 px-3 text-xs flex-shrink-0"
                           >
-                            {loadingComment === `article-${article._id}` ? 'Posting...' : 'Post'}
+                            {loadingComment === `article-${article._id}`
+                              ? "Posting..."
+                              : "Post"}
                           </Button>
                         </div>
                       </div>
@@ -1157,84 +1883,139 @@ const PostsEventsList = ({
             }
 
             // Products
-            if (item.type === 'product') {
+            if (item.type === "product") {
               const product = item.product;
-              const productActions = isAdminView && (onEditProduct || onDeleteProduct) ? (
-                <div className="mb-2 flex justify-end gap-1">
-                  {onEditProduct ? (
-                    <button
-                      type="button"
-                      onClick={() => onEditProduct(product)}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                      title="Edit product"
-                    >
-                      <FiEdit2 size={12} />
-                    </button>
-                  ) : null}
-                  {onDeleteProduct ? (
-                    <button
-                      type="button"
-                      onClick={() => onDeleteProduct(product)}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:text-red-600"
-                      title="Delete product"
-                    >
-                      <FiTrash2 size={12} />
-                    </button>
-                  ) : null}
-                </div>
-              ) : null;
+              const productActions =
+                isAdminView && (onEditProduct || onDeleteProduct) ? (
+                  <div className="mb-2 flex justify-end gap-1">
+                    {onEditProduct ? (
+                      <button
+                        type="button"
+                        onClick={() => onEditProduct(product)}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                        title="Edit product"
+                      >
+                        <FiEdit2 size={12} />
+                      </button>
+                    ) : null}
+                    {onDeleteProduct ? (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteProduct(product)}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:text-red-600"
+                        title="Delete product"
+                      >
+                        <FiTrash2 size={12} />
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null;
               return (
-                <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5">
+                <article
+                  key={item.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5"
+                >
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-                    <Link to={`/communities/${item.communityId}`} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100">
-                      {communityNameById?.get(item.communityId) || 'Community'}
+                    <Link
+                      to={`/communities/${item.communityId}`}
+                      className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100"
+                    >
+                      {communityNameById?.get(item.communityId) || "Community"}
                     </Link>
                     <span>•</span>
-                    <span>{formatDate ? formatDate(product?.createdAt || '') : (product?.createdAt || '')}</span>
+                    <span>
+                      {formatDate
+                        ? formatDate(product?.createdAt || "")
+                        : product?.createdAt || ""}
+                    </span>
                   </div>
 
                   <div className="mb-2.5 flex items-center gap-2.5">
                     <div className="flex h-9 w-9 items-center justify-center">
-                      <Avatar src={resolveAvatarSrc(getEntityAvatar(product).src)} name={getEntityAvatar(product).name} size={36} />
+                      <Avatar
+                        src={resolveAvatarSrc(getEntityAvatar(product).src)}
+                        name={getEntityAvatar(product).name}
+                        size={36}
+                      />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <Link to={getProfileLink(product)} className="truncate text-sm font-semibold text-slate-900 hover:underline">{getEntityAvatar(product).name}</Link>
+                      <Link
+                        to={getProfileLink(product)}
+                        className="truncate text-sm font-semibold text-slate-900 hover:underline"
+                      >
+                        {getEntityAvatar(product).name}
+                      </Link>
                       <p className="text-[11px] text-slate-400">Product</p>
                     </div>
                     {productActions}
                   </div>
 
-                  <h3 className="text-sm font-semibold text-slate-900">{product?.title}</h3>
-                  <p className="mt-1 text-xs text-slate-700">{product?.price ? `$${product.price}` : ''}</p>
-                  {product?.description && <p className="mt-2 text-sm text-slate-700 line-clamp-3">{product.description}</p>}
-                  {renderAttachmentGallery(item.id, product.images, 'Product attachment')}
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    {product?.title}
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-700">
+                    {product?.price ? `$${product.price}` : ""}
+                  </p>
+                  {product?.description && (
+                    <p className="mt-2 text-sm text-slate-700 line-clamp-3">
+                      {product.description}
+                    </p>
+                  )}
+                  {renderAttachmentGallery(
+                    item.id,
+                    product.images,
+                    "Product attachment",
+                  )}
 
                   <div className="mt-3 flex items-center gap-4 border-t border-slate-100 pt-2 text-xs text-slate-500">
                     {(() => {
                       const eng = getEngagement(product);
                       return (
                         <>
-                          <button type="button" onClick={() => onLikeItem && onLikeItem('product', product)} className={`inline-flex items-center gap-2 ${eng.isLiked ? 'text-red-600' : 'hover:text-slate-700'}`}>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onLikeItem && onLikeItem("product", product)
+                            }
+                            className={`inline-flex items-center gap-2 ${eng.isLiked ? "text-red-600" : "hover:text-slate-700"}`}
+                          >
                             <FiHeart />
-                            <span className="tabular-nums">{eng.likesCount}</span>
-                          </button>
-
-                          <button type="button" onClick={() => {
-                            setExpandedId(expandedId === `product-${product._id}` ? null : `product-${product._id}`);
-                            if (onOpenCommentsItem) onOpenCommentsItem('product', product);
-                          }} className="inline-flex items-center gap-2 hover:text-slate-700">
-                            <FiMessageSquare />
-                            <span className="tabular-nums">{eng.commentsCount}</span>
+                            <span className="tabular-nums">
+                              {eng.likesCount}
+                            </span>
                           </button>
 
                           <button
                             type="button"
-                            onClick={() => onRepostItem && onRepostItem('product', product)}
+                            onClick={() => {
+                              setExpandedId(
+                                expandedId === `product-${product._id}`
+                                  ? null
+                                  : `product-${product._id}`,
+                              );
+                              if (onOpenCommentsItem)
+                                onOpenCommentsItem("product", product);
+                            }}
+                            className="inline-flex items-center gap-2 hover:text-slate-700"
+                          >
+                            <FiMessageSquare />
+                            <span className="tabular-nums">
+                              {eng.commentsCount}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onRepostItem && onRepostItem("product", product)
+                            }
                             aria-pressed={eng.isReposted}
-                            className={`inline-flex items-center gap-2 ${eng.isReposted ? 'text-emerald-600' : 'hover:text-slate-700'}`}
+                            className={`inline-flex items-center gap-2 ${eng.isReposted ? "text-emerald-600" : "hover:text-slate-700"}`}
                           >
                             <FiRepeat />
-                            <span className="tabular-nums">{eng.repostsCount}</span>
+                            <span className="tabular-nums">
+                              {eng.repostsCount}
+                            </span>
                           </button>
                         </>
                       );
@@ -1244,35 +2025,75 @@ const PostsEventsList = ({
                   {expandedId === `product-${product._id}` && (
                     <div className="mt-4 border-t border-slate-100 pt-3 space-y-3">
                       <div className="space-y-3 max-h-64 overflow-y-auto">
-                        {Array.isArray((product as any).comments) && (product as any).comments.length > 0 ? (
+                        {Array.isArray((product as any).comments) &&
+                        (product as any).comments.length > 0 ? (
                           (product as any).comments.map((c: any) => (
-                            <div key={c._id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                            <div
+                              key={c._id}
+                              className="rounded-lg border border-slate-100 bg-slate-50 p-3"
+                            >
                               <div className="flex items-start gap-2">
                                 <div className="h-7 w-7 flex-shrink-0">
-                                  <Avatar src={resolveAvatarSrc(c.author?.avatar)} name={c.author?.name || 'User'} size={28} />
+                                  <Avatar
+                                    src={resolveAvatarSrc(c.author?.avatar)}
+                                    name={c.author?.name || "User"}
+                                    size={28}
+                                  />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <Link to={getProfileLink(c.author)} className="text-xs font-semibold text-slate-900 hover:underline">{c.author?.name || 'User'}</Link>
-                                  <p className="mt-1 text-xs text-slate-700 whitespace-pre-wrap break-words">{c.content}</p>
+                                  <Link
+                                    to={getProfileLink(c.author)}
+                                    className="text-xs font-semibold text-slate-900 hover:underline"
+                                  >
+                                    {c.author?.name || "User"}
+                                  </Link>
+                                  <p className="mt-1 text-xs text-slate-700 whitespace-pre-wrap break-words">
+                                    {c.content}
+                                  </p>
                                   <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500">
-                                    <button type="button" className="hover:text-slate-700" onClick={() => setReplyInputs((s) => ({ ...s, [c._id]: s[c._id] || '' }))}>Reply</button>
+                                    <button
+                                      type="button"
+                                      className="hover:text-slate-700"
+                                      onClick={() =>
+                                        setReplyInputs((s) => ({
+                                          ...s,
+                                          [c._id]: s[c._id] || "",
+                                        }))
+                                      }
+                                    >
+                                      Reply
+                                    </button>
                                   </div>
                                   {replyInputs[c._id] !== undefined && (
                                     <div className="mt-2 flex gap-2">
-                                      <input 
-                                        value={replyInputs[c._id]} 
-                                        onChange={(e) => setReplyInputs((s) => ({ ...s, [c._id]: e.target.value }))} 
-                                        className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-xs" 
+                                      <input
+                                        value={replyInputs[c._id]}
+                                        onChange={(e) =>
+                                          setReplyInputs((s) => ({
+                                            ...s,
+                                            [c._id]: e.target.value,
+                                          }))
+                                        }
+                                        className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-xs"
                                         placeholder="Write a reply"
                                       />
-                                      <Button 
-                                        type="button" 
-                                        size="sm" 
-                                        onClick={() => handleReplySubmit('product', product._id, item.communityId, c._id)} 
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleReplySubmit(
+                                            "product",
+                                            product._id,
+                                            item.communityId,
+                                            c._id,
+                                          )
+                                        }
                                         disabled={loadingComment === c._id}
                                         className="h-7 text-xs"
                                       >
-                                        {loadingComment === c._id ? 'Posting...' : 'Reply'}
+                                        {loadingComment === c._id
+                                          ? "Posting..."
+                                          : "Reply"}
                                       </Button>
                                     </div>
                                   )}
@@ -1281,28 +2102,51 @@ const PostsEventsList = ({
                             </div>
                           ))
                         ) : (
-                          <p className="text-xs text-slate-500">No comments yet</p>
+                          <p className="text-xs text-slate-500">
+                            No comments yet
+                          </p>
                         )}
                       </div>
 
                       <div className="flex gap-2 border-t border-slate-100 pt-3">
                         <div className="h-7 w-7 flex-shrink-0">
-                          <Avatar src={resolveAvatarSrc(getEntityAvatar(null).src)} name={getEntityAvatar(null).name} size={28} />
+                          <Avatar
+                            src={resolveAvatarSrc(getEntityAvatar(null).src)}
+                            name={getEntityAvatar(null).name}
+                            size={28}
+                          />
                         </div>
                         <div className="flex-1 flex gap-2 min-w-0">
-                          <input 
-                            value={commentInput[`product-${product._id}`] || ""} 
-                            onChange={(e) => setCommentInput((prev) => ({ ...prev, [`product-${product._id}`]: e.target.value }))} 
-                            placeholder="Write a comment..." 
+                          <input
+                            value={commentInput[`product-${product._id}`] || ""}
+                            onChange={(e) =>
+                              setCommentInput((prev) => ({
+                                ...prev,
+                                [`product-${product._id}`]: e.target.value,
+                              }))
+                            }
+                            placeholder="Write a comment..."
                             className="flex-1 rounded-full border border-slate-200 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0"
                           />
-                          <Button 
-                            type="button" 
-                            onClick={() => handleCommentSubmit(`product-${product._id}`, item.communityId, 'product', product._id)} 
-                            disabled={loadingComment === `product-${product._id}` || !commentInput[`product-${product._id}`]?.trim()}
+                          <Button
+                            type="button"
+                            onClick={() =>
+                              handleCommentSubmit(
+                                `product-${product._id}`,
+                                item.communityId,
+                                "product",
+                                product._id,
+                              )
+                            }
+                            disabled={
+                              loadingComment === `product-${product._id}` ||
+                              !commentInput[`product-${product._id}`]?.trim()
+                            }
                             className="h-8 px-3 text-xs flex-shrink-0"
                           >
-                            {loadingComment === `product-${product._id}` ? 'Posting...' : 'Post'}
+                            {loadingComment === `product-${product._id}`
+                              ? "Posting..."
+                              : "Post"}
                           </Button>
                         </div>
                       </div>
