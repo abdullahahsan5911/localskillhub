@@ -47,11 +47,30 @@ export default function JobEditor() {
   }, [communityId, navigate]);
 
   useEffect(() => {
-    if (jobId) {
+    if (jobId && communityId) {
       const loadJob = async () => {
         try {
-          const res = await api.getCommunityJobs({ includeImages: true, includeLinks: true });
-          const jobs = Array.isArray(res.data) ? res.data : [];
+          // Fetch jobs for the specific community
+          const res = await api.getCommunityJobs({ 
+            communityId, 
+            includeImages: true, 
+            includeLinks: true 
+          });
+          
+          // Handle different possible response structures
+          let jobs = [];
+          if (Array.isArray(res.data)) {
+            jobs = res.data;
+          } else if (res.data && Array.isArray(res.data.jobs)) {
+            jobs = res.data.jobs;
+          } else if (res.data && res.data.data && Array.isArray(res.data.data)) {
+            jobs = res.data.data;
+          } else if (Array.isArray(res)) {
+            jobs = res;
+          }
+          
+          console.log('Loaded jobs:', jobs, 'Looking for jobId:', jobId);
+          
           const job = jobs.find((j: any) => j._id === jobId);
           if (job) {
             let parsedLocation: DetailedLocation = { country: "", city: "", street: "" };
@@ -73,14 +92,24 @@ export default function JobEditor() {
             });
             setJobImages(job.images || []);
             setJobLinks(job.links || []);
+          } else {
+            console.warn('Job not found in response. Available jobs:', jobs.map((j: any) => ({ id: j._id, title: j.title })));
+            toast({ 
+              title: "Job not found", 
+              description: "The job you're trying to edit could not be found.",
+              variant: "destructive" 
+            });
+            navigate(`/communities/${communityId}`);
           }
         } catch (error) {
+          console.error("Failed to load job:", error);
           toast({ title: "Failed to load job", variant: "destructive" });
+          navigate(`/communities/${communityId}`);
         }
       };
       loadJob();
     }
-  }, [jobId]);
+  }, [jobId, communityId, navigate]);
 
   const uploadAttachmentImage = async (files: File[]) => {
     if (!files.length) return;

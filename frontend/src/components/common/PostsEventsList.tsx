@@ -81,40 +81,40 @@ interface ProductItem {
 
 type FeedItem =
   | {
-    type: "post";
-    id: string;
-    timestamp: string;
-    communityId: string;
-    post: CommunityPostItem;
-  }
+      type: "post";
+      id: string;
+      timestamp: string;
+      communityId: string;
+      post: CommunityPostItem;
+    }
   | {
-    type: "event";
-    id: string;
-    timestamp: string;
-    communityId: string;
-    event: EventItem;
-  }
+      type: "event";
+      id: string;
+      timestamp: string;
+      communityId: string;
+      event: EventItem;
+    }
   | {
-    type: "job";
-    id: string;
-    timestamp: string;
-    communityId: string;
-    job: JobItem;
-  }
+      type: "job";
+      id: string;
+      timestamp: string;
+      communityId: string;
+      job: JobItem;
+    }
   | {
-    type: "article";
-    id: string;
-    timestamp: string;
-    communityId: string;
-    article: ArticleItem;
-  }
+      type: "article";
+      id: string;
+      timestamp: string;
+      communityId: string;
+      article: ArticleItem;
+    }
   | {
-    type: "product";
-    id: string;
-    timestamp: string;
-    communityId: string;
-    product: ProductItem;
-  };
+      type: "product";
+      id: string;
+      timestamp: string;
+      communityId: string;
+      product: ProductItem;
+    };
 
 interface Props {
   feed?: FeedItem[];
@@ -230,7 +230,10 @@ const PostsEventsList = ({
   const [fallbackFeed, setFallbackFeed] = useState<FeedItem[]>([]);
   const [loadingFallbackFeed, setLoadingFallbackFeed] = useState(false);
 
-  const shouldLoadFallbackFeed = !feed || feed.length === 0;
+  const shouldLoadFallbackFeed = useMemo(
+    () => !feed || feed.length === 0,
+    [feed],
+  );
 
   useEffect(() => {
     if (!shouldLoadFallbackFeed) {
@@ -402,7 +405,7 @@ const PostsEventsList = ({
     return () => {
       cancelled = true;
     };
-  }, [posts, shouldLoadFallbackFeed]);
+  }, [shouldLoadFallbackFeed, posts]);
 
   const derivedFeed = useMemo<FeedItem[]>(() => {
     if (feed && feed.length > 0) return feed;
@@ -546,7 +549,7 @@ const PostsEventsList = ({
 
     if (images.length === 1) {
       return (
-        <div className="mt-3 overflow-hidden rounded-xl border border-slate-200">
+        <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 sm:rounded-xl">
           <img
             src={images[0]}
             alt={`${altPrefix}`}
@@ -557,7 +560,7 @@ const PostsEventsList = ({
     }
 
     return (
-      <div className="mt-3 relative overflow-hidden rounded-xl border border-slate-200 bg-slate-900">
+      <div className="mt-3 relative overflow-hidden rounded-lg border border-slate-200 bg-slate-900 sm:rounded-xl">
         <img
           src={images[index]}
           alt={`${altPrefix}`}
@@ -572,10 +575,11 @@ const PostsEventsList = ({
                 ((prev[itemId] || 0) - 1 + images.length) % images.length,
             }))
           }
-          className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
+          className="absolute left-1 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80 transition-colors sm:left-2 sm:p-1.5"
           aria-label="Previous image"
         >
-          <FiChevronLeft size={18} />
+          <FiChevronLeft size={16} className="sm:hidden" />
+          <FiChevronLeft size={18} className="hidden sm:block" />
         </button>
         <button
           type="button"
@@ -585,12 +589,13 @@ const PostsEventsList = ({
               [itemId]: ((prev[itemId] || 0) + 1) % images.length,
             }))
           }
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
+          className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80 transition-colors sm:right-2 sm:p-1.5"
           aria-label="Next image"
         >
-          <FiChevronRight size={18} />
+          <FiChevronRight size={16} className="sm:hidden" />
+          <FiChevronRight size={18} className="hidden sm:block" />
         </button>
-        <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-black/60 px-2.5 py-1">
+        <div className="absolute bottom-1.5 left-1/2 flex -translate-x-1/2 gap-1 rounded-full bg-black/60 px-2 py-1 sm:bottom-2 sm:gap-1.5 sm:px-2.5">
           {images.map((_, idx) => (
             <button
               key={idx}
@@ -598,7 +603,11 @@ const PostsEventsList = ({
               onClick={() =>
                 setImageCarouselIndex((prev) => ({ ...prev, [itemId]: idx }))
               }
-              className={`h-1.5 rounded-full transition-colors ${idx === index ? "bg-white w-6" : "bg-white/50 w-1.5"}`}
+              className={`h-1 rounded-full transition-colors sm:h-1.5 ${
+                idx === index
+                  ? "bg-white w-4 sm:w-6"
+                  : "bg-white/50 w-1 sm:w-1.5"
+              }`}
               aria-label={`Go to image ${idx + 1}`}
             />
           ))}
@@ -609,40 +618,65 @@ const PostsEventsList = ({
 
   return (
     <div className="space-y-3">
+      {/* Mobile-responsive filter buttons */}
       <div className="mb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs text-slate-600">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-1 text-xs text-slate-600 sm:gap-2">
           <button
-            className={`rounded-full px-2 py-1 ${activeFilter === "all" ? "bg-slate-900 text-white" : "bg-white border"}`}
+            className={`flex-shrink-0 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:py-2 ${
+              activeFilter === "all"
+                ? "bg-slate-900 text-white"
+                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}
             onClick={() => setActiveFilter("all")}
           >
             All
           </button>
           <button
-            className={`rounded-full px-2 py-1 ${activeFilter === "posts" ? "bg-slate-900 text-white" : "bg-white border"}`}
+            className={`flex-shrink-0 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:py-2 ${
+              activeFilter === "posts"
+                ? "bg-slate-900 text-white"
+                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}
             onClick={() => setActiveFilter("posts")}
           >
             Posts
           </button>
           <button
-            className={`rounded-full px-2 py-1 ${activeFilter === "events" ? "bg-slate-900 text-white" : "bg-white border"}`}
+            className={`flex-shrink-0 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:py-2 ${
+              activeFilter === "events"
+                ? "bg-slate-900 text-white"
+                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}
             onClick={() => setActiveFilter("events")}
           >
             Events
           </button>
           <button
-            className={`rounded-full px-2 py-1 ${activeFilter === "jobs" ? "bg-slate-900 text-white" : "bg-white border"}`}
+            className={`flex-shrink-0 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:py-2 ${
+              activeFilter === "jobs"
+                ? "bg-slate-900 text-white"
+                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}
             onClick={() => setActiveFilter("jobs")}
           >
             Jobs
           </button>
           <button
-            className={`rounded-full px-2 py-1 ${activeFilter === "articles" ? "bg-slate-900 text-white" : "bg-white border"}`}
+            className={`flex-shrink-0 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:py-2 ${
+              activeFilter === "articles"
+                ? "bg-slate-900 text-white"
+                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}
             onClick={() => setActiveFilter("articles")}
           >
             Articles
           </button>
           <button
-            className={`rounded-full px-2 py-1 ${activeFilter === "products" ? "bg-slate-900 text-white" : "bg-white border"}`}
+            className={`flex-shrink-0 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:py-2 ${
+              activeFilter === "products"
+                ? "bg-slate-900 text-white"
+                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}
             onClick={() => setActiveFilter("products")}
           >
             Products
@@ -651,12 +685,20 @@ const PostsEventsList = ({
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-8 text-slate-400">
-          Loading...
+        <div className="flex items-center justify-center py-6 text-slate-400 sm:py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-slate-400 mx-auto mb-2 sm:h-8 sm:w-8"></div>
+            <p className="text-xs sm:text-sm">Loading...</p>
+          </div>
         </div>
       ) : visible.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
-          <p className="text-sm font-medium text-slate-500">No items</p>
+        <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center sm:rounded-xl sm:px-4 sm:py-8">
+          <p className="text-xs font-medium text-slate-500 sm:text-sm">
+            No items
+          </p>
+          <p className="text-xs text-slate-400 mt-1 sm:text-sm">
+            Check back later for new content
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -692,39 +734,43 @@ const PostsEventsList = ({
               return (
                 <article
                   key={item.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5"
+                  className="rounded-xl border border-slate-200 bg-white p-3 transition-all hover:border-slate-300 hover:shadow-sm sm:rounded-2xl sm:p-5"
                 >
-                  <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                  {/* Community and timestamp info */}
+                  <div className="mb-2 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 sm:gap-2 sm:text-[11px]">
                     <Link
                       to={`/communities/${item.communityId}`}
-                      className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100"
+                      className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 font-semibold text-slate-700 hover:bg-slate-100 sm:px-2.5 sm:py-1"
                     >
                       {communityNameById?.get(item.communityId) || "Community"}
                     </Link>
-                    <span>•</span>
-                    <span>
+                    <span className="hidden sm:inline">•</span>
+                    <span className="text-[10px] sm:text-[11px]">
                       {formatRelative
                         ? formatRelative(post.createdAt)
                         : post.createdAt}
                     </span>
                   </div>
 
-                  <div className="mb-2.5 flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center">
+                  {/* Author info and admin actions */}
+                  <div className="mb-2.5 flex items-center gap-2 sm:gap-2.5">
+                    <div className="flex h-8 w-8 items-center justify-center sm:h-9 sm:w-9">
                       <Avatar
                         src={resolveAvatarSrc((post.authorId as any)?.avatar)}
                         name={(post.authorId as any)?.name || "User"}
-                        size={36}
+                        size={32}
                       />
                     </div>
                     <div className="min-w-0 flex-1">
                       <Link
                         to={getProfileLink(post.authorId)}
-                        className="truncate text-sm font-semibold text-slate-900 hover:underline"
+                        className="block truncate text-sm font-semibold text-slate-900 hover:underline"
                       >
                         {(post.authorId as any)?.name || "Member"}
                       </Link>
-                      <p className="text-[11px] text-slate-400">Posted</p>
+                      <p className="text-[10px] text-slate-400 sm:text-[11px]">
+                        Posted
+                      </p>
                     </div>
                     {isAdminView && (onEditPost || onDeletePost) ? (
                       <div className="flex items-center gap-1">
@@ -732,7 +778,7 @@ const PostsEventsList = ({
                           <button
                             type="button"
                             onClick={() => onEditPost(post)}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 sm:h-8 sm:w-8"
                             title="Edit post"
                           >
                             <FiEdit2 size={12} />
@@ -742,7 +788,7 @@ const PostsEventsList = ({
                           <button
                             type="button"
                             onClick={() => onDeletePost(post)}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:bg-red-50 hover:text-red-600"
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:bg-red-50 hover:text-red-600 sm:h-8 sm:w-8"
                             title="Delete post"
                           >
                             <FiTrash2 size={12} />
@@ -752,14 +798,16 @@ const PostsEventsList = ({
                     ) : null}
                   </div>
 
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+                  {/* Post content */}
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 sm:text-base sm:leading-relaxed">
                     {post.content}
                   </p>
 
+                  {/* Post images */}
                   {Array.isArray(post.images) && post.images.length > 0 && (
                     <div className="mt-3 w-full">
                       {post.images.length === 1 ? (
-                        <div className="overflow-hidden rounded-xl border border-slate-200">
+                        <div className="overflow-hidden rounded-lg border border-slate-200 sm:rounded-xl">
                           <img
                             src={post.images[0]}
                             alt="Post attachment"
@@ -767,7 +815,7 @@ const PostsEventsList = ({
                           />
                         </div>
                       ) : (
-                        <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-900">
+                        <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-slate-900 sm:rounded-xl">
                           <img
                             src={post.images[imageCarouselIndex[post._id] || 0]}
                             alt="Post attachment"
@@ -787,10 +835,17 @@ const PostsEventsList = ({
                                       post.images!.length,
                                   }))
                                 }
-                                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
+                                className="absolute left-1 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80 transition-colors sm:left-2 sm:p-1.5"
                                 aria-label="Previous image"
                               >
-                                <FiChevronLeft size={18} />
+                                <FiChevronLeft
+                                  size={16}
+                                  className="sm:hidden"
+                                />
+                                <FiChevronLeft
+                                  size={18}
+                                  className="hidden sm:block"
+                                />
                               </button>
                               <button
                                 type="button"
@@ -802,12 +857,19 @@ const PostsEventsList = ({
                                       post.images!.length,
                                   }))
                                 }
-                                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80 transition-colors sm:right-2 sm:p-1.5"
                                 aria-label="Next image"
                               >
-                                <FiChevronRight size={18} />
+                                <FiChevronRight
+                                  size={16}
+                                  className="sm:hidden"
+                                />
+                                <FiChevronRight
+                                  size={18}
+                                  className="hidden sm:block"
+                                />
                               </button>
-                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/60 rounded-full px-2.5 py-1">
+                              <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1 bg-black/60 rounded-full px-2 py-1 sm:bottom-2 sm:gap-1.5 sm:px-2.5">
                                 {post.images.map((_, idx) => (
                                   <button
                                     key={idx}
@@ -818,11 +880,12 @@ const PostsEventsList = ({
                                         [post._id]: idx,
                                       }))
                                     }
-                                    className={`h-1.5 rounded-full transition-colors ${idx ===
-                                        (imageCarouselIndex[post._id] || 0)
-                                        ? "bg-white w-6"
-                                        : "bg-white/50 w-1.5"
-                                      }`}
+                                    className={`h-1 rounded-full transition-colors sm:h-1.5 ${
+                                      idx ===
+                                      (imageCarouselIndex[post._id] || 0)
+                                        ? "bg-white w-4 sm:w-6"
+                                        : "bg-white/50 w-1 sm:w-1.5"
+                                    }`}
                                     aria-label={`Go to image ${idx + 1}`}
                                   />
                                 ))}
@@ -834,15 +897,16 @@ const PostsEventsList = ({
                     </div>
                   )}
 
+                  {/* Post links */}
                   {Array.isArray(post.links) && post.links.length > 0 && (
-                    <div className="mt-3 flex flex-col gap-2">
+                    <div className="mt-3 flex flex-col gap-1.5 sm:gap-2">
                       {post.links.map((ln, idx) => (
                         <a
                           key={idx}
                           href={ln}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:underline"
+                          className="text-xs text-blue-600 hover:underline break-all sm:text-sm"
                         >
                           {ln}
                         </a>
@@ -850,14 +914,19 @@ const PostsEventsList = ({
                     </div>
                   )}
 
-                  <div className="mt-3 flex items-center gap-4 border-t border-slate-100 pt-2 text-xs text-slate-500">
+                  {/* Engagement buttons */}
+                  <div className="mt-3 flex items-center gap-3 border-t border-slate-100 pt-2.5 text-xs text-slate-500 sm:gap-4 sm:pt-3">
                     <button
                       type="button"
                       onClick={() => onLikePost && onLikePost(post)}
-                      className={`inline-flex items-center gap-2 ${isLiked ? "text-red-600" : "hover:text-slate-700"}`}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 transition-colors hover:bg-slate-50 sm:gap-2 sm:px-0 sm:py-0 sm:hover:bg-transparent ${
+                        isLiked ? "text-red-600" : "hover:text-slate-700"
+                      }`}
                     >
-                      <FiHeart />
-                      <span className="tabular-nums">{likesCount}</span>
+                      <FiHeart size={14} className="sm:size-4" />
+                      <span className="tabular-nums text-xs sm:text-sm">
+                        {likesCount}
+                      </span>
                     </button>
 
                     <button
@@ -869,55 +938,62 @@ const PostsEventsList = ({
                             : `post-${post._id}`,
                         )
                       }
-                      className="inline-flex items-center gap-2 hover:text-slate-700"
+                      className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 transition-colors hover:bg-slate-50 hover:text-slate-700 sm:gap-2 sm:px-0 sm:py-0 sm:hover:bg-transparent"
                     >
-                      <FiMessageSquare />
-                      <span className="tabular-nums">{commentsCount}</span>
+                      <FiMessageSquare size={14} className="sm:size-4" />
+                      <span className="tabular-nums text-xs sm:text-sm">
+                        {commentsCount}
+                      </span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => onRepost && onRepost(post)}
                       aria-pressed={isReposted}
-                      className={`inline-flex items-center gap-2 ${isReposted ? "text-emerald-600" : "hover:text-slate-700"}`}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 transition-colors hover:bg-slate-50 sm:gap-2 sm:px-0 sm:py-0 sm:hover:bg-transparent ${
+                        isReposted ? "text-emerald-600" : "hover:text-slate-700"
+                      }`}
                     >
-                      <FiRepeat />
-                      <span className="tabular-nums">{repostsCount}</span>
+                      <FiRepeat size={14} className="sm:size-4" />
+                      <span className="tabular-nums text-xs sm:text-sm">
+                        {repostsCount}
+                      </span>
                     </button>
                   </div>
 
+                  {/* Comments section */}
                   {expandedId === `post-${post._id}` && (
-                    <div className="mt-4 border-t border-slate-100 pt-3 space-y-3">
-                      <div className="space-y-3 max-h-64 overflow-y-auto">
+                    <div className="mt-3 border-t border-slate-100 pt-3 space-y-3 sm:mt-4">
+                      <div className="space-y-2.5 max-h-60 overflow-y-auto sm:max-h-64 sm:space-y-3">
                         {Array.isArray((latest as any).comments) &&
-                          (latest as any).comments.length > 0 ? (
+                        (latest as any).comments.length > 0 ? (
                           (latest as any).comments.map((c: any) => (
                             <div
                               key={c._id}
-                              className="rounded-lg border border-slate-100 bg-slate-50 p-3"
+                              className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 sm:p-3"
                             >
                               <div className="flex items-start gap-2">
-                                <div className="h-7 w-7 flex-shrink-0">
+                                <div className="h-6 w-6 flex-shrink-0 sm:h-7 sm:w-7">
                                   <Avatar
                                     src={resolveAvatarSrc(c.author?.avatar)}
                                     name={c.author?.name || "User"}
-                                    size={28}
+                                    size={24}
                                   />
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <Link
                                     to={getProfileLink(c.author)}
-                                    className="text-xs font-semibold text-slate-900 hover:underline"
+                                    className="text-xs font-semibold text-slate-900 hover:underline sm:text-sm"
                                   >
                                     {c.author?.name || "User"}
                                   </Link>
-                                  <p className="mt-1 text-xs text-slate-700 whitespace-pre-wrap break-words">
+                                  <p className="mt-1 text-xs text-slate-700 whitespace-pre-wrap break-words sm:text-sm">
                                     {c.content}
                                   </p>
-                                  <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500">
+                                  <div className="mt-1.5 flex items-center gap-2 text-[10px] text-slate-500 sm:mt-2 sm:text-[11px]">
                                     <button
                                       type="button"
-                                      className="hover:text-slate-700"
+                                      className="hover:text-slate-700 py-1"
                                       onClick={() =>
                                         setReplyInputs((s) => ({
                                           ...s,
@@ -930,7 +1006,7 @@ const PostsEventsList = ({
                                     {isAdminView && onDeleteComment ? (
                                       <button
                                         type="button"
-                                        className="text-slate-500 hover:text-red-600"
+                                        className="text-slate-500 hover:text-red-600 py-1"
                                         onClick={() =>
                                           onDeleteComment(post._id, c._id)
                                         }
@@ -940,7 +1016,7 @@ const PostsEventsList = ({
                                     ) : null}
                                   </div>
                                   {replyInputs[c._id] !== undefined && (
-                                    <div className="mt-2 flex gap-2">
+                                    <div className="mt-2 flex gap-1.5 sm:gap-2">
                                       <input
                                         value={replyInputs[c._id]}
                                         onChange={(e) =>
@@ -949,7 +1025,7 @@ const PostsEventsList = ({
                                             [c._id]: e.target.value,
                                           }))
                                         }
-                                        className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-xs"
+                                        className="flex-1 rounded-md border border-slate-200 px-2 py-1.5 text-xs focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-100 sm:text-sm"
                                         placeholder="Write a reply"
                                       />
                                       <Button
@@ -964,7 +1040,7 @@ const PostsEventsList = ({
                                           )
                                         }
                                         disabled={loadingComment === c._id}
-                                        className="h-7 text-xs"
+                                        className="h-7 px-2 text-xs sm:h-8 sm:px-3 sm:text-sm"
                                       >
                                         {loadingComment === c._id
                                           ? "Posting..."
@@ -977,21 +1053,22 @@ const PostsEventsList = ({
                             </div>
                           ))
                         ) : (
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-slate-500 text-center py-2 sm:text-sm">
                             No comments yet
                           </p>
                         )}
                       </div>
 
+                      {/* Add comment input */}
                       <div className="flex gap-2 border-t border-slate-100 pt-3">
-                        <div className="h-7 w-7 flex-shrink-0">
+                        <div className="h-6 w-6 flex-shrink-0 sm:h-7 sm:w-7">
                           <Avatar
                             src={resolveAvatarSrc("")}
                             name={""}
-                            size={28}
+                            size={24}
                           />
                         </div>
-                        <div className="flex-1 flex gap-2 min-w-0">
+                        <div className="flex-1 flex gap-1.5 min-w-0 sm:gap-2">
                           <input
                             value={commentInput[post._id] || ""}
                             onChange={(e) =>
@@ -1001,7 +1078,7 @@ const PostsEventsList = ({
                               }))
                             }
                             placeholder="Write a comment..."
-                            className="flex-1 rounded-full border border-slate-200 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0"
+                            className="flex-1 rounded-full border border-slate-200 px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-400 min-w-0 sm:py-2 sm:text-sm"
                           />
                           <Button
                             type="button"
@@ -1017,7 +1094,7 @@ const PostsEventsList = ({
                               loadingComment === post._id ||
                               !commentInput[post._id]?.trim()
                             }
-                            className="h-8 px-3 text-xs flex-shrink-0"
+                            className="h-7 px-2.5 text-xs flex-shrink-0 sm:h-8 sm:px-3 sm:text-sm"
                           >
                             {loadingComment === post._id
                               ? "Posting..."
@@ -1046,35 +1123,37 @@ const PostsEventsList = ({
               return (
                 <article
                   key={item.id}
-                  className="rounded-2xl border border-slate-200 bg-[linear-gradient(145deg,#fff7ed,#ffffff)] p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5"
+                  className="rounded-xl border border-slate-200 bg-[linear-gradient(145deg,#fff7ed,#ffffff)] p-3 transition-all hover:border-slate-300 hover:shadow-sm sm:rounded-2xl sm:p-5"
                 >
-                  <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                  {/* Community and date info */}
+                  <div className="mb-2 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 sm:gap-2 sm:text-[11px]">
                     {item.communityId ? (
                       <Link
                         to={`/communities/${item.communityId}`}
-                        className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 font-semibold text-orange-700 hover:bg-orange-100"
+                        className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 font-semibold text-orange-700 hover:bg-orange-100 sm:px-2.5 sm:py-1"
                       >
                         {communityName}
                       </Link>
                     ) : (
-                      <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 font-semibold text-orange-700">
+                      <span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 font-semibold text-orange-700 sm:px-2.5 sm:py-1">
                         Community event
                       </span>
                     )}
-                    <span>•</span>
-                    <span>
+                    <span className="hidden sm:inline">•</span>
+                    <span className="text-[10px] sm:text-[11px]">
                       {formatDate ? formatDate(event.date) : event.date}
                     </span>
                   </div>
 
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-xl border border-orange-200 bg-white px-2.5 py-2 text-center">
-                      <p className="text-[10px] uppercase tracking-wide text-slate-500">
+                  <div className="flex items-start gap-2.5 sm:gap-3">
+                    {/* Date badge */}
+                    <div className="rounded-lg border border-orange-200 bg-white px-2 py-1.5 text-center sm:rounded-xl sm:px-2.5 sm:py-2">
+                      <p className="text-[9px] uppercase tracking-wide text-slate-500 sm:text-[10px]">
                         {new Date(event.date).toLocaleDateString("en-US", {
                           month: "short",
                         })}
                       </p>
-                      <p className="text-sm font-semibold text-slate-900">
+                      <p className="text-xs font-semibold text-slate-900 sm:text-sm">
                         {new Date(event.date).toLocaleDateString("en-US", {
                           day: "numeric",
                         })}
@@ -1082,26 +1161,29 @@ const PostsEventsList = ({
                     </div>
 
                     <div className="min-w-0 flex-1">
+                      {/* Admin actions */}
                       {isAdminView && (onEditEvent || onDeleteEvent) ? (
                         <div className="mb-2 flex justify-end gap-1">
                           {onEditEvent ? (
                             <button
                               type="button"
                               onClick={() => onEditEvent(event)}
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                              className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 sm:h-7 sm:w-7"
                               title="Edit event"
                             >
-                              <FiEdit2 size={12} />
+                              <FiEdit2 size={10} className="sm:hidden" />
+                              <FiEdit2 size={12} className="hidden sm:block" />
                             </button>
                           ) : null}
                           {onDeleteEvent ? (
                             <button
                               type="button"
                               onClick={() => onDeleteEvent(event)}
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:text-red-600"
+                              className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:text-red-600 sm:h-7 sm:w-7"
                               title="Delete event"
                             >
-                              <FiTrash2 size={12} />
+                              <FiTrash2 size={10} className="sm:hidden" />
+                              <FiTrash2 size={12} className="hidden sm:block" />
                             </button>
                           ) : null}
                         </div>
@@ -1109,10 +1191,10 @@ const PostsEventsList = ({
 
                       {/* Event author (if present) */}
                       {(event as any).author ||
-                        (event as any).creator ||
-                        (event as any).createdBy ||
-                        (event as any).authorId ||
-                        (event as any).user ? (
+                      (event as any).creator ||
+                      (event as any).createdBy ||
+                      (event as any).authorId ||
+                      (event as any).user ? (
                         <div className="mb-2.5 flex items-center gap-2.5">
                           <div className="flex h-8 w-8 items-center justify-center">
                             <Avatar
@@ -1141,10 +1223,10 @@ const PostsEventsList = ({
                             <Link
                               to={getProfileLink(
                                 (event as any).author ||
-                                (event as any).creator ||
-                                (event as any).createdBy ||
-                                (event as any).authorId ||
-                                (event as any).user,
+                                  (event as any).creator ||
+                                  (event as any).createdBy ||
+                                  (event as any).authorId ||
+                                  (event as any).user,
                               )}
                               className="truncate text-sm font-semibold text-slate-900 hover:underline"
                             >
@@ -1203,7 +1285,7 @@ const PostsEventsList = ({
                                 <img
                                   src={
                                     event.images[
-                                    imageCarouselIndex[event._id] || 0
+                                      imageCarouselIndex[event._id] || 0
                                     ]
                                   }
                                   alt="Event attachment"
@@ -1254,11 +1336,12 @@ const PostsEventsList = ({
                                               [event._id]: idx,
                                             }))
                                           }
-                                          className={`h-1.5 rounded-full transition-colors ${idx ===
-                                              (imageCarouselIndex[event._id] || 0)
+                                          className={`h-1.5 rounded-full transition-colors ${
+                                            idx ===
+                                            (imageCarouselIndex[event._id] || 0)
                                               ? "bg-white w-6"
                                               : "bg-white/50 w-1.5"
-                                            }`}
+                                          }`}
                                           aria-label={`Go to image ${idx + 1}`}
                                         />
                                       ))}
@@ -1389,7 +1472,11 @@ const PostsEventsList = ({
                             <FiMapPin className="text-slate-400" size={12} />
                             {typeof job.location === "string"
                               ? job.location
-                              : [job.location.street, job.location.city, job.location.country]
+                              : [
+                                  job.location.street,
+                                  job.location.city,
+                                  job.location.country,
+                                ]
                                   .filter(Boolean)
                                   .join(", ")}
                           </span>
@@ -1402,7 +1489,10 @@ const PostsEventsList = ({
                         )}
                         {job?.salary && (
                           <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 shadow-sm border border-emerald-200">
-                            <FiDollarSign className="text-emerald-500" size={12} />
+                            <FiDollarSign
+                              className="text-emerald-500"
+                              size={12}
+                            />
                             {job.salary}
                           </span>
                         )}
@@ -1479,7 +1569,7 @@ const PostsEventsList = ({
                     <div className="mt-4 border-t border-slate-100 pt-3 space-y-3">
                       <div className="space-y-3 max-h-64 overflow-y-auto">
                         {Array.isArray((job as any).comments) &&
-                          (job as any).comments.length > 0 ? (
+                        (job as any).comments.length > 0 ? (
                           (job as any).comments.map((c: any) => (
                             <div
                               key={c._id}
@@ -1783,7 +1873,7 @@ const PostsEventsList = ({
                       )}
                       <div className="space-y-3 max-h-64 overflow-y-auto border-t border-slate-100 pt-3">
                         {Array.isArray((article as any).comments) &&
-                          (article as any).comments.length > 0 ? (
+                        (article as any).comments.length > 0 ? (
                           (article as any).comments.map((c: any) => (
                             <div
                               key={c._id}
@@ -1997,7 +2087,7 @@ const PostsEventsList = ({
                       </div>
 
                       {product?.description && (
-                        <p className="mt-3 text-sm text-slate-700 line-clamp-3">
+                        <p className="mt-3 text-sm text-slate-700 break-words whitespace-normal">
                           {product.description}
                         </p>
                       )}
@@ -2069,7 +2159,7 @@ const PostsEventsList = ({
                     <div className="mt-4 border-t border-slate-100 pt-3 space-y-3">
                       <div className="space-y-3 max-h-64 overflow-y-auto">
                         {Array.isArray((product as any).comments) &&
-                          (product as any).comments.length > 0 ? (
+                        (product as any).comments.length > 0 ? (
                           (product as any).comments.map((c: any) => (
                             <div
                               key={c._id}
@@ -2206,5 +2296,4 @@ const PostsEventsList = ({
     </div>
   );
 };
-
 export default PostsEventsList;

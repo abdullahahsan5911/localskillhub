@@ -98,6 +98,7 @@ export default function ProductEditor() {
 
   const [currentStep, setCurrentStep] = useState<ProductStep>("initial");
   const [sameNameAsOrg, setSameNameAsOrg] = useState<boolean | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // "features" removed — it was collected nowhere in the UI but was in state & payload
   const [productForm, setProductForm] = useState({
@@ -183,16 +184,29 @@ export default function ProductEditor() {
 
     const loadProduct = async () => {
       try {
-        // Pass communityId as a parameter in the params object
+        // Fetch products for the specific community
         const res = await api.getCommunityProducts({
           communityId,
           includeImages: true,
           includeLinks: true,
         });
-        const products: Array<Record<string, unknown>> = Array.isArray(res.data)
-          ? res.data
-          : [];
-        const product = products.find((p) => p._id === productId);
+        
+        // Handle different possible response structures
+        const resData = (res as any).data ?? res;
+        let products: any[] = [];
+        if (Array.isArray(resData)) {
+          products = resData;
+        } else if (resData && Array.isArray(resData.products)) {
+          products = resData.products;
+        } else if (resData && resData.data && Array.isArray(resData.data)) {
+          products = resData.data;
+        } else if (Array.isArray(res)) {
+          products = res as any[];
+        }
+        
+        console.log('Loaded products:', products, 'Looking for productId:', productId);
+        
+        const product = products.find((p: any) => p._id === productId);
         if (product) {
           setProductForm({
             title: (product.title as string) || "",
@@ -222,15 +236,24 @@ export default function ProductEditor() {
           );
           setProductForEveryone(product.forEveryone !== false);
           setCurrentStep("details");
+        } else {
+          console.warn('Product not found in response. Available products:', products.map((p: any) => ({ id: p._id, title: p.title })));
+          toast({ 
+            title: "Product not found", 
+            description: "The product you're trying to edit could not be found.",
+            variant: "destructive" 
+          });
+          navigate(`/communities/${communityId}`);
         }
       } catch (error) {
         console.error("Failed to load product:", error);
         toast({ title: "Failed to load product", variant: "destructive" });
+        navigate(`/communities/${communityId}`);
       }
     };
 
     void loadProduct();
-  }, [productId, communityId]);
+  }, [productId, communityId, navigate]);
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
   const uploadLogo = async (file: File) => {
@@ -469,9 +492,9 @@ export default function ProductEditor() {
     </div>
   );
 
-  const Sidebar = () => (
-    <div className="w-64 bg-white border-r border-slate-200 p-6 shrink-0">
-      <div className="mb-8">
+  const SidebarContent = () => (
+    <>
+      <div className="mb-6 sm:mb-8">
         <h3 className="font-semibold text-slate-900 mb-2">Product details</h3>
         <div className="w-full bg-slate-200 rounded-full h-2">
           <div
@@ -491,7 +514,7 @@ export default function ProductEditor() {
           <h4 className="text-sm font-medium text-slate-700 mb-3">Header</h4>
           <button
             type="button"
-            onClick={() => setCurrentStep("details")}
+            onClick={() => { setCurrentStep("details"); setSidebarOpen(false); }}
             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${
               currentStep === "details"
                 ? "bg-amber-100 text-amber-800 font-medium"
@@ -520,7 +543,7 @@ export default function ProductEditor() {
                 <button
                   key={step}
                   type="button"
-                  onClick={() => setCurrentStep(step)}
+                  onClick={() => { setCurrentStep(step); setSidebarOpen(false); }}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${
                     currentStep === step
                       ? "bg-amber-100 text-amber-800 font-medium"
@@ -537,7 +560,43 @@ export default function ProductEditor() {
           )}
         </div>
       </nav>
-    </div>
+    </>
+  );
+
+  const Sidebar = () => (
+    <>
+      {/* Desktop sidebar */}
+      <div className="hidden md:block w-64 bg-white border-r border-slate-200 p-6 shrink-0 overflow-y-auto">
+        <SidebarContent />
+      </div>
+
+      {/* Mobile drawer overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Mobile drawer */}
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white p-6 shadow-xl transition-transform duration-300 md:hidden ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <span className="font-semibold text-slate-900">Steps</span>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+          >
+            ✕
+          </button>
+        </div>
+        <SidebarContent />
+      </div>
+    </>
   );
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -546,41 +605,70 @@ export default function ProductEditor() {
       <Navbar />
       <div className="min-h-screen bg-slate-50">
         {currentStep === "initial" ? (
-          <div className="py-16">
+        <div className="py-8 sm:py-16 px-4">
             <InitialStep />
-          </div>
+        </div>
         ) : (
-          <div className="flex h-screen pt-16">
+          <div className="flex min-h-screen pt-0 md:pt-0">
             <Sidebar />
 
             <div className="flex-1 overflow-auto">
-              <div className="max-w-4xl mx-auto px-8 py-8">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
                 {/* Header */}
-                <div className="mb-8 flex items-center gap-3">
+                <div className="mb-6 sm:mb-8 flex items-center gap-3">
+                  {/* Mobile: hamburger for sidebar */}
+                  <button
+                    type="button"
+                    onClick={() => setSidebarOpen(true)}
+                    className="flex md:hidden h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100"
+                    aria-label="Open steps menu"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                  </button>
                   <button
                     type="button"
                     onClick={() => navigate(`/communities/${communityId}`)}
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100"
+                    className="hidden md:flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100"
                   >
                     <FiArrowLeft size={18} />
                   </button>
-                  <div>
-                    <h1 className="text-2xl font-semibold text-slate-900">
+                  <div className="min-w-0">
+                    <h1 className="text-lg sm:text-2xl font-semibold text-slate-900 truncate">
                       {currentStep === "details" && "Update product information"}
                       {currentStep === "about" && "About the product"}
                       {currentStep === "media" && "Product media & screenshots"}
                       {currentStep === "customers" && "Customers"}
                       {currentStep === "users" && "Add product users"}
                     </h1>
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
                       * indicates required
                     </p>
                   </div>
                 </div>
 
+                {/* Mobile step progress bar */}
+                <div className="md:hidden mb-5 bg-white rounded-xl border border-slate-200 px-4 py-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-slate-600">
+                      Step {getStepNumber(currentStep)} of {ORDERED_STEPS.length}
+                    </span>
+                    <span className="text-xs text-slate-500 capitalize">{currentStep}</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-1.5">
+                    <div
+                      className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${(getStepNumber(currentStep) / ORDERED_STEPS.length) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+
                 {/* ── Details step ─────────────────────────────────────── */}
                 {currentStep === "details" && (
-                  <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm">
+                  <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-8 shadow-sm">
                     <div className="space-y-6">
                       {/* Product Logo */}
                       <div>
@@ -726,7 +814,7 @@ export default function ProductEditor() {
 
                 {/* ── About step ───────────────────────────────────────── */}
                 {currentStep === "about" && (
-                  <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm">
+                  <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-8 shadow-sm">
                     <div className="space-y-6">
                       {/* Description */}
                       <div>
@@ -813,7 +901,7 @@ export default function ProductEditor() {
 
                 {/* ── Media step ───────────────────────────────────────── */}
                 {currentStep === "media" && (
-                  <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm">
+                  <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-8 shadow-sm">
                     <div className="space-y-6">
                       <div>
                         <h3 className="text-lg font-semibold text-slate-900 mb-2">
@@ -969,7 +1057,7 @@ export default function ProductEditor() {
 
                 {/* ── Customers step ───────────────────────────────────── */}
                 {currentStep === "customers" && (
-                  <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm">
+                  <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-8 shadow-sm">
                     <div className="space-y-6">
                       <div>
                         <h3 className="text-lg font-semibold text-slate-900 mb-2">
@@ -1066,7 +1154,7 @@ export default function ProductEditor() {
 
                 {/* ── Users step ───────────────────────────────────────── */}
                 {currentStep === "users" && (
-                  <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm">
+                  <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-8 shadow-sm">
                     <div className="space-y-6">
                       <div>
                         <h3 className="text-lg font-semibold text-slate-900 mb-2">
@@ -1188,23 +1276,23 @@ export default function ProductEditor() {
                 )}
 
                 {/* ── Navigation buttons ───────────────────────────────── */}
-                <div className="flex justify-between mt-8">
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 mt-6 sm:mt-8 pb-8">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={goBack}
-                    className="px-6"
+                    className="w-full sm:w-auto px-6"
                   >
                     Back
                   </Button>
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-col-reverse sm:flex-row gap-3">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => navigate(`/communities/${communityId}`)}
                       disabled={submitting}
-                      className="px-6"
+                      className="w-full sm:w-auto px-6"
                     >
                       Cancel
                     </Button>
@@ -1219,7 +1307,7 @@ export default function ProductEditor() {
                           (!productForEveryone &&
                             selectedJobFunctions.length === 0)
                         }
-                        className="px-8"
+                        className="w-full sm:w-auto px-8"
                       >
                         {submitting
                           ? "Publishing..."
@@ -1232,7 +1320,7 @@ export default function ProductEditor() {
                         type="button"
                         onClick={goNext}
                         disabled={!isStepComplete(currentStep)}
-                        className="px-6"
+                        className="w-full sm:w-auto px-6"
                       >
                         Next
                       </Button>
