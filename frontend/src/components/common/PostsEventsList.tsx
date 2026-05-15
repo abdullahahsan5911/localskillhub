@@ -553,7 +553,7 @@ const PostsEventsList = ({
           <img
             src={images[0]}
             alt={`${altPrefix}`}
-            className="w-full object-cover"
+            className="w-full max-h-96 object-cover"
           />
         </div>
       );
@@ -564,7 +564,7 @@ const PostsEventsList = ({
         <img
           src={images[index]}
           alt={`${altPrefix}`}
-          className="w-full object-cover"
+          className="w-full max-h-96 object-cover"
         />
         <button
           type="button"
@@ -617,7 +617,7 @@ const PostsEventsList = ({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 w-full min-w-0 overflow-hidden">
       {/* Mobile-responsive filter buttons */}
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-1 text-xs text-slate-600 sm:gap-2">
@@ -701,7 +701,7 @@ const PostsEventsList = ({
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 w-full min-w-0">
           {visible.map((item) => {
             // Posts
             if (item.type === "post") {
@@ -734,7 +734,7 @@ const PostsEventsList = ({
               return (
                 <article
                   key={item.id}
-                  className="rounded-xl border border-slate-200 bg-white p-3 transition-all hover:border-slate-300 hover:shadow-sm sm:rounded-2xl sm:p-5"
+                  className="rounded-xl border border-slate-200 bg-white p-3 transition-all hover:border-slate-300 hover:shadow-sm sm:rounded-2xl sm:p-5 w-full overflow-hidden"
                 >
                   {/* Community and timestamp info */}
                   <div className="mb-2 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 sm:gap-2 sm:text-[11px]">
@@ -805,13 +805,13 @@ const PostsEventsList = ({
 
                   {/* Post images */}
                   {Array.isArray(post.images) && post.images.length > 0 && (
-                    <div className="mt-3 w-full">
+                    <div className="mt-3 w-full max-w-full overflow-hidden">
                       {post.images.length === 1 ? (
                         <div className="overflow-hidden rounded-lg border border-slate-200 sm:rounded-xl">
                           <img
                             src={post.images[0]}
                             alt="Post attachment"
-                            className="w-full object-cover"
+                            className="w-full max-h-96 object-cover"
                           />
                         </div>
                       ) : (
@@ -819,7 +819,7 @@ const PostsEventsList = ({
                           <img
                             src={post.images[imageCarouselIndex[post._id] || 0]}
                             alt="Post attachment"
-                            className="w-full object-cover"
+                            className="w-full max-h-96 object-cover"
                           />
                           {post.images.length > 1 && (
                             <>
@@ -1123,7 +1123,7 @@ const PostsEventsList = ({
               return (
                 <article
                   key={item.id}
-                  className="rounded-xl border border-slate-200 bg-[linear-gradient(145deg,#fff7ed,#ffffff)] p-3 transition-all hover:border-slate-300 hover:shadow-sm sm:rounded-2xl sm:p-5"
+                  className="rounded-xl border border-slate-200 bg-[linear-gradient(145deg,#fff7ed,#ffffff)] p-3 transition-all hover:border-slate-300 hover:shadow-sm sm:rounded-2xl sm:p-5 w-full overflow-hidden"
                 >
                   {/* Community and date info */}
                   <div className="mb-2 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 sm:gap-2 sm:text-[11px]">
@@ -1271,13 +1271,13 @@ const PostsEventsList = ({
                       ) : null}
                       {Array.isArray(event.images) &&
                         event.images.length > 0 && (
-                          <div className="mt-3 w-full">
+                          <div className="mt-3 w-full max-w-full overflow-hidden">
                             {event.images.length === 1 ? (
                               <div className="overflow-hidden rounded-xl border border-slate-200">
                                 <img
                                   src={event.images[0]}
                                   alt="Event attachment"
-                                  className="w-full object-cover"
+                                  className="w-full max-h-96 object-cover"
                                 />
                               </div>
                             ) : (
@@ -1289,7 +1289,7 @@ const PostsEventsList = ({
                                     ]
                                   }
                                   alt="Event attachment"
-                                  className="w-full object-cover"
+                                  className="w-full max-h-96 object-cover"
                                 />
                                 {event.images.length > 1 && (
                                   <>
@@ -1421,7 +1421,7 @@ const PostsEventsList = ({
               return (
                 <article
                   key={item.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5"
+                  className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5 w-full overflow-hidden"
                 >
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
                     <Link
@@ -1730,7 +1730,7 @@ const PostsEventsList = ({
               return (
                 <article
                   key={item.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5"
+                  className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5 w-full overflow-hidden"
                 >
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
                     <Link
@@ -2034,7 +2034,7 @@ const PostsEventsList = ({
               return (
                 <article
                   key={item.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5"
+                  className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm sm:p-5 w-full overflow-hidden"
                 >
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
                     <Link
@@ -2072,11 +2072,12 @@ const PostsEventsList = ({
                   </div>
 
                   <div className="mt-3 flex flex-col sm:flex-row sm:items-start gap-4 rounded-xl border border-amber-100 bg-amber-50/30 p-4">
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-4">
-                        <h3 className="text-base font-bold text-slate-900">
+                        <h3 className="text-base font-bold text-slate-900 break-words">
                           {product?.title}
                         </h3>
+
                         {product?.price && (
                           <div className="flex-shrink-0 flex items-center justify-center rounded-lg bg-amber-100 px-3 py-1.5 border border-amber-200">
                             <span className="text-sm font-bold text-amber-800">

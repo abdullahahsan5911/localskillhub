@@ -1647,14 +1647,14 @@ const CommunityAdminWorkspace = ({
         </SheetContent>
       </Sheet>
 
-      <div className="grid gap-3 lg:grid-cols-12">
+      <div className="grid gap-3 lg:grid-cols-12 min-w-0 overflow-hidden">
         {/* ── Desktop sidebar ──────────────────────────────────────────────── */}
         <div className="hidden lg:block space-y-3 lg:col-span-3">
           <SidebarContent />
         </div>
 
         {/* ── Main content ─────────────────────────────────────────────────── */}
-        <div className="space-y-3 lg:col-span-6">
+        <div className="space-y-3 lg:col-span-6 min-w-0 overflow-hidden">
           {/* DASHBOARD */}
           {activeTab === "dashboard" && (
             <div className="rounded-lg border border-slate-200 bg-white p-3 sm:p-4">
