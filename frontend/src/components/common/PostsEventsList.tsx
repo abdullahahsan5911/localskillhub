@@ -10,6 +10,10 @@ import {
   FiChevronRight,
   FiEdit2,
   FiTrash2,
+  FiBriefcase,
+  FiDollarSign,
+  FiTag,
+  FiShoppingCart,
 } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { resolveAvatarSrc } from "@/lib/avatar";
@@ -45,7 +49,7 @@ interface JobItem {
   _id: string;
   title: string;
   description?: string;
-  location?: string;
+  location?: string | { street?: string; city?: string; country?: string };
   salary?: string;
   type?: string;
   communityId?: string | { _id?: string };
@@ -77,40 +81,40 @@ interface ProductItem {
 
 type FeedItem =
   | {
-      type: "post";
-      id: string;
-      timestamp: string;
-      communityId: string;
-      post: CommunityPostItem;
-    }
+    type: "post";
+    id: string;
+    timestamp: string;
+    communityId: string;
+    post: CommunityPostItem;
+  }
   | {
-      type: "event";
-      id: string;
-      timestamp: string;
-      communityId: string;
-      event: EventItem;
-    }
+    type: "event";
+    id: string;
+    timestamp: string;
+    communityId: string;
+    event: EventItem;
+  }
   | {
-      type: "job";
-      id: string;
-      timestamp: string;
-      communityId: string;
-      job: JobItem;
-    }
+    type: "job";
+    id: string;
+    timestamp: string;
+    communityId: string;
+    job: JobItem;
+  }
   | {
-      type: "article";
-      id: string;
-      timestamp: string;
-      communityId: string;
-      article: ArticleItem;
-    }
+    type: "article";
+    id: string;
+    timestamp: string;
+    communityId: string;
+    article: ArticleItem;
+  }
   | {
-      type: "product";
-      id: string;
-      timestamp: string;
-      communityId: string;
-      product: ProductItem;
-    };
+    type: "product";
+    id: string;
+    timestamp: string;
+    communityId: string;
+    product: ProductItem;
+  };
 
 interface Props {
   feed?: FeedItem[];
@@ -814,12 +818,11 @@ const PostsEventsList = ({
                                         [post._id]: idx,
                                       }))
                                     }
-                                    className={`h-1.5 rounded-full transition-colors ${
-                                      idx ===
-                                      (imageCarouselIndex[post._id] || 0)
+                                    className={`h-1.5 rounded-full transition-colors ${idx ===
+                                        (imageCarouselIndex[post._id] || 0)
                                         ? "bg-white w-6"
                                         : "bg-white/50 w-1.5"
-                                    }`}
+                                      }`}
                                     aria-label={`Go to image ${idx + 1}`}
                                   />
                                 ))}
@@ -887,7 +890,7 @@ const PostsEventsList = ({
                     <div className="mt-4 border-t border-slate-100 pt-3 space-y-3">
                       <div className="space-y-3 max-h-64 overflow-y-auto">
                         {Array.isArray((latest as any).comments) &&
-                        (latest as any).comments.length > 0 ? (
+                          (latest as any).comments.length > 0 ? (
                           (latest as any).comments.map((c: any) => (
                             <div
                               key={c._id}
@@ -1106,10 +1109,10 @@ const PostsEventsList = ({
 
                       {/* Event author (if present) */}
                       {(event as any).author ||
-                      (event as any).creator ||
-                      (event as any).createdBy ||
-                      (event as any).authorId ||
-                      (event as any).user ? (
+                        (event as any).creator ||
+                        (event as any).createdBy ||
+                        (event as any).authorId ||
+                        (event as any).user ? (
                         <div className="mb-2.5 flex items-center gap-2.5">
                           <div className="flex h-8 w-8 items-center justify-center">
                             <Avatar
@@ -1138,10 +1141,10 @@ const PostsEventsList = ({
                             <Link
                               to={getProfileLink(
                                 (event as any).author ||
-                                  (event as any).creator ||
-                                  (event as any).createdBy ||
-                                  (event as any).authorId ||
-                                  (event as any).user,
+                                (event as any).creator ||
+                                (event as any).createdBy ||
+                                (event as any).authorId ||
+                                (event as any).user,
                               )}
                               className="truncate text-sm font-semibold text-slate-900 hover:underline"
                             >
@@ -1200,7 +1203,7 @@ const PostsEventsList = ({
                                 <img
                                   src={
                                     event.images[
-                                      imageCarouselIndex[event._id] || 0
+                                    imageCarouselIndex[event._id] || 0
                                     ]
                                   }
                                   alt="Event attachment"
@@ -1251,12 +1254,11 @@ const PostsEventsList = ({
                                               [event._id]: idx,
                                             }))
                                           }
-                                          className={`h-1.5 rounded-full transition-colors ${
-                                            idx ===
-                                            (imageCarouselIndex[event._id] || 0)
+                                          className={`h-1.5 rounded-full transition-colors ${idx ===
+                                              (imageCarouselIndex[event._id] || 0)
                                               ? "bg-white w-6"
                                               : "bg-white/50 w-1.5"
-                                          }`}
+                                            }`}
                                           aria-label={`Go to image ${idx + 1}`}
                                         />
                                       ))}
@@ -1373,18 +1375,47 @@ const PostsEventsList = ({
                     {jobActions}
                   </div>
 
-                  <h3 className="text-sm font-semibold text-slate-900">
-                    {job?.title}
-                  </h3>
-                  <p className="mt-1 text-xs text-slate-700">
-                    {job?.location || ""} • {job?.type || ""} •{" "}
-                    {job?.salary || ""}
-                  </p>
-                  {job?.description && (
-                    <p className="mt-2 text-sm text-slate-700 line-clamp-3">
-                      {job.description}
-                    </p>
-                  )}
+                  <div className="mt-3 flex flex-col sm:flex-row sm:items-start gap-4 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <h3 className="text-base font-bold text-slate-900">
+                          {job?.title}
+                        </h3>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {job?.location && (
+                          <span className="inline-flex items-center gap-1.5 rounded-md bg-white px-2 py-1 text-xs font-medium text-slate-600 shadow-sm border border-slate-200">
+                            <FiMapPin className="text-slate-400" size={12} />
+                            {typeof job.location === "string"
+                              ? job.location
+                              : [job.location.street, job.location.city, job.location.country]
+                                  .filter(Boolean)
+                                  .join(", ")}
+                          </span>
+                        )}
+                        {job?.type && (
+                          <span className="inline-flex items-center gap-1.5 rounded-md bg-white px-2 py-1 text-xs font-medium text-slate-600 shadow-sm border border-slate-200">
+                            <FiBriefcase className="text-slate-400" size={12} />
+                            {job.type}
+                          </span>
+                        )}
+                        {job?.salary && (
+                          <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 shadow-sm border border-emerald-200">
+                            <FiDollarSign className="text-emerald-500" size={12} />
+                            {job.salary}
+                          </span>
+                        )}
+                      </div>
+
+                      {job?.description && (
+                        <p className="mt-3 text-sm text-slate-700 line-clamp-3">
+                          {job.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
                   {renderAttachmentGallery(
                     item.id,
                     job.images,
@@ -1448,7 +1479,7 @@ const PostsEventsList = ({
                     <div className="mt-4 border-t border-slate-100 pt-3 space-y-3">
                       <div className="space-y-3 max-h-64 overflow-y-auto">
                         {Array.isArray((job as any).comments) &&
-                        (job as any).comments.length > 0 ? (
+                          (job as any).comments.length > 0 ? (
                           (job as any).comments.map((c: any) => (
                             <div
                               key={c._id}
@@ -1752,7 +1783,7 @@ const PostsEventsList = ({
                       )}
                       <div className="space-y-3 max-h-64 overflow-y-auto border-t border-slate-100 pt-3">
                         {Array.isArray((article as any).comments) &&
-                        (article as any).comments.length > 0 ? (
+                          (article as any).comments.length > 0 ? (
                           (article as any).comments.map((c: any) => (
                             <div
                               key={c._id}
@@ -1950,17 +1981,29 @@ const PostsEventsList = ({
                     {productActions}
                   </div>
 
-                  <h3 className="text-sm font-semibold text-slate-900">
-                    {product?.title}
-                  </h3>
-                  <p className="mt-1 text-xs text-slate-700">
-                    {product?.price ? `$${product.price}` : ""}
-                  </p>
-                  {product?.description && (
-                    <p className="mt-2 text-sm text-slate-700 line-clamp-3">
-                      {product.description}
-                    </p>
-                  )}
+                  <div className="mt-3 flex flex-col sm:flex-row sm:items-start gap-4 rounded-xl border border-amber-100 bg-amber-50/30 p-4">
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <h3 className="text-base font-bold text-slate-900">
+                          {product?.title}
+                        </h3>
+                        {product?.price && (
+                          <div className="flex-shrink-0 flex items-center justify-center rounded-lg bg-amber-100 px-3 py-1.5 border border-amber-200">
+                            <span className="text-sm font-bold text-amber-800">
+                              ${product.price}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {product?.description && (
+                        <p className="mt-3 text-sm text-slate-700 line-clamp-3">
+                          {product.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
                   {renderAttachmentGallery(
                     item.id,
                     product.images,
@@ -2026,7 +2069,7 @@ const PostsEventsList = ({
                     <div className="mt-4 border-t border-slate-100 pt-3 space-y-3">
                       <div className="space-y-3 max-h-64 overflow-y-auto">
                         {Array.isArray((product as any).comments) &&
-                        (product as any).comments.length > 0 ? (
+                          (product as any).comments.length > 0 ? (
                           (product as any).comments.map((c: any) => (
                             <div
                               key={c._id}

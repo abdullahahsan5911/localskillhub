@@ -57,7 +57,9 @@ const communityJobSchema = new mongoose.Schema(
     },
     title: String,
     description: String,
-    location: String,
+    location: {
+      type: mongoose.Schema.Types.Mixed,
+    },
     salary: String,
     type: {
       type: String,

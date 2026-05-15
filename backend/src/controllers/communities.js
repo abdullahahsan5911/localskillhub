@@ -10,7 +10,11 @@ import { canManageCommunity } from "../utils/communityHelpers.js";
 // Event-related handlers (migrated from legacy community.js)
 export const getEvents = async (req, res, next) => {
   try {
-    const events = await Event.find()
+    const { communityId } = req.query;
+    const filter = {};
+    if (communityId) filter.communityId = communityId;
+
+    const events = await Event.find(filter)
       .sort({ date: 1 })
       .limit(20)
       .populate("createdBy", "name avatar role accountType");
@@ -266,7 +270,11 @@ export const deleteEvent = async (req, res, next) => {
 // Job-related handlers
 export const getJobs = async (req, res, next) => {
   try {
-    const jobs = await CommunityJob.find()
+    const { communityId } = req.query;
+    const filter = {};
+    if (communityId) filter.communityId = communityId;
+
+    const jobs = await CommunityJob.find(filter)
       .sort({ createdAt: -1 })
       .limit(20)
       .populate("createdBy", "name avatar role accountType")
@@ -508,7 +516,11 @@ export const reactToJob = async (req, res, next) => {
 // Article-related handlers
 export const getArticles = async (req, res, next) => {
   try {
-    const articles = await CommunityArticle.find()
+    const { communityId } = req.query;
+    const filter = {};
+    if (communityId) filter.communityId = communityId;
+
+    const articles = await CommunityArticle.find(filter)
       .sort({ createdAt: -1 })
       .limit(20)
       .populate("createdBy", "name avatar role accountType")
@@ -755,7 +767,11 @@ export const reactToArticle = async (req, res, next) => {
 // Product-related handlers
 export const getProducts = async (req, res, next) => {
   try {
-    const products = await CommunityProduct.find()
+    const { communityId } = req.query;
+    const filter = {};
+    if (communityId) filter.communityId = communityId;
+
+    const products = await CommunityProduct.find(filter)
       .sort({ createdAt: -1 })
       .limit(20)
       .populate("createdBy", "name avatar role accountType")
